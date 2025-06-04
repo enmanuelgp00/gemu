@@ -13,9 +13,7 @@ public class Gemu {
 	Gemu( File file ) {
 		gameList = new ArrayList<Game>();
 		findGames( file );
-		for ( Game g : gameList ) {
-			System.out.println(g.getName());
-		}
+		gameList.get(0).play();
 	}
 	
 	public void findGames( File file ) {

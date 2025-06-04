@@ -1,16 +1,16 @@
 package gemu.game;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 
 public class Game {
 
 	GameInfo info;
-	String dir;
+	String path;
 	
 	public Game ( File launcher ) {	
-		dir = launcher.getParentFile().getAbsolutePath();
-		info = new GameInfo( new File ( dir + "/" + GameInfo.FILE_NAME) );
+		path = launcher.getParentFile().getAbsolutePath();
+		info = new GameInfo( new File ( path + "/" + GameInfo.FILE_NAME) );
 		setLauncher( launcher );
 		String fileName = launcher.getName();
 		String name = fileName.substring( 0, fileName.lastIndexOf('.') );
@@ -20,12 +20,13 @@ public class Game {
 		
 	public Game ( GameInfo info ) {
 		this.info = info;
+		path = info.getFile().getParentFile().getAbsolutePath();
 	}
 	public void setLauncher( File file ) {
 		info.set( GameInfo.KEY_LAUNCHER , file.getName());
 	}  
 	public File getLauncher() {
-		return new File( dir + "/" + info.get("launcher") );
+		return new File( path + "/" + info.get(GameInfo.KEY_LAUNCHER) );
 	}
 	public void setName( String name ) {
 		info.set( GameInfo.KEY_NAME, name );
@@ -50,5 +51,23 @@ public class Game {
 	
 	public GameInfo getInfo() {
 		return info;
-	}	
+	}
+		
+	public void play() {
+		try {
+			ProcessBuilder builder = new ProcessBuilder(getLauncher().getAbsolutePath());
+			Process process = builder.start();
+			BufferedReader reader = new BufferedReader( new InputStreamReader(process.getInputStream()));
+			String line;
+			while ( (line = reader.readLine()) != null ) {
+				System.out.println(line);
+			}
+			
+			int exitCode = process.waitFor();
+			System.out.println("Exit code : " + exitCode);		
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+		
+	}
 }
