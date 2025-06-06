@@ -9,8 +9,22 @@ public class GameInfo {
 	static final String KEY_NAME = "name";
 	static final String KEY_LAUNCHER = "exe";
 	static final String KEY_SITES = "sites";
-	static final String KEY_TAGS = "tags";
-	final String[] keys = new String[] { KEY_NAME, KEY_LAUNCHER, KEY_SITES, KEY_TAGS };
+	static final String KEY_TAGS = "tags"; 
+	static final String KEY_VERSION = "version";  
+	static final String KEY_SCREENSHOTS = "screenshots"; 
+	static final String KEY_EMULATOR = "needs_emulator"; 
+	static final String KEY_FAVORITE = "favorite";  
+	
+	final Set<String> keys = new HashSet<String>( Arrays.asList( new String[] {
+		KEY_NAME,
+		KEY_VERSION, 
+		KEY_LAUNCHER, 
+		KEY_SITES, 
+		KEY_TAGS,
+		KEY_SCREENSHOTS,
+		KEY_EMULATOR,
+		KEY_FAVORITE
+		}));
 	
 	HashMap<String, List<String>> info;
 	
@@ -30,12 +44,18 @@ public class GameInfo {
 			String key = null;
 			String itm = null;
 			int code;
+			int line = 0;
+			int col = 0;
 			boolean isInCurlyBrace = false;
 			boolean isInQuotes = false;
 			while ( ( code = reader.read() ) != -1 )  {
 				char ch = (char) code;
-				
+				col++;
 				switch(ch) {
+					case '\n':
+						line++;
+						col = 0;
+					break;
 					case '{':
 						isInCurlyBrace = true;
 					break;  
@@ -54,11 +74,15 @@ public class GameInfo {
 					if ( isEndWordSign(ch) ) {
 						if ( str.length() > 0 ) { 
 							if ( isInCurlyBrace ) {
-								itm = str.toString();
-								info.getMap().get( key ).add( itm );
+								itm = str.toString(); 
+									info.getMap().get( key ).add( itm );
+								
 								str.setLength(0);
 							} else {                            
 								key = str.toString();
+								if ( !info.getMap().keySet().contains(key) ) {
+									System.out.println( String.format("{ %s } is not a valid key in file : %s\n [ line: %d , col : %d ]\n", key, file.getAbsolutePath() , line, col ));
+								}
 								str.setLength(0);
 							}       						
 						}
@@ -83,13 +107,22 @@ public class GameInfo {
 		}
 		return false;
 	}
-	public List<String> getList( String key ) {
-		return info.get( key );
+	
+	List<String> get( String key ) {
+	
+		if ( info.keySet().contains(key) ) {
+			return info.get( key );		
+		}
+		
+		if ( keys.contains( key ) ) {
+			info.put( key, new ArrayList<String>() );
+			return info.get( key );
+		}
+		
+		return null;
 	}
-	public String get( String key ) {
-		return info.get( key ).get(0);
-	}
-	public void set( String key, String value ) {
+	
+	void set( String key, String value ) { 
 		List<String> list = info.get( key );
 		if ( list.size() > 0 ) {
 			list.set( 0 , value );		
@@ -100,7 +133,7 @@ public class GameInfo {
 	public File getFile() {
 		return this.file;
 	}
-	public HashMap<String, List<String>> getMap() {
+	HashMap<String, List<String>> getMap() {
 		return info;
 	}
 	public void commit() {

@@ -1,19 +1,26 @@
 package gemu;
 
+import javax.swing.SwingUtilities;
 import gemu.game.*;
-
+import gemu.frame.main.*;
 import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Gemu {
-
+	public static final String IGNORE = "gemu.ignore";
 	List<Game> gameList;
 	
 	Gemu( File file ) {
 		gameList = new ArrayList<Game>();
 		findGames( file );
-		gameList.get(0).play();
+		SwingUtilities.invokeLater( new Runnable() {
+			@Override
+			public void run() {
+				MainFrame mainFrame = new MainFrame( gameList );			
+			}
+		} );
 	}
 	
 	public void findGames( File file ) {
@@ -22,12 +29,30 @@ public class Gemu {
 				new OnPossibleGameFound() {
 					@Override
 					public void gameFound( Game game ) {
-						//System.out.println( "game with source found " + game.getName());
 						gameList.add( game );
 					}
 					@Override
 					public void launchersFound( List<File> launchers ) {
-						gameList.add( new Game( launchers.get(0)));
+						String folder = launchers.get(0).getParentFile().getAbsolutePath();	 
+						int index = 0;
+						
+						if ( launchers.size() > 1 ) {
+							System.out.println("\nMutiple launchers were found in the folder :" + folder + "\n");	
+							for ( File f : launchers ) {
+								System.out.println(f.getName());
+							} 
+							System.out.println("");
+						
+							Scanner scan = new Scanner( System.in );
+							while ( index < 1 || index > launchers.size() ) {
+								System.out.println("Choose from 1 to " + ( launchers.size() ) );
+								index = scan.nextInt();
+							}
+							--index;
+						}
+						Game game = new Game( launchers.get(index));
+						System.out.println("New game found : { " + game.getName() +" }");
+						gameList.add( game );
 					}
 				}
 				)){			
@@ -46,11 +71,22 @@ public class Gemu {
 		Game game;
 		
 		for ( File f : file.listFiles() ) {
-			if (isLauncher(f)) {
-				launchers.add( f );
+			if ( isLauncher(f) ) {
+				if ( Game.isLocalEmulator(f) ) {
+					Game.setLocalEmulator( f );
+				} else {
+					launchers.add( f );				
+				}
 				
 			} else if ( isGameInfo( f ) ) {
 				game = new Game( GameInfo.parse( f ) );
+				if ( game.getScreenshots() == null ) {
+					File possibleScreenshot = new File ( game.getFolder() + "/screenshot.jpg");
+					if ( possibleScreenshot.exists()) {
+						game.addScreenshot( possibleScreenshot ).commit(); 
+						System.out.println("New Screenshot for " + game.getName() );
+					}
+				}
 				listener.gameFound( game );
 				return true;
 			}
@@ -64,7 +100,7 @@ public class Gemu {
 		
 	}
 	public boolean isLauncher( File file ) {
-		String[] exceptions = new String[] {"helper", "crash" };
+		String[] exceptions = new String[] {"helper", "crash", "update", "install", "legui" };
 		String name = file.getName();
 		for ( String exception : exceptions ) {
 			if ( name.toLowerCase().contains(exception)) {
@@ -74,7 +110,9 @@ public class Gemu {
 		int dotIndex = name.lastIndexOf('.');
 		String extension = name.substring( dotIndex + 1 );
 		return extension.equals("exe");
-	}       
+	}
+	
+	
 	public boolean isGameInfo( File file ) {
 		return file.getName().equals(GameInfo.FILE_NAME);
 	}	
