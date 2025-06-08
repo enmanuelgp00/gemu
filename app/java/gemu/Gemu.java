@@ -4,9 +4,7 @@ import javax.swing.SwingUtilities;
 import gemu.game.*;
 import gemu.frame.main.*;
 import java.io.File;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
 public class Gemu {
 	public static final String IGNORE = "gemu.ignore";
@@ -15,6 +13,7 @@ public class Gemu {
 	Gemu( File file ) {
 		gameList = new ArrayList<Game>();
 		findGames( file );
+		gameList = sort( gameList );              
 		SwingUtilities.invokeLater( new Runnable() {
 			@Override
 			public void run() {
@@ -23,16 +22,40 @@ public class Gemu {
 		} );
 	}
 	
+	public ArrayList<Game> sort( List<Game> list ) {
+	
+		Set<Game> gms = new HashSet<Game>();
+		Set<Game> cGms = new HashSet<Game>();
+		
+		for ( Game game : list ) {
+			if ( game.isCompressed() ) {
+				cGms.add( game );			
+			} else {
+				gms.add( game );
+			}
+		}
+		
+		ArrayList<Game> l = new ArrayList<Game>();		
+		for ( Game game : gms ) {
+			l.add(game);
+		}
+		for ( Game game : cGms ) {
+			l.add(game);
+		}
+		
+		return l;
+		
+	}
 	public void findGames( File file ) {
 		 if ( file.isDirectory() ) {
 			if ( !hasPossibleGame( file, 
 				new OnPossibleGameFound() {
 					@Override
-					public void gameFound( Game game ) {
+					public void onGameFound( Game game ) {
 						gameList.add( game );
 					}
 					@Override
-					public void launchersFound( List<File> launchers ) {
+					public void onLaunchersFound( List<File> launchers ) {
 						String folder = launchers.get(0).getParentFile().getAbsolutePath();	 
 						int index = 0;
 						
@@ -52,6 +75,7 @@ public class Gemu {
 						}
 						Game game = new Game( launchers.get(index));
 						System.out.println("New game found : { " + game.getName() +" }");
+						System.out.println( game.getFolder() );
 						gameList.add( game );
 					}
 				}
@@ -87,39 +111,76 @@ public class Gemu {
 						System.out.println("New Screenshot for " + game.getName() );
 					}
 				}
-				listener.gameFound( game );
+				listener.onGameFound( game );
 				return true;
+			} else if ( is7zFile( f ) ) {
+			
+				Shell.run( new Shell.OnProcessListener() {
+					@Override
+					public void onProcessStarted( Process p ) { }      
+					@Override
+					public void onProcessFinished( Process p, int code ) { }
+					@Override
+					public void onStreamLineRead( String line ) {
+						if ( line.length() > 53 ) {
+							String pth = line.substring( 53 );
+							String name = pth.substring( pth.lastIndexOf('\\') + 1 );
+							if ( hasExtension( name, "exe" ) ) {  
+								if ( isLauncherName( name ) ) {								
+									launchers.add( new File( f.getParentFile().getAbsolutePath() + "/" + name ) );
+								} 
+							}
+						}
+					}
+					
+				} , "7z", "l", f.getAbsolutePath() );
 			}
 		}
 		
 		if ( launchers.size() > 0 ) {
-			listener.launchersFound( launchers );
+			listener.onLaunchersFound( launchers );
 			return true;
 		}
+		
 		return false;
 		
 	}
 	public boolean isLauncher( File file ) {
-		String[] exceptions = new String[] {"helper", "crash", "update", "install", "legui" };
 		String name = file.getName();
+		if ( hasExtension( name, "exe" ) ) {
+			return isLauncherName( name );		
+		}
+		return false;
+	}
+	public boolean isLauncherName( String name ) {
+		String[] exceptions = new String[] {"helper", "crash", "update", "install", "gui", "config", "setting", "utility", "setup"};
 		for ( String exception : exceptions ) {
 			if ( name.toLowerCase().contains(exception)) {
 				return false;
 			}
 		}
-		int dotIndex = name.lastIndexOf('.');
-		String extension = name.substring( dotIndex + 1 );
-		return extension.equals("exe");
+		return true;
+	}
+	public boolean hasExtension( File file, String extension ) {
+		String name = file.getName();
+		return hasExtension( name, extension );
+	}
+	public boolean hasExtension( String name, String extension ) {
+		String flExtension = name.substring( name.lastIndexOf('.') + 1 );
+		return flExtension.equals( extension );		
 	}
 	
+	public boolean is7zFile( File file ) {
+		return hasExtension( file, "7z" );
+	}
 	
 	public boolean isGameInfo( File file ) {
 		return file.getName().equals(GameInfo.FILE_NAME);
 	}	
 	
 	public interface OnPossibleGameFound {
-		public void gameFound( Game game );
-		public void launchersFound( List<File> launchers );
+		public void onGameFound( Game game );
+		public void onLaunchersFound( List<File> launchers );
 	}
 	public static void main( String[] args ) {
 		new Gemu( new File(args[0]));

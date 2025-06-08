@@ -93,6 +93,7 @@ public class GameInfo {
 				
 				
 			}
+		reader.close();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}

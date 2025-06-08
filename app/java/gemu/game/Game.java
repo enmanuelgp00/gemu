@@ -36,11 +36,14 @@ public class Game {
 		this.info = info;
 		folder = info.getFile().getParentFile();
 	}
+	
 	public void setLauncher( File file ) {
 		info.set( GameInfo.KEY_LAUNCHER , file.getName());
-	}  
+	}
+	
 	public File getLauncher() {
-		return new File( folder.getAbsolutePath() + "/" + info.get(GameInfo.KEY_LAUNCHER).get(0) );
+		File launch = new File( folder.getAbsolutePath() + "/" + info.get(GameInfo.KEY_LAUNCHER).get(0) );
+		return launch;
 	}
 	public void setName( String name ) {
 		info.set( GameInfo.KEY_NAME, name );
@@ -67,6 +70,15 @@ public class Game {
 	public String getVersion() {
 		return info.get(GameInfo.KEY_VERSION).get(0);
 	}
+	public GameInfo removeScreenshot( File file ) {
+		if ( info.get(GameInfo.KEY_SCREENSHOTS).remove( file.getName() ) ) {
+			System.out.println( file.getName() + " was remove from screenshots in game : " + getName() );
+		}
+		if ( file.exists() ) {
+			file.delete();
+		}
+		return info;
+	}
 	public GameInfo addScreenshot( File file ) {
 		if ( file.exists() ) {
 			if ( file.getParentFile().getAbsolutePath().equals( folder.getAbsolutePath()) ) {
@@ -90,29 +102,63 @@ public class Game {
 		return info;
 	}
 	public boolean isCompressed() {
-		if ( getLauncher().exists() )  {
-			 return false;
+		return !getLauncher().exists();
+		/*
+		if ( getCompression() != null )  {
+			 return true;
 		}
-		return true;
+		return false;
+		*/
+	}
+	public void openFolder( Shell.OnProcessListener listener ) {
+		Shell.run( listener, "explorer.exe", folder.getAbsolutePath() );
 	}
 	public void openFolder() {
 		Shell.run("explorer.exe", folder.getAbsolutePath() );
 	}
-	public void compress() {
-		if ( !isCompressed() ) {
-			System.out.println("Compressing : \"" + getName() + "\"");
-			Shell.run( "7z", "a","-sdel","-mmt8", "-mx9", "-x!" + GameInfo.FILE_NAME , folder.getAbsolutePath() + "/"+ getName() + ".7z", folder.getAbsolutePath() + "/." );		
-		}
+	public void compress( Shell.OnProcessListener listener ) {
+		Thread t = new Thread( new Runnable() {
+			@Override
+			public void run () {
+				if ( !isCompressed() ) {
+					Shell.run( listener , "7z", "a","-sdel","-mmt8", "-mx9", "-x!" + GameInfo.FILE_NAME , folder.getAbsolutePath() + "/"+ getName() + ".7z", folder.getAbsolutePath() + "/." );		
+				} else {
+					System.out.println( getName() + " is already compressed");
+				}							
+			}
+		});
+		t.start();
 	}
 	
-	public void decompress() {
-		if (isCompressed()) {
-			System.out.println("Decompressing :" + getName());
-			File compressedFile = new File( folder.getAbsolutePath() + "/" + getName() + ".7z" );
-			Shell.run("7z", "x", "-o"+folder.getAbsolutePath(), compressedFile.getAbsolutePath());
-			compressedFile.delete();
-			
+	public File getCompression() {
+		List<File> compressions = new ArrayList<File>();
+		for ( File f : folder.listFiles() ) {
+			 if (f.getName().contains(".7z")) {
+				compressions.add(f);
+			 }
 		}
+		if (compressions.size() > 1 ) {
+			System.out.println("More than one compression file found in " + folder.getAbsolutePath() + "\n game: " + getName() );
+			System.exit( 1 );
+		} else if (compressions.size() == 0 ) {
+			return null;
+		}
+		return compressions.get(0);
+	}
+	public void decompress( Shell.OnProcessListener listener ) {
+		Thread t = new Thread( new Runnable() {
+			@Override
+			public void run () {
+				File compression = null; 
+				if ( ( compression = getCompression()) != null ) {
+						Shell.run( listener, "7z", "x", "-o"+ folder.getAbsolutePath(), compression.getAbsolutePath() );
+						compression.delete();		
+				} else {
+					System.out.println( getName() + " no compressed file found ");
+				}		
+			}
+		});
+		t.start();
 	}
 	public boolean isFavorite() {
 		if ( info.get(GameInfo.KEY_FAVORITE).size() > 0 ) {
@@ -156,6 +202,5 @@ public class Game {
 		}
 		
 	}
-	
 	
 }
