@@ -1,5 +1,6 @@
 package gemu;
 
+import gemu.sys.Shell;
 import gemu.game.*;
 import java.io.File;
 import java.util.List;
@@ -36,7 +37,14 @@ public class Gemu {
 		}
 		@Override
 		public void onCompressedGameFound( CompressedGame compressedGame ) {
-			System.out.println("Hello from listener");
+			Shell.run( new Shell.OnProcessListener(){
+				@Override
+				public void onProcessStarted( Process process ){}
+				@Override
+				public void onStreamLineReaded( String line ){}
+				@Override
+				public void onProcessFinished( Process process, int exitCode ){}
+			},"cmd.exe");
 		}
 	};
 	
