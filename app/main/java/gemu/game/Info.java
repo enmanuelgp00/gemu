@@ -9,18 +9,29 @@ import java.util.HashMap;
 
 class Info {
 
+	static final String EXTENSION = "ginf";
+	
 	HashMap<String, List<String>> map = new HashMap<String, List<String>>();
 	
-	Folder folder;
+	FolderZip folder;
 	
-	Info( Folder folder ) {
+	Info( FolderZip folder ) {
 		this.folder = folder;
 		for (Key k : Key.SET ) {
 			map.put( k.name, new ArrayList<String>() );
 		}
 	}
 	
-	public Folder getFolder() {
+	static Info parse( File file ) {
+		Info info = new Info( file.getParentFolderZip() );
+		return info;
+	}
+	
+	public static boolean isFileInfo( File file ) {
+		return file.hasExtension( EXTENSION );
+	}
+	
+	public FolderZip getFolder() {
 		return folder;
 	}
 	

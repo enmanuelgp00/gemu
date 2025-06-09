@@ -1,33 +1,31 @@
 package gemu.game;
 
-import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 
-public final class Game {
+public class Game {
 	private Info info;
 	
-	private Game( Launcher launcher ) {
-		this.info = new Info( Folder.from( launcher ));
-		
-		setLauncher( launcher ).
-		setName( "New Game" );
+	public Game( Launcher launcher ) {
+		this.info = new Info( launcher.getParentFolderZip() );
+		setLauncher( launcher );
 		
 	}
 	
-	private Game( Info info ) {
+	public Game( CompressedLauncher launcher ) {		
+		this.info = new Info( launcher.getRootFile().getParentFolderZip() );
+		setLauncher( launcher.getFile() );
+	}
+	
+	public Game( Info info ) {
 		 this.info = info;
 	}
 	
-	public static Game from( File file ) {
-		Launcher launcher = new Launcher( file.getAbsolutePath() );
-		return new Game( launcher );
-	}
-	
 	public Game setLauncher( Launcher launcher ) {
-		info.set( Info.Key.LAUNCHER, launcher.getName() );	
+		String path = launcher.getAbsolutePath().substring( info.getFolder().getAbsolutePath().length() );
+		info.set( Info.Key.LAUNCHER, path );	
 		return this;
-	}
+	}	
 	
 	public Launcher getLauncher() {
 		return new Launcher ( info.getFolder().getAbsolutePath() + "/" + info.get( Info.Key.LAUNCHER ).get(0) );
@@ -50,4 +48,5 @@ public final class Game {
 	public List<String> getTags() {
 		return info.get( Info.Key.TAGS );
 	}
+	
 }

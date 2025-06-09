@@ -1,17 +1,39 @@
 package gemu.game;
 
-import java.io.File;
-
 public class Launcher extends File {
 
 	public Launcher( String name ) {
 		super(name);
-		try {
-			if ( isDirectory() || !Launcher.isLauncher( this ) ) {
+		check();
+	}
+	public Launcher( File file ) {
+		super( file.getAbsolutePath() );
+		check();
+	}
+	
+	public static boolean isFileLauncher( File file ) {
+		if ( file.hasExtension("exe") ) {
+			String[] exceptions = new String[] { "setting", "crash", "helper", "setup" };		
+			String name = file.getName();
+			
+			for (String e : exceptions ) {
+				if (name.toLowerCase().contains( e ) ) {
+						return false;
+				}
+			}
+			return true;
+		}		
+		return false;
+	}
+	
+	private void check() {
+		 try {
+			if ( !Launcher.isFileLauncher( this ) ) {
 				throw new Exception() {
 					@Override
 					public void printStackTrace() {
-						System.out.println( name );
+						super.printStackTrace();
+						System.out.println( getName() );
 					}
 				};
 			}
@@ -19,19 +41,5 @@ public class Launcher extends File {
 			e.printStackTrace();
 			System.exit( 1 );
 		}
-	}
-	
-	
-	public static boolean isLauncher( File file ) {
-		String[] exceptions = new String[] { "setting", "crash", "helper", "setup" };		
-		String name = file.getName();
-		
-		for (String e : exceptions ) {
-			if (name.toLowerCase().contains( e ) ) {
-					return false;
-			}
-		}
-		String extension = name.substring( name.lastIndexOf('.') + 1 );
-		return extension.equals("exe");
 	}
 }
