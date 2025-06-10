@@ -38,7 +38,7 @@ public class Launcher extends File {
 					Shell.exec( new Shell.OnProcessListener() {
 						@Override
 						public void onProcessStarted( Process process ) {
-							System.out.println("");
+							System.out.println( getAbsolutePath() );
 						}
 						@Override
 						public void onStreamLineRead( String line ) {
@@ -48,7 +48,7 @@ public class Launcher extends File {
 						public void onProcessFinished( Process process, int exitCode ) {
 							System.out.println("");
 						}
-					}, getAbsolutePath() );
+					}, new Shell.Command( getParentFolder() , getAbsolutePath() ) );
 				}
 			} );
 			ht.start();

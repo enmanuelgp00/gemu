@@ -1,5 +1,6 @@
 package gemu.game;
 
+import gemu.system.Shell;
 import gemu.file.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -71,17 +72,28 @@ public class Game {
 		return CompactFile.isFileCompact( getLauncher() );
 	}
 	
+	public void openFolder() {
+		Shell.exec( new Shell.Command("explorer", getFolder().getAbsolutePath() ) );
+	}
 	
 	public void compress() { 
 		if ( !isCompressed() ) {
 			
 			File file = info.getFolder();		
-			Compressions.add( new Compressions.CompressProcess( file ) {
+			Compressions.add( new Compressions.CompressProcess( file, new Shell.OnProcessListener() {
 				@Override
 				public void onProcessStarted( Process process ) {
-					System.out.println("Compressing : " + getName() );
+					System.out.println("\n[ Compressing : " + getName() + " ]");
 				}
-			});
+				@Override
+				public void onStreamLineRead( String line ) { 
+					System.out.println( line );
+				}
+				@Override
+				public void onProcessFinished( Process process, int exitCode ) {
+					//setLauncher( new Launcher( new CompactFile() );
+				}
+			}, "screenshot.jpg", Info.NAME_FILE ) );
 			
 			
 		} else {
@@ -92,13 +104,23 @@ public class Game {
 	public void decompress() {
 		if ( isCompressed() ) { 
 			CompactFile compression = new CompactFile( getLauncher() );
-			Compressions.add( new Compressions.DecompressProcess( compression ) {
+			Compressions.add( new Compressions.DecompressProcess( compression, new Shell.OnProcessListener() {
 				@Override
 				public void onProcessStarted( Process process ) {
-					System.out.println("Decompressing : " + getName() );
-				
+					System.out.println("\n[ Decompressing : " + getName() + " ]" );
 				}
-			} );
+				@Override
+				public void onStreamLineRead( String line ) {
+					System.out.println( line );
+				}
+				@Override
+				public void onProcessFinished( Process process, int exitCode ) {
+					String oldPath = compression.getAbsolutePath();
+					String root = compression.getParentRootFile().getAbsolutePath();
+					String newPath = oldPath.substring( root.length() );
+					setLauncher( new Launcher( getFolder().getAbsolutePath() + "/" + newPath ) );
+				}
+			}));
 		
 		} else {
 			System.out.println( "[ " + getName() + " ] : is not compressed");

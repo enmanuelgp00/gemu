@@ -1,7 +1,9 @@
 package gemu.file;
 
+import gemu.system.Shell;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.ArrayList; 
+import java.util.Arrays;
 
 public final class Compressions {
 	
@@ -39,35 +41,61 @@ public final class Compressions {
 	}
 	
 	
-	public static abstract class CompressProcess extends CProcess {
-		public CompressProcess( File file ) {
-			super( file );
+	public static class CompressProcess extends CProcess {
+		final String[] ignorels;
+		public CompressProcess( File file, Shell.OnProcessListener listener, String... ignorels ) {
+			super( file, listener );
+			this.ignorels = ignorels;
 		} 
 		@Override
 		void checkAnonymous() {} 		
 		@Override
 		public void start() {
-			System.out.println("Compressing : " + getFile() );
+			File file = getFile();
+			String name = "/" + file.getName();
+			StringBuilder path = new StringBuilder();
+			path.append( file.getAbsolutePath() );
+			File src = null;
+			while( new File ( path.toString() ).exists() ) {
+				src = new File( path.toString() );
+				path.append( name );
+			}
+			
+			StringBuilder cmd =  new StringBuilder();
+			cmd.append( "7z a " );
+			for ( String s : this.ignorels ) {
+				cmd.append(" -x!" + s);
+			}
+			cmd.append(" -sdel -mmt8 -mx9 -t7z");
+			List<String> cmdls = new ArrayList<String>( Arrays.<String>asList( cmd.toString().split("\\s+")) );
+			cmdls.add( file.getAbsolutePath() + "\\" + file.getName() + ".7z" );
+			cmdls.add( src + "\\." );
+			Shell.exec( getListener(), new Shell.Command( null, cmdls.toArray( new String[cmdls.size()]) ));
+			src.delete();
 		}
 	}       
 	
-	public static abstract class DecompressProcess extends CProcess {
-		public DecompressProcess( CompactFile file ) {
-			super( file.getParentRootFile());
+	public static class DecompressProcess extends CProcess {
+		public DecompressProcess( CompactFile file, Shell.OnProcessListener listener ) {
+			super( file.getParentRootFile(), listener );
 		}
 		@Override
 		void checkAnonymous() {}
 		@Override
 		public void start() {
-			System.out.println("Decompressing : " + getFile() );
-		
+			File file = getFile();
+			Shell.exec( getListener(), new Shell.Command( "7z", "x", "-o" + file.getParentFile().getAbsolutePath() , file.getAbsolutePath() ) );
+			file.delete();
 		}
 	}
 	
 	public static abstract class CProcess {
 		File file;
-		public CProcess( File file) {
+		Shell.OnProcessListener listener;
+		
+		public CProcess( File file, Shell.OnProcessListener listener ) {
 			this.file = file;
+			this.listener = listener;
 			checkAnonymous();
 		}
 		void checkAnonymous() {
@@ -91,8 +119,9 @@ public final class Compressions {
 		public File getFile() {
 			return file;
 		}
-		
+		public Shell.OnProcessListener getListener() {
+			return listener;
+		}
 		public void start() { } ;
-		public abstract void onProcessStarted( Process process );
 	}
 }

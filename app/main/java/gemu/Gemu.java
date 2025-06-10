@@ -3,31 +3,20 @@ package gemu;
 import gemu.system.Shell;
 import gemu.game.*; 
 import gemu.file.*;
+import gemu.frame.main.MainFrame;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Gemu {
-	private List<Game> gameLs = new ArrayList<Game>();
+	private List<Game> gamels = new ArrayList<Game>();
 	
 	Gemu( Folder folder ) {		
 		findGames( folder );
-		
-		for ( int i = 0; i < 5; i++ ) {
-			Game game = gameLs.get( i );
-			if ( game.isCompressed() ) {
-				game.decompress();
-			} else {                    
-				game.compress();			
-			}
-		}
-				
-		
-	}
-	public void open( Game game ) {
-		System.out.println("Openning Game : " + game.getFolder().getAbsolutePath() );
-		game.play();
-	}
+		new MainFrame( gamels );
+	}	
+	
 	private void findGames( File file ) {		
 		if ( file.isDirectory() || CompactFile.isFileCompact( file ) ) {
 			if( !Game.hasFilePossibleGame( file , onPossibleGameFoundListener ) ) {
@@ -43,11 +32,12 @@ public class Gemu {
 	Game.OnPossibleGameFoundListener onPossibleGameFoundListener = new Game.OnPossibleGameFoundListener() {
 		@Override
 		public void onGameFound( Game game ) {
-			gameLs.add(game);
+			gamels.add(game);
 		}
 		@Override
 		public void onLauncherListFound( List<Launcher> launchers ) {
-			System.out.println("[ " + launchers.size() + " ] Launchers Found");			
+			System.out.println("[ " + launchers.size() + " ] Launchers Found");
+			gamels.add( new Game( launchers.get(0)));
 		}
 	};
 	

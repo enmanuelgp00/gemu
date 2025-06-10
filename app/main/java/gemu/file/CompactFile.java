@@ -50,7 +50,7 @@ public class CompactFile extends File {
 				}
 				@Override
 				public void onProcessFinished( Process process, int exitCode ) {}
-			} , "7z", "l", "-slt", getAbsolutePath() );
+			} , new Shell.Command( "7z", "l", "-slt", getAbsolutePath()));
 			return lsCompactFile.toArray( new CompactFile[ lsCompactFile.size() ] );
 		}
 		

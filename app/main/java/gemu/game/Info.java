@@ -10,7 +10,7 @@ import gemu.file.*;
 
 public class Info {
 
-	static final String EXTENSION = "ginf";
+	static final String NAME_FILE = "gm.inf";
 	
 	HashMap<String, List<String>> map = new HashMap<String, List<String>>();
 	
@@ -29,7 +29,7 @@ public class Info {
 	}
 	
 	public static boolean isFileInfo( File file ) {
-		return file.hasExtension( EXTENSION );
+		return file.getName().equals( NAME_FILE );
 	}
 	
 	public Folder getFolder() {
