@@ -1,9 +1,9 @@
-package gemu.sys;
+package gemu.system;
 
 import java.io.*;
 
 public final class Shell {
-	public static void run ( OnProcessListener listener, String... command ) {		
+	public static void exec ( OnProcessListener listener, String... command ) {		
 		
 		try {
 			ProcessBuilder builder = new ProcessBuilder( command );

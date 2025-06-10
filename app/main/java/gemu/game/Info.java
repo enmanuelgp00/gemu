@@ -6,24 +6,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import gemu.file.*;
 
-class Info {
+public class Info {
 
 	static final String EXTENSION = "ginf";
 	
 	HashMap<String, List<String>> map = new HashMap<String, List<String>>();
 	
-	FolderZip folder;
+	Folder folder;
 	
-	Info( FolderZip folder ) {
+	Info( Folder folder ) {
 		this.folder = folder;
 		for (Key k : Key.SET ) {
 			map.put( k.name, new ArrayList<String>() );
 		}
 	}
 	
-	static Info parse( File file ) {
-		Info info = new Info( file.getParentFolderZip() );
+	public static Info parse( File file ) {
+		Info info = new Info( file.getParentFolder() );
 		return info;
 	}
 	
@@ -31,7 +32,7 @@ class Info {
 		return file.hasExtension( EXTENSION );
 	}
 	
-	public FolderZip getFolder() {
+	public Folder getFolder() {
 		return folder;
 	}
 	

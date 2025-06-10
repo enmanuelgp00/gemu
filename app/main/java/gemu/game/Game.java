@@ -1,5 +1,6 @@
 package gemu.game;
 
+import gemu.file.*;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -7,14 +8,14 @@ public class Game {
 	private Info info;
 	
 	public Game( Launcher launcher ) {
-		this.info = new Info( launcher.getParentFolderZip() );
+		this.info = new Info( launcher.getParentFolder() );
 		setLauncher( launcher );
 		
 	}
 	
-	public Game( CompressedLauncher launcher ) {		
-		this.info = new Info( launcher.getRootFile().getParentFolderZip() );
-		setLauncher( launcher.getFile() );
+	public Game( CompactLauncher launcher ) {		
+		this.info = new Info( launcher.getParentRootFile().getParentFolder() );
+		setLauncher( launcher );
 	}
 	
 	public Game( Info info ) {
@@ -25,7 +26,12 @@ public class Game {
 		String path = launcher.getAbsolutePath().substring( info.getFolder().getAbsolutePath().length() );
 		info.set( Info.Key.LAUNCHER, path );	
 		return this;
-	}	
+	}
+	public Game setLauncher( CompactLauncher launcher ) {
+		String path = launcher.getAbsolutePath().substring( info.getFolder().getAbsolutePath().length() );
+		info.set( Info.Key.LAUNCHER, path );	
+		return this;
+	}
 	
 	public Launcher getLauncher() {
 		return new Launcher ( info.getFolder().getAbsolutePath() + "/" + info.get( Info.Key.LAUNCHER ).get(0) );
@@ -37,7 +43,11 @@ public class Game {
 	}
 	
 	public String getName() {
-		return info.get( Info.Key.NAME ).get(0);
+		List<String> names = info.get( Info.Key.NAME );
+		if ( names.size() > 0 ) { 
+			return names.get(0);
+		}		
+		return getFolder().getName();
 	}
 	
 	public Game addTags( String tag ) {
@@ -49,4 +59,93 @@ public class Game {
 		return info.get( Info.Key.TAGS );
 	}
 	
+	public void play() {
+		getLauncher().run();
+	}
+	
+	public Folder getFolder() {
+		return info.getFolder();
+	}
+	
+	public boolean isCompressed() {
+		return CompactFile.isFileCompact( getLauncher() );
+	}
+	
+	
+	public void compress() { 
+		if ( !isCompressed() ) {
+			
+			File file = info.getFolder();		
+			Compressions.add( new Compressions.CompressProcess( file ) {
+				@Override
+				public void onProcessStarted( Process process ) {
+					System.out.println("Compressing : " + getName() );
+				}
+			});
+			
+			
+		} else {
+			System.out.println( "[ " + getName() + " ] : is already compressed");
+		}
+	}
+	
+	public void decompress() {
+		if ( isCompressed() ) { 
+			CompactFile compression = new CompactFile( getLauncher() );
+			Compressions.add( new Compressions.DecompressProcess( compression ) {
+				@Override
+				public void onProcessStarted( Process process ) {
+					System.out.println("Decompressing : " + getName() );
+				
+				}
+			} );
+		
+		} else {
+			System.out.println( "[ " + getName() + " ] : is not compressed");
+		}
+	}
+	
+	
+	public static boolean hasFilePossibleGame( File file, OnPossibleGameFoundListener listener ) {
+		List<Launcher> launcherLs = new ArrayList<Launcher>();
+		if ( CompactFile.isFileCompact( file ) ) {
+			CompactFile compactFile = new CompactFile( file );
+			if ( compactFile.isRootFile() ) {
+				for ( CompactFile f : compactFile.listFiles() ) {
+					if ( Launcher.isFileLauncher( f ) ) {
+						listener.onGameFound( new Game( new CompactLauncher( f ) ) );
+						return true;
+					}
+				} 			
+			}
+			
+		} else {
+			for ( File f : file.listFiles() ) {			
+				if ( Info.isFileInfo( f ) ) {
+					listener.onGameFound( new Game( Info.parse( f ) ) );
+					return true;
+				
+				} else if ( Launcher.isFileLauncher( f ) ) {
+					launcherLs.add( new Launcher( f ) );
+				}
+			}
+		}
+		
+		if ( launcherLs.size() > 0 ) {
+			if ( launcherLs.size() == 1 ) {
+				listener.onGameFound( new Game( launcherLs.get( 0 ) ) );
+				return true;
+			}
+			
+			listener.onLauncherListFound( launcherLs );
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public interface OnPossibleGameFoundListener {
+		public void onGameFound( Game game );
+		public void onLauncherListFound( List<Launcher> launchers );		
+	}
 }

@@ -1,37 +1,49 @@
 package gemu;
 
-import gemu.sys.Shell;
-import gemu.game.*;
+import gemu.system.Shell;
+import gemu.game.*; 
+import gemu.file.*;
 
 import java.util.List;
 import java.util.ArrayList;
 
 public class Gemu {
-	private List<Game> lsGames = new ArrayList<Game>();
+	private List<Game> gameLs = new ArrayList<Game>();
 	
-	Gemu( FolderZip folder ) {
+	Gemu( Folder folder ) {		
 		findGames( folder );
-		for ( Game g : lsGames ) {
-			System.out.println( g.getLauncher().getAbsolutePath() );
+		
+		for ( int i = 0; i < 5; i++ ) {
+			Game game = gameLs.get( i );
+			if ( game.isCompressed() ) {
+				game.decompress();
+			} else {                    
+				game.compress();			
+			}
 		}
+				
+		
 	}
-	
+	public void open( Game game ) {
+		System.out.println("Openning Game : " + game.getFolder().getAbsolutePath() );
+		game.play();
+	}
 	private void findGames( File file ) {		
-		if ( file.isDirectory() || file.isCompressed() ) {
-			if( !new FolderZip(file).hasPossibleGame( onPossibleGameFoundListener ) ) {
+		if ( file.isDirectory() || CompactFile.isFileCompact( file ) ) {
+			if( !Game.hasFilePossibleGame( file , onPossibleGameFoundListener ) ) {
 				if ( file.isDirectory() ) {
 					for ( File f : file.listFiles() ) {
 						findGames( f );
 					}				
 				}			
 			}				
-		}
+		} 
 	}
 	
-	FolderZip.OnPossibleGameFoundListener onPossibleGameFoundListener = new FolderZip.OnPossibleGameFoundListener() {
+	Game.OnPossibleGameFoundListener onPossibleGameFoundListener = new Game.OnPossibleGameFoundListener() {
 		@Override
 		public void onGameFound( Game game ) {
-			lsGames.add(game);
+			gameLs.add(game);
 		}
 		@Override
 		public void onLauncherListFound( List<Launcher> launchers ) {
@@ -40,6 +52,6 @@ public class Gemu {
 	};
 	
 	public static void main ( String[] args ) {		
-		new Gemu( new FolderZip(args[0]) );
+		new Gemu( new Folder(args[0]) );
 	}
 }
