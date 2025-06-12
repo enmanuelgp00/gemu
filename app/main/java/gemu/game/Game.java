@@ -3,10 +3,14 @@ package gemu.game;
 import gemu.system.*;
 import gemu.file.*;
 import java.util.List;
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Set;      
+import java.util.HashSet;
 
 public class Game {
 	private GameInfo info;
+	private static String[] screenshotNames = new String[]{ "screenshot", "capture" };
 	public static final int COMPRESSION_STATE_FREE = 0;
 	public static final int COMPRESSION_STATE_COMPRESSING = 1;
 	public static final int COMPRESSION_STATE_DECOMPRESSING = -1;
@@ -27,6 +31,16 @@ public class Game {
 	
 	public Game( GameInfo info ) {
 		 this.info = info;
+	}
+	
+	
+	public static boolean isScreenshot( File f ) {
+		for ( String n : screenshotNames ) {
+			if ( f.getName().contains( n ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public Game setLauncher( Launcher launcher ) {
@@ -80,6 +94,14 @@ public class Game {
 	public Folder getFolder() {
 		return info.getFolder();
 	}
+	
+	public void addScreenshot( File file ) {
+		if ( file.exists() ) {
+			info.modif( GameInfo.Key.screenshots ).add( file.getName() );
+			info.commit();		
+		}
+	}
+	
 	public File[] getScreenshots() {
 		String[] names = info.get( GameInfo.Key.screenshots );
 		File[] screenshots = new File[ names.length ];
@@ -101,6 +123,7 @@ public class Game {
 	public void openFolder() {
 		Shell.exec( new Shell.Command("explorer", getFolder().getAbsolutePath() ) );
 	}
+	
 	public int getCompressionState() {
 		for ( Compressions.CProcess p : Compressions.getList() ) {
 			File f = p.getFile();
@@ -117,6 +140,8 @@ public class Game {
 		return COMPRESSION_STATE_FREE;
 		
 	}
+	
+	
 	public void compress( OnSuccessListener listener ) {
 		if ( getCompressionState() == COMPRESSION_STATE_FREE ) {
 		
@@ -193,32 +218,54 @@ public class Game {
 	
 	
 	public static boolean hasPossibleGame( File file, OnPossibleGameFoundListener listener ) {
+	
 		List<Launcher> launcherLs = new ArrayList<Launcher>();
 		List<CompactLauncher> compactLauncherList = new ArrayList<CompactLauncher>();
+		Game game = null;
+		
 		if ( CompactFile.isCompactFile( file ) ) {
 			CompactFile compactFile = new CompactFile( file );
+			
 			if ( compactFile.isRootFile() ) {
+			
 				for ( CompactFile f : compactFile.listFiles() ) {
+				
 					if ( Launcher.isLauncherFile( f ) ) {
+					
 						launcherLs.add( new Launcher( f ) );
 					}
 				} 			
 			}
 			
 		} else {
-			for ( File f : file.listFiles() ) {			
-				if ( GameInfo.isGameInfoFile( f ) ) {
-					listener.onGameFound( new Game( GameInfo.parse( f ) ) );
-					return true;
+			for ( File f : file.listFiles() ) {
+			
+				if ( GameInfo.isIgnoreFile( f ) ) {
+					listener.onIgnoreFileFound( f );
+					return false;
+					
+				} else if ( GameInfo.isGameInfoFile( f ) ) {
+					game = new Game( GameInfo.parse( f ) );
 				
 				} else if ( Launcher.isLauncherFile( f ) ) {
 					launcherLs.add( new Launcher( f ) );
 					
-				} else if ( GameInfo.isIgnoreFile( f ) ) {
-					System.out.println("Ignoring : " + f.getParentFile() + "\\" );
-					return false;
+				} else  if ( Game.isScreenshot( f ) ) {					
+					
+					if ( game != null ) {
+					
+						if ( !new HashSet<File>( Arrays.<File>asList( game.getScreenshots() )  ).contains(f)) {
+							System.out.println("New screenshot in game : [ " + game.getName() + " ] ");
+							game.addScreenshot( f );
+						}					
+					}
 				}
 			}
+		}
+		
+		if ( game != null ) {
+			listener.onGameFound( game );
+			return true;
 		}
 		
 		if ( launcherLs.size() > 0 ) {
@@ -236,6 +283,7 @@ public class Game {
 	
 	public interface OnPossibleGameFoundListener {
 		public void onGameFound( Game game );
-		public void onLauncherListFound( List<Launcher> launchers );		
+		public void onLauncherListFound( List<Launcher> launchers );
+		public void onIgnoreFileFound( File file );
 	}
 }

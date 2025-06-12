@@ -77,7 +77,7 @@ public class GameInfo {
 		return info;
 	}
 	
-	private List<String> modif( Key key ) {
+	List<String> modif( Key key ) {
 		return map.get( key.value );
 	}
 	

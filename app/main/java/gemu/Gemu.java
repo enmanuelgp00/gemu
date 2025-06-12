@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Gemu {
+	File ignoreFolder = new File("") ;
+	
 	private List<Game> gamels = new ArrayList<Game>();
 	
 	Gemu( Folder folder ) {		
@@ -21,8 +23,11 @@ public class Gemu {
 	
 	private void findGames( File file ) {		
 		if ( file.isDirectory() || CompactFile.isCompactFile( file ) ) {
+		
 			if( !Game.hasPossibleGame( file , onPossibleGameFoundListener ) ) {
-				if ( file.isDirectory() && !GameInfo.hasIgnoreFile( file ) ) {
+			
+				if ( file.isDirectory() && !file.matchesPath( ignoreFolder ) ) {
+				
 					for ( File f : file.listFiles() ) {
 						findGames( f );
 					}				
@@ -35,6 +40,10 @@ public class Gemu {
 		@Override
 		public void onGameFound( Game game ) {
 			gamels.add(game);
+		}
+		public void onIgnoreFileFound( File f ) {
+			System.out.println( f.getParentFile() + "\\ --> [ IGNORED ]");
+			ignoreFolder = f.getParentFile();
 		}
 		@Override
 		public void onLauncherListFound( List<Launcher> launchers ) {
