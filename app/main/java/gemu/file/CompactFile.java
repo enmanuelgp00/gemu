@@ -1,6 +1,6 @@
 package gemu.file;
 
-import gemu.system.Shell;
+import gemu.system.*;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -14,7 +14,7 @@ public class CompactFile extends File {
 		super( file.getAbsolutePath() );
 	}
 	
-	public static boolean isFileCompact( File file ) {
+	public static boolean isCompactFile( File file ) {
 		CompactFile compactFile = new CompactFile( file.getAbsolutePath() );
 		if ( !compactFile.isRootFile() ) {			
 			return compactFile.getParentRootFile() != null;
@@ -31,7 +31,7 @@ public class CompactFile extends File {
 	public CompactFile[] listFiles() {
 		if ( isRootFile() ) {
 			List<CompactFile> lsCompactFile = new ArrayList<CompactFile>();
-			Shell.exec( new Shell.OnProcessListener() {
+			Shell.exec( new OnProcessListener() {
 				String path;
 				@Override
 				public void onProcessStarted( Process process ) { }

@@ -1,6 +1,6 @@
 package gemu.file;
 
-import gemu.system.Shell;
+import gemu.system.*;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -8,6 +8,14 @@ public class File extends java.io.File {
 	public File( String name ) {
 		super( name );
 	}  
+	
+	public boolean matchesPath( File file ) {
+		return this.getAbsolutePath().equals( file.getAbsolutePath() );
+	}
+	
+	public boolean hasSameName( File file ) {
+		return this.getName().toLowerCase().equals( file.getName().toLowerCase() );
+	}
 	
 	public boolean hasExtension( String e ) {
 		if (!isDirectory()) {       		

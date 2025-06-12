@@ -1,6 +1,6 @@
 package gemu.game;
 
-import gemu.system.Shell;
+import gemu.system.*;
 import gemu.file.*;
 
 public class Launcher extends File {
@@ -14,9 +14,9 @@ public class Launcher extends File {
 		check();
 	}
 	
-	public static boolean isFileLauncher( File file ) {
+	public static boolean isLauncherFile( File file ) {
 		if ( file.hasExtension("exe") ) {
-			String[] exceptions = new String[] { "setting", "crash", "helper", "setup" };		
+			String[] exceptions = new String[] { "setting", "crash", "helper", "setup", "uninstall" };		
 			String name = file.getName();
 			
 			for (String e : exceptions ) {
@@ -31,11 +31,11 @@ public class Launcher extends File {
 	
 	
 	public void run () {
-		if ( !CompactFile.isFileCompact( this ) ) {
+		if ( !CompactFile.isCompactFile( this ) ) {
 			Thread ht = new Thread( new Runnable() {
 				@Override
 				public void run() {
-					Shell.exec( new Shell.OnProcessListener() {
+					Shell.exec( new OnProcessListener() {
 						@Override
 						public void onProcessStarted( Process process ) {
 							System.out.println( getAbsolutePath() );
@@ -60,7 +60,7 @@ public class Launcher extends File {
 	private void check() {
 		 try {
 			
-			if ( !exists() && !CompactFile.isFileCompact( this ) ) {
+			if ( !exists() && !CompactFile.isCompactFile( this ) ) {
 				throw new Exception() {
 					@Override
 					public void printStackTrace() {
@@ -70,7 +70,7 @@ public class Launcher extends File {
 				};
 			}
 			
-			if ( !Launcher.isFileLauncher( this ) ) {
+			if ( !Launcher.isLauncherFile( this ) ) {
 				throw new Exception() {
 					@Override
 					public void printStackTrace() {

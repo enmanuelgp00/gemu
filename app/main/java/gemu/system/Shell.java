@@ -4,7 +4,7 @@ import gemu.file.Folder;
 import java.io.*;
 
 public final class Shell {
-	public static void exec ( OnProcessListener listener, Command command ) {		
+	public static int exec ( OnProcessListener listener, Command command ) {		
 		
 		try {
 			ProcessBuilder builder = new ProcessBuilder( command.name );
@@ -27,12 +27,14 @@ public final class Shell {
 			listener.onProcessFinished( process, exitCode );
 			
 			reader.close();
+			return exitCode;
 		} catch (Exception e ) {
 			e.printStackTrace();
+			return 1;
 		}
 	}
-	public static void exec ( Command command ) {
-		Shell.exec( new OnProcessListener() {		  
+	public static int exec ( Command command ) {
+		return Shell.exec( new OnProcessListener() {		  
 			@Override
 			public void onProcessStarted( Process process ) {
 			
@@ -59,11 +61,6 @@ public final class Shell {
 			this.name = name;
 		}
 		
-	}
-	public interface OnProcessListener {
-		public void onProcessStarted( Process process );
-		public void onStreamLineRead( String line );
-		public void onProcessFinished( Process process, int exitCode );
 	}
 }
 
