@@ -1,5 +1,6 @@
 package gemu.frame.main;
 
+import gemu.util.Texts;
 import gemu.file.File;
 import java.io.IOException;
 import gemu.system.*;
@@ -11,22 +12,24 @@ import java.awt.event.*;
 
 public class GamePanel extends JPanel {
 	TagsPanel tagsPanel;
+	StatusPanel statusPanel;
+	
 	Game game;
 	PopupMenu popupMenu;
 	GamePanel( Game game ) {
 		super();                    
-		this.game = game;           
+		this.game = game; 
 		setLayout( new OverlayLayout( this ) );
 		BackgroundLayer backgroundLayer = new BackgroundLayer();
-		//backgroundLayer.setPreferredSize( new Dimension( 300, 500 ) );
 		
 		popupMenu = new PopupMenu();
 		tagsPanel = new TagsPanel();
-		
-		//tagsPanel.setMaximumSize( tagsPanel.getPreferredSize() );
+		statusPanel = new StatusPanel();
 		
 		JPanel layer0 = new JPanel( new BorderLayout() );
 		layer0.setOpaque( false );
+		
+		layer0.add( statusPanel, BorderLayout.NORTH );
 		layer0.add( tagsPanel, BorderLayout.SOUTH );
 		
 		conditionalBackground();
@@ -34,10 +37,11 @@ public class GamePanel extends JPanel {
 		
 		updateTags();
 		
-		add( backgroundLayer );
 		add( layer0 );
-		this.game = game;
+		add( backgroundLayer );
+		
 	}
+	
 
 	private void conditionalBackground() {
 	   if ( game.isCompressed() ) {
@@ -68,10 +72,7 @@ public class GamePanel extends JPanel {
 			super( new BorderLayout());
 			
 			setOpaque( false );
-			String name = "<html><p style=text-align:center;>" + game.getName() +"</p></html>";
-			
-			JLabel label = new JLabel( name , SwingConstants.CENTER );
-			add( label );
+			add( new Title() );
 			
 			addMouseListener( new MouseAdapter() {
 				@Override
@@ -81,6 +82,14 @@ public class GamePanel extends JPanel {
 					}
 				}
 			});
+		}
+		private class Title extends JLabel {
+			Title() {
+				super( "<html><p style=text-align:center;>" + game.getName() +"</p></html>" , SwingConstants.CENTER );
+				setFont( new Font( "Courier New", Font.PLAIN, 24 ) );
+				setForeground( Color.WHITE );
+				
+			}
 		}
 		
 		@Override
@@ -220,12 +229,27 @@ public class GamePanel extends JPanel {
 		}
 	} // end of class { PopupMenu }
 	
+	class StatusPanel extends JPanel {
+		Tag size;
+		StatusPanel() {
+			super( new FlowLayout( FlowLayout.RIGHT ) );
+			setOpaque( false );
+			size = new Tag( Texts.bytesToHumanVerbose( game.length() ) );
+			size.setForeground( Color.WHITE );
+			size.setBackground( Color.BLACK );
+			add( size );
+			
+		}
+		
+	}
+	
 	class Tag extends JLabel {
 		Tag( String name ) {
 			super( name );
 			setOpaque( true );
 			setBackground( Color.PINK );
-			setBorder( BorderFactory.createEmptyBorder( 0, 3, 2, 3 ));			
+			setBorder( BorderFactory.createEmptyBorder( 2, 3, 0, 3 ));			
+			setFont( new Font( "Consolas", Font.PLAIN, 13 ) );
 		}
 		
 	}
@@ -233,7 +257,7 @@ public class GamePanel extends JPanel {
 	class TagsPanel extends JPanel {
 		TagsPanel() {
 			super( new FlowLayout( FlowLayout.LEFT ) );
-			setOpaque( false );
+			setOpaque( true );
 		}
 		
 		@Override

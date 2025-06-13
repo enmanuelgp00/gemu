@@ -30,7 +30,25 @@ public class Game {
 	}
 	
 	public Game( GameInfo info ) {
-		 this.info = info;
+		this.info = info;
+		if ( info.get( GameInfo.Key.name ).length == 0 ) {
+			GameNames.interpret( this , new GameNames.InterpreterListener() {
+				@Override
+				public void onVersionInterpreted( String v ) {
+					System.out.println( v );
+				}
+				@Override
+				public void onSitesInterpreted( String[] sites ) {
+					System.out.println( sites );
+				
+				}
+				@Override
+				public void onNameInterpreted( String name ) {
+					System.out.println( name );
+				
+				}
+			});
+		}
 	}
 	
 	

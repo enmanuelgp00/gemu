@@ -4,6 +4,8 @@ import gemu.system.*;
 import gemu.game.*; 
 import gemu.file.*;
 import gemu.frame.main.MainFrame;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import java.io.IOException;
 
 
@@ -18,7 +20,12 @@ public class Gemu {
 	
 	Gemu( Folder folder ) {		
 		findGames( folder );
-		new MainFrame( gamels );
+		SwingUtilities.invokeLater( new Runnable() {
+			@Override
+			public void run () {
+				 new MainFrame( gamels );
+			}
+		});
 	}	
 	
 	private void findGames( File file ) {		

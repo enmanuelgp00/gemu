@@ -15,7 +15,18 @@ public class Folder extends File {
 		check();
 	}
 	
-	
+	@Override
+	public long length() {
+		long length = 0;
+		for ( File f : listFiles() ) {
+			if( f.isDirectory() ) {
+				length += new Folder( f ).length();
+			} else {
+				length += f.length();
+			}         			
+		}
+		return length;
+	}
 	
 	private void check() {
 		try {
