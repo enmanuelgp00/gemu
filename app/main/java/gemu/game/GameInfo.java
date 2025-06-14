@@ -179,13 +179,15 @@ public class GameInfo {
 		public static final Key version;
 		public static final Key tags;
 		public static final Key screenshots;
+		public static final Key favorite;
 		
 		public static final Set<Key> set = new HashSet<Key>( Arrays.asList( new Key[] {
 			name = new Key("name"),
 			launcher = new Key("exe"),
 			version = new Key("version"),
 			tags = new Key("tags"),
-			screenshots = new Key("screenshots")
+			screenshots = new Key("screenshots"),
+			favorite = new Key("star")
 		}));
 		
 		public static Key get( String name ) throws Exception {
@@ -198,7 +200,7 @@ public class GameInfo {
 			throw new Exception() {
 				@Override
 				public void printStackTrace() {
-					System.out.println( name + " is not a valid key name");
+					System.out.println( "\n[ \"" + name + "\" is not a valid key name ]");
 					super.printStackTrace();
 				}
 			};

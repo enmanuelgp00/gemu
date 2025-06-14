@@ -1,5 +1,6 @@
 package gemu.frame.main;
 
+import gemu.frame.main.gamepanel.GamePanel;
 import gemu.game.Game;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -8,12 +9,17 @@ import java.util.List;
 
 public class GameShelf extends JScrollPane {
 	List<Game> gamels;
+	Body body;
 	GameShelf( List<Game> gamels ) {
 		super();
 		this.gamels = gamels;
-		setViewportView( new Body() );
+		body = new Body();
+		setViewportView( body );
 		setHorizontalScrollBarPolicy( JScrollPane.HORIZONTAL_SCROLLBAR_NEVER );
+		
+		
 	}
+		
 	
 	class Body extends JPanel {
 		Body() {
@@ -23,6 +29,8 @@ public class GameShelf extends JScrollPane {
 				add( new GamePanel(g) );
 			}
 		}
+		
+		
 		
 		@Override
 		public Dimension getPreferredSize() {
@@ -35,6 +43,13 @@ public class GameShelf extends JScrollPane {
 			int height = 0;
 			
 			Component[] components = getComponents();
+			/*
+			for ( Component c : components ) {
+				Rectangle bounds = c.getBounds();
+				System.out.println( bounds.x + " " + bounds.y );
+			}
+			*/
+			
 			Component lastComponent = components[ components.length - 1 ];
 			
 			Rectangle bounds = lastComponent.getBounds();

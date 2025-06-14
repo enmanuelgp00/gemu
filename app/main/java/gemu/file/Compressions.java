@@ -40,7 +40,7 @@ public final class Compressions {
 		compressing = state;
 	}
 	
-	public static CProcess[] getList() {
+	public static synchronized CProcess[] getList() {
 		return processls.toArray( new CProcess[processls.size()] );
 	}
 	

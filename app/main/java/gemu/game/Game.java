@@ -21,12 +21,14 @@ public class Game {
 		} else {
 			this.info = new GameInfo( launcher.getParentFolder() );
 		}
-		setLauncher( launcher );
+		setLauncher( launcher ).
+		setFavorite( false );
 	}
 	
 	public Game( CompactLauncher launcher ) {		
 		this.info = new GameInfo( launcher.getParentRootFile().getParentFolder() );
-		setLauncher( launcher );
+		setLauncher( launcher ).
+		setFavorite( false );
 	}
 	
 	public Game( GameInfo info ) {
@@ -93,7 +95,7 @@ public class Game {
 		return getFolder().getName();
 	}
 	
-	public Game addTags( String tag ) {
+	public Game addTag( String tag ) {
 		info.add( GameInfo.Key.tags, tag );
 		info.commit();
 		return this;
@@ -132,6 +134,42 @@ public class Game {
 	}
 	public long length() {
 		return getFolder().length();
+	}
+	
+	public Game setFavorite( boolean b ) {
+		info.set( GameInfo.Key.favorite, String.valueOf( b ) );
+		info.commit();
+		return this;
+	}
+	
+	public boolean isFavorite() {
+		String[] arr = info.get( GameInfo.Key.favorite );
+		if ( arr.length > 0 ) {
+			return Boolean.parseBoolean( info.get( GameInfo.Key.favorite )[0] );		
+		}
+		return false;
+	}
+	
+	public Game setVersion( String value ) {
+		if ( value.charAt(0) != 'v') {
+			value = 'v' + value;
+		}
+		info.set( GameInfo.Key.version, value );
+		info.commit();
+		return this;
+	}
+	
+	public String getVersion() {
+		String[] list = info.get( GameInfo.Key.version );
+		if ( list.length > 0 ) {
+			String value = list[0];
+			if ( value.charAt(0) != 'v') {
+				value = 'v' + value;
+			};
+			setVersion( value );
+			return value;
+		}
+		return null;
 	}
 	
 	public boolean isCompressed() {

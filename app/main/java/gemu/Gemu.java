@@ -26,6 +26,7 @@ public class Gemu {
 				 new MainFrame( gamels );
 			}
 		});
+		
 	}	
 	
 	private void findGames( File file ) {		
