@@ -49,7 +49,9 @@ public class GameInfo {
 				}
 				
 				if ( inQuotes ) {
-					if ( ch != '"') { str.append( ch ); } 
+					if ( ch != '"') { 
+						str.append( ch ); 
+					} 
 				} else {					
 					if ( isWordDelimiter( ch ) ) {						
 						if ( str.length() > 0 ) {							

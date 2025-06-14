@@ -5,12 +5,16 @@ import gemu.file.*;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Set;      
+import java.util.Set;     
+import java.util.TreeSet;     
 import java.util.HashSet;
 
 public class Game {
 	private GameInfo info;
 	private static String[] screenshotNames = new String[]{ "screenshot", "capture" };
+	
+	public static final Set<String> tagsCollection = new TreeSet<String>();
+	
 	public static final int COMPRESSION_STATE_FREE = 0;
 	public static final int COMPRESSION_STATE_COMPRESSING = 1;
 	public static final int COMPRESSION_STATE_DECOMPRESSING = -1;
@@ -23,12 +27,21 @@ public class Game {
 		}
 		setLauncher( launcher ).
 		setFavorite( false );
+		
+		addTagsToCollection();
+	}
+	
+	private void addTagsToCollection() {
+		for ( String s : getTags() ) {
+			Game.tagsCollection.add( s );
+		}
 	}
 	
 	public Game( CompactLauncher launcher ) {		
 		this.info = new GameInfo( launcher.getParentRootFile().getParentFolder() );
 		setLauncher( launcher ).
-		setFavorite( false );
+		setFavorite( false ); 
+		addTagsToCollection();
 	}
 	
 	public Game( GameInfo info ) {
@@ -50,7 +63,8 @@ public class Game {
 				
 				}
 			});
-		}
+		}  
+		addTagsToCollection();
 	}
 	
 	
@@ -94,7 +108,11 @@ public class Game {
 		}		
 		return getFolder().getName();
 	}
-	
+	public Game removeTag( String tag ) {
+		info.modif( GameInfo.Key.tags ).remove( tag );
+		info.commit();
+		return this;
+	}
 	public Game addTag( String tag ) {
 		info.add( GameInfo.Key.tags, tag );
 		info.commit();

@@ -1,5 +1,6 @@
 package gemu.frame.main.gamepanel;
 
+import gemu.frame.tagging.TaggingFrame;
 import gemu.game.Game;
 import gemu.system.*;
 
@@ -12,6 +13,7 @@ class PopupMenu extends JPopupMenu {
 		JMenuItem compress;
 		JMenuItem decompress;
 		JMenuItem openFolder;
+		JMenuItem addTags;
 		
 		GamePanel gamePanel;
 		
@@ -24,7 +26,8 @@ class PopupMenu extends JPopupMenu {
 				play = new JMenuItem("Play Game"),
 				compress = new JMenuItem("Compress"),
 				decompress = new JMenuItem("Extract"),
-				openFolder = new JMenuItem("Open Folder")
+				openFolder = new JMenuItem("Open Folder"),
+				addTags = new JMenuItem("Tagging")
 			};
 			
 			for ( JMenuItem item : items ) {
@@ -78,6 +81,13 @@ class PopupMenu extends JPopupMenu {
 				@Override
 				public void actionPerformed( ActionEvent e ) {
 					gamePanel.getGame().openFolder();
+				}
+			});
+			
+			addTags.addActionListener( new ActionListener() {
+				@Override
+				public void actionPerformed( ActionEvent e ) {
+					new TaggingFrame( gamePanel.getGame() );
 				}
 			});
 		}

@@ -20,6 +20,8 @@ public class Gemu {
 	
 	Gemu( Folder folder ) {		
 		findGames( folder );
+		moveFavoritesToTop();
+		
 		SwingUtilities.invokeLater( new Runnable() {
 			@Override
 			public void run () {
@@ -27,7 +29,23 @@ public class Gemu {
 			}
 		});
 		
-	}	
+	}
+	
+	private void moveFavoritesToTop() {
+		int f = 0;
+		for ( int i = 0; i < gamels.size(); i++ ) {
+			Game gm = gamels.get(i);
+			
+			if( gm.isFavorite() ) {
+				if (i != f ) {     				
+					Game tmp = gamels.get(f);
+					gamels.set( i, tmp );
+					gamels.set( f, gm );					
+				}                       				
+				f ++ ;
+			}         
+		}
+	}
 	
 	private void findGames( File file ) {		
 		if ( file.isDirectory() || CompactFile.isCompactFile( file ) ) {

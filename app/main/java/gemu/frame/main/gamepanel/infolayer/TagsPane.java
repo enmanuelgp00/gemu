@@ -1,8 +1,10 @@
 package gemu.frame.main.gamepanel.infolayer;
 
+import gemu.frame.tagging.TaggingFrame;
 import gemu.game.Game;
 import javax.swing.*;
-import java.awt.*;
+import java.awt.*;    
+import java.awt.event.*;
 
 class TagsPane extends JPanel {
 		Game game;
@@ -14,7 +16,7 @@ class TagsPane extends JPanel {
 			
 			this.game = game;
 			update();
-			setPreferredSize( new Dimension( 143, 50 ));
+			setPreferredSize( new Dimension( 143, 73 ));
 			setMaximumSize( getPreferredSize() );
 		}
 		/*
@@ -43,7 +45,26 @@ class TagsPane extends JPanel {
 		public void update() {
 			removeAll();
 			for ( String tag : game.getTags() ) {
-				add( new Tag( tag ) );
+				add( new Tag( tag ) {
+					{
+						addMouseListener( new MouseAdapter() {
+							@Override
+							public void mouseEntered( MouseEvent e ) {
+								setBackground( Color.WHITE );
+							}                                  
+							@Override
+							public void mouseExited( MouseEvent e  ) {  
+								setBackground( Color.PINK );
+							}
+							@Override
+							public void mousePressed( MouseEvent e ) {
+								if ( SwingUtilities.isLeftMouseButton(e) ) {
+									new TaggingFrame( game );
+								}
+							}
+						});
+					}
+				} );
 			}
 		}
 	}
