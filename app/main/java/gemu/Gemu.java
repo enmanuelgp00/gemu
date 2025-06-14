@@ -15,7 +15,7 @@ import java.util.Scanner;
 
 public class Gemu {
 	File ignoreFolder = new File("") ;
-	
+	File moreFileContainer =  new File("");
 	private List<Game> gamels = new ArrayList<Game>();
 	
 	Gemu( Folder folder ) {		
@@ -49,77 +49,112 @@ public class Gemu {
 	
 	private void findGames( File file ) {		
 		if ( file.isDirectory() || CompactFile.isCompactFile( file ) ) {
-		
-			if( !Game.hasPossibleGame( file , onPossibleGameFoundListener ) ) {
-			
+			if( !Games.hasPossibleGame( file , onPossibleGameFoundListener ) ) {
 				if ( file.isDirectory() && !file.matchesPath( ignoreFolder ) ) {
-				
+					System.out.println( file.matchesPath( moreFileContainer ) );
 					for ( File f : file.listFiles() ) {
 						findGames( f );
 					}				
-				}			
-			}				
-		} 
+				} 
+			}
+			
+			if ( file.matchesPath( moreFileContainer ) ) {
+				for ( File sf : file.listFiles() ) {
+					if ( sf.isDirectory()) {
+						findGames( sf );
+					}
+				}
+			}
+		}
 	}
 	
-	Game.OnPossibleGameFoundListener onPossibleGameFoundListener = new Game.OnPossibleGameFoundListener() {
+	Games.OnPossibleGameFoundListener onPossibleGameFoundListener = new Games.OnPossibleGameFoundListener() {
 		@Override
 		public void onGameFound( Game game ) {
 			gamels.add(game);
-		}
+		}		
+		
 		public void onIgnoreFileFound( File f ) {
 			System.out.println( f.getParentFile() + "\\ --> [ IGNORED ]");
 			ignoreFolder = f.getParentFile();
 		}
+		
 		@Override
 		public void onLauncherListFound( List<Launcher> launchers ) {
-			Scanner scan = new Scanner( System.in );
-			String answer = null;
-			File container = null;
-			if ( CompactFile.isCompactFile( launchers.get(0))) {
-				container = new CompactFile( launchers.get(0)).getParentRootFile();
-			} else {
-				container =  launchers.get(0).getParentFile();
-			}
-			System.out.println("[ " + launchers.size() + " ] Launchers Found in : " + container );
-			System.out.println("Would you like to define this folder as a Game ? [ y / n ]");
-			if( ( answer = scan.nextLine() ).equals("y") ) {
-				int index = -1;
-				while( 0 > index || index > launchers.size() ) {
-					int i = 0;
-					System.out.println("Please, select which is the main launcher");
-					for ( Launcher l : launchers ) {
-						System.out.println("[" + i + "] " + l );
-						i++;
-					}
-					try {
-						index = scan.nextInt();
-					} catch ( Exception e ) {}
-				}
-				
-				gamels.add( new Game( launchers.get(index)));
-			} else {
-				System.out.println("Would you like to create an ignore file ? [ y / n ]");
-				if ( ( answer = scan.nextLine() ).equals("y") ) {
-					if ( CompactFile.isCompactFile ( container ) ) {
-						container = container.getParentFile();						
-						
-						try {                                                         						
-							GameInfo.createIgnoreFileIn( new Folder ( container ) );
-							System.out.println("An ignore file was created in folder : " + container );	
-						
-						} catch ( IOException e ) {
-							System.out.println( e.getMessage() );
-							System.out.println("Error: counld not create a ignore file");
-						}
-					}
-					
-				}
-			}
-			
-			
+			handleNewLaunchers( launchers );
+		}
+		
+		@Override
+		public void onCompactLauncherListFound( List<CompactLauncher> launchers ) {
+			handleNewCompactLaunchers( launchers );
+		}
+		@Override
+		public void onMoreFileFound( File file ) {   			
+			moreFileContainer = file.getParentFile();
 		}
 	};
+	
+	
+	private void handleNewCompactLaunchers( List<CompactLauncher> launchers ) {
+		List<Launcher> list = new ArrayList<Launcher>();
+		for ( CompactLauncher l : launchers ) {
+			list.add( new Launcher(l) );
+		}
+		handleNewLaunchers( list );
+	}
+	
+	private void handleNewLaunchers( List<Launcher> launchers ) {
+		Scanner scan = new Scanner( System.in );
+		String answer = null;
+		File container = null;
+		
+		if ( CompactFile.isCompactFile( launchers.get(0))) {
+			container = new CompactFile( launchers.get(0)).getParentRootFile();
+		} else {
+			container =  launchers.get(0).getParentFile();
+		}
+		System.out.println("[ " + launchers.size() + " ] Launchers Found in : " + container );
+		System.out.println("Would you like to define this folder as a Game ? [ y / n ]");
+		if( ( answer = scan.nextLine() ).equals("y") ) {
+			int index = -1;
+			while( 0 > index || index > launchers.size() ) {
+				int i = 0;
+				System.out.println("Please, select which is the main launcher");
+				for ( Launcher l : launchers ) {
+					System.out.println("[" + i + "] " + l );
+					i++;
+				}
+				try {
+					index = scan.nextInt();
+				} catch ( Exception e ) {}
+			}
+			
+			Launcher launcher = launchers.get(index);
+			if ( CompactFile.isCompactFile( launcher ) ) {
+				gamels.add( new Game( new CompactLauncher( launcher )));
+			} else {
+				gamels.add( new Game( launcher ));
+			}
+			
+		} else {
+			System.out.println("Would you like to create an ignore file ? [ y / n ]");
+			if ( ( answer = scan.nextLine() ).equals("y") ) {
+				if ( CompactFile.isCompactFile ( container ) ) {
+					container = container.getParentFile();						
+					
+					try {                                                         						
+						GameInfo.createIgnoreFileIn( new Folder ( container ) );
+						System.out.println("An ignore file was created in folder : " + container );	
+					
+					} catch ( IOException e ) {
+						System.out.println( e.getMessage() );
+						System.out.println("Error: counld not create a ignore file");
+					}
+				}
+				
+			}
+		}
+	}
 	
 	public static void main ( String[] args ) {		
 		new Gemu( new Folder(args[0]) );

@@ -5,26 +5,64 @@ import gemu.file.File;
 import gemu.file.*;
 import java.io.*;
 
-public class GameInfo {
+public class GameInfo extends InfoFile {
 
-	static final String NAME_FILE = "gm.info"; 
-	static final String NAME_IGNORE = "gm.ignore";
+	static final String IGNORE = ".gemuignore";
 	
 	private HashMap<String, List<String>> map = new HashMap<String, List<String>>();
 	
 	Folder folder;
 	File file;
 	
-	GameInfo( Folder folder ) {
-		this.folder = folder;
-		file = new File( folder.getAbsolutePath() + "\\" + NAME_FILE );
+	private GameInfo( File file ) {  
+		super( file );
 		for (Key k : Key.set ) {
 			map.put( k.value, new ArrayList<String>() );
+		}	
+	}
+	
+	GameInfo( Launcher launcher ) {
+		super( launcher );
+		try {
+			if ( getFile().exists() ) {
+				 throw new IOException();
+			}
+			for (Key k : Key.set ) {
+				map.put( k.value, new ArrayList<String>() );
+			}
+		} catch ( Exception e ) {
+			e.printStackTrace();
+			System.exit( 1 );
+		}
+	}
+	
+	GameInfo( CompactLauncher compactLauncher ) {
+		super( compactLauncher.getParentRootFile() );
+		try {
+			if ( getFile().exists() ) {
+				 throw new IOException();
+			}
+			for (Key k : Key.set ) {
+				map.put( k.value, new ArrayList<String>() );
+			}
+		} catch ( Exception e ) {
+			System.out.println( compactLauncher );
+			e.printStackTrace();
+			System.exit( 1 );
 		}
 	}
 	
 	public static GameInfo parse( File file ) {
-		GameInfo info = new GameInfo( file.getParentFolder() );
+		try {			
+			if ( !GameInfo.isGameInfoFile( file ) && !file.exists() ) {
+				throw new Exception();
+			}
+		} catch ( Exception e ) {
+			System.out.println( file + " is not a valid info file ");
+			e.printStackTrace();
+			System.exit( 1 );		
+		}
+		GameInfo info = new GameInfo( file );
 		try {
 			BufferedReader reader = new BufferedReader( new FileReader( file ) );
 			int charCode;
@@ -93,7 +131,7 @@ public class GameInfo {
 		return false;
 	}
 	public static void createIgnoreFileIn( Folder folder ) throws IOException {
-		File ignoreFile = new File( folder.getAbsolutePath() + "\\" + NAME_IGNORE );
+		File ignoreFile = new File( folder.getAbsolutePath() + "\\" + IGNORE );
 		boolean isCreated = ignoreFile.createNewFile();
 		if ( !isCreated ) {
 			throw new IOException();
@@ -109,25 +147,10 @@ public class GameInfo {
 	}
 	
 	public static boolean isIgnoreFile( File file ) {
-		return file.getName().equals( NAME_IGNORE );
+		return file.getName().equals( IGNORE );
 	}
 	public static boolean isGameInfoFile( File file ) {
-		return file.getName().equals( NAME_FILE );
-	}
-	public void setFolder( Folder folder ) {;
-		this.folder = folder;    
-		File f = new File ( folder.getAbsolutePath() + "\\" + NAME_FILE );
-		getFile().renameTo( f );
-		setFile( f );		
-	}
-	private void setFile( File file) {
-		this.file = file;
-	}
-	public File getFile() {
-		return this.file;
-	}
-	public Folder getFolder() {
-		return this.folder;
+		return file.hasExtension( EXTENSION ); //getName().equals( NAME_FILE );
 	}
 	
 	void set( Key key, String value ) {

@@ -7,11 +7,11 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Set;     
 import java.util.TreeSet;     
-import java.util.HashSet;
+import java.util.HashSet;     
+import java.util.HashMap;
 
 public class Game {
 	private GameInfo info;
-	private static String[] screenshotNames = new String[]{ "screenshot", "capture" };
 	
 	public static final Set<String> tagsCollection = new TreeSet<String>();
 	
@@ -20,11 +20,7 @@ public class Game {
 	public static final int COMPRESSION_STATE_DECOMPRESSING = -1;
 	
 	public Game( Launcher launcher ) {
-		if ( CompactFile.isCompactFile( launcher )) {
-			this.info = new GameInfo( new CompactLauncher( launcher ).getParentRootFile().getParentFolder() );
-		} else {
-			this.info = new GameInfo( launcher.getParentFolder() );
-		}
+		this.info = new GameInfo( launcher );
 		setLauncher( launcher ).
 		setFavorite( false );
 		
@@ -38,7 +34,7 @@ public class Game {
 	}
 	
 	public Game( CompactLauncher launcher ) {		
-		this.info = new GameInfo( launcher.getParentRootFile().getParentFolder() );
+		this.info = new GameInfo( launcher );
 		setLauncher( launcher ).
 		setFavorite( false ); 
 		addTagsToCollection();
@@ -67,15 +63,6 @@ public class Game {
 		addTagsToCollection();
 	}
 	
-	
-	public static boolean isScreenshot( File f ) {
-		for ( String n : screenshotNames ) {
-			if ( f.getName().contains( n ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
 	
 	public Game setLauncher( Launcher launcher ) {
 		String path = launcher.getAbsolutePath().substring( getFolder().getAbsolutePath().length() );
@@ -151,6 +138,10 @@ public class Game {
 		return screenshots;
 	}
 	public long length() {
+		Launcher launcher = getLauncher();
+		if ( CompactFile.isCompactFile( launcher )) {
+			return new CompactFile( launcher ).getParentRootFile().length();
+		}
 		return getFolder().length();
 	}
 	
@@ -242,7 +233,7 @@ public class Game {
 						listener.onSuccess();
 					}
 					
-				}, "screenshot.jpg", GameInfo.NAME_FILE ) );
+				}, "screenshot.jpg", "." + GameInfo.EXTENSION ) );
 			
 				
 			} else {
@@ -275,7 +266,9 @@ public class Game {
 						String newPath = oldPath.substring( root.length() );
 						
 						if ( !getFolder().matchesPath( folder ) ) {
-							setFolder( folder );
+							System.out.println( "Relocating folder ..." + getFolder() );
+							setFolder( folder );                                        
+							System.out.println( getFolder() );
 						}
 						
 						setLauncher( new Launcher( getFolder().getAbsolutePath() + "/" + newPath ) );
@@ -291,73 +284,5 @@ public class Game {
 	}
 	
 	
-	public static boolean hasPossibleGame( File file, OnPossibleGameFoundListener listener ) {
 	
-		List<Launcher> launcherLs = new ArrayList<Launcher>();
-		List<CompactLauncher> compactLauncherList = new ArrayList<CompactLauncher>();
-		Game game = null;
-		
-		if ( CompactFile.isCompactFile( file ) ) {
-			CompactFile compactFile = new CompactFile( file );
-			
-			if ( compactFile.isRootFile() ) {
-			
-				for ( CompactFile f : compactFile.listFiles() ) {
-				
-					if ( Launcher.isLauncherFile( f ) ) {
-					
-						launcherLs.add( new Launcher( f ) );
-					}
-				} 			
-			}
-			
-		} else {
-			for ( File f : file.listFiles() ) {
-			
-				if ( GameInfo.isIgnoreFile( f ) ) {
-					listener.onIgnoreFileFound( f );
-					return false;
-					
-				} else if ( GameInfo.isGameInfoFile( f ) ) {
-					game = new Game( GameInfo.parse( f ) );
-				
-				} else if ( Launcher.isLauncherFile( f ) ) {
-					launcherLs.add( new Launcher( f ) );
-					
-				} else  if ( Game.isScreenshot( f ) ) {					
-					
-					if ( game != null ) {
-					
-						if ( !new HashSet<File>( Arrays.<File>asList( game.getScreenshots() )  ).contains(f)) {
-							System.out.println("New screenshot in game : [ " + game.getName() + " ] ");
-							game.addScreenshot( f );
-						}					
-					}
-				}
-			}
-		}
-		
-		if ( game != null ) {
-			listener.onGameFound( game );
-			return true;
-		}
-		
-		if ( launcherLs.size() > 0 ) {
-			if ( launcherLs.size() == 1 ) {
-				listener.onGameFound( new Game( launcherLs.get( 0 ) ) );
-				return true;
-			}
-			
-			listener.onLauncherListFound( launcherLs );
-			return true;
-		}
-		
-		return false;
-	}
-	
-	public interface OnPossibleGameFoundListener {
-		public void onGameFound( Game game );
-		public void onLauncherListFound( List<Launcher> launchers );
-		public void onIgnoreFileFound( File file );
-	}
 }

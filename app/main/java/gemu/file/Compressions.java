@@ -110,15 +110,25 @@ public final class Compressions {
 			OnDecompressListener listener = (OnDecompressListener) getListener();
 			listener.onStart();
 			
-			File file = getFile(); // this is 7z 
-			Folder folder = file.getParentFolder();
+			File file = getFile(); // this is the 7z, zip, rar
+			File folder = file.getParentFolder();
 			
 			while( ( folder.hasSameName( folder.getParentFile() ) )) {			
 				folder = folder.getParentFolder();
 			}
+			int count = 0;
+			for ( File f : folder.listFiles() ) {
+				if ( CompactFile.isCompactFile(f) ) {
+					count ++ ;
+				}
+				if ( count > 1 ) {
+					folder = new File( folder.getAbsolutePath() + "\\" + file.getBaseName() );
+					break;
+				}
+			}
 			
 			if ( Shell.exec( new Shell.Command( "7z", "x", "-y", "-o" + folder.getAbsolutePath() , file.getAbsolutePath() ) ) == 0 ) {
-				listener.onSuccess( folder );
+				listener.onSuccess( new Folder( folder ) );
 				
 				if ( file.delete() ) {
 					System.out.println( "[ Source file deleted : " + file + " ]" );

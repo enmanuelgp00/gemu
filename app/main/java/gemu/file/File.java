@@ -52,10 +52,15 @@ public class File extends java.io.File {
 		}
 		return null;
 	}
-	
+	public String getBaseName() {
+		return getName().substring( 0, getName().lastIndexOf('.'));
+	}
 	@Override
 	public File[] listFiles() {
 		java.io.File[] pfiles = super.listFiles();
+		if ( pfiles == null ) {
+			return null;
+		}
 		File[] files = new File[ pfiles.length ];
 		for ( int i = 0; i < pfiles.length; i++ ) {
 			files[i] = new File( pfiles[i].getAbsolutePath() );
