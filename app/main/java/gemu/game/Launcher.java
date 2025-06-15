@@ -16,7 +16,7 @@ public class Launcher extends File {
 	
 	public static boolean isLauncherFile( File file ) {
 		if ( file.hasExtension("exe") ) {
-			String[] exceptions = new String[] { "setting", "crash", "helper", "setup", "uninstall" };		
+			String[] exceptions = new String[] { "config", "setting", "crash", "helper", "setup", "unins", "update" };		
 			String name = file.getName();
 			
 			for (String e : exceptions ) {
@@ -65,7 +65,7 @@ public class Launcher extends File {
 					@Override
 					public void printStackTrace() {
 						super.printStackTrace();
-						System.out.println( "Launcher does not exists : " + getAbsolutePath() );
+						Log.error( getAbsolutePath() + " : this launcher does not exists ");
 					}
 				};
 			}

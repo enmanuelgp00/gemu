@@ -92,7 +92,12 @@ public class Game {
 		String[] names = info.get( GameInfo.Key.name );
 		if ( names.length > 0 ) { 
 			return names[0];
-		}		
+		}
+		Launcher launcher = getLauncher();
+		if ( CompactFile.isCompactFile( launcher ) ) {
+			return new CompactFile( launcher ).getParentRootFile().getBaseName();
+		}
+		
 		return getFolder().getName();
 	}
 	public Game removeTag( String tag ) {
@@ -225,15 +230,19 @@ public class Game {
 						listener.onError(); 
 					}
 					@Override
-					public void onSuccess( CompactFile file ) {
-						String absolutePath = launcher.getAbsolutePath();
-						String parentAbsPath = folder.getAbsolutePath();
-						String path = absolutePath.substring( parentAbsPath.length() );
-						setLauncher( new CompactLauncher( file.getAbsolutePath() + "/" + path ));
+					public void onSuccess( CompactFile compactFile ) {
+					
+						for ( CompactFile f : compactFile.listFiles() ) {
+							if (f.hasSameName( launcher )) {           
+								Log.info( f + " : Relocating launcher");
+								setLauncher( new CompactLauncher( f ));
+								break;
+							}
+						}
 						listener.onSuccess();
 					}
 					
-				}, "screenshot.jpg", "." + GameInfo.EXTENSION ) );
+				}, "screenshot.jpg", "*." + GameInfo.EXTENSION ) );
 			
 				
 			} else {
@@ -252,23 +261,46 @@ public class Game {
 				Compressions.add( new Compressions.DecompressProcess( compression , new Compressions.OnDecompressListener() {
 					@Override
 					public void onStart() {					
-						System.out.println("\n[ Decompressing : " + getName() + " ]" );
+						Log.info("\n[ Decompressing : " + getName() + " ]" );
 						listener.onStart();
+					}
+					@Override
+					public void onSingleCompactFileFoundIn( Folder folder ) {
+						File more = Games.defineMoreFileIn( folder );
+						if ( !more.exists() ) {
+							try {
+								more.createNewFile();
+								Log.info("More than a single compact file found : more sign created");
+							
+							} catch ( Exception e) {
+								Log.error( e.getMessage() );
+								e.printStackTrace();
+							}
+						}
+						
+					}                                                    
+					@Override
+					public void onNonSingleCompactFileFoundIn( Folder folder ) {
+						File more = Games.defineMoreFileIn( folder );
+						if ( more.exists() ) {
+							more.delete();                                                            
+							Log.info("Single compact file found : more sign delete");
+						}
 					}
 					@Override
 					public void onError() {
 						listener.onError();
 					}
 					@Override
-					public void onSuccess( Folder folder ) {						
+					public void onSuccess( Folder folder ) {
+						
 						String oldPath = compression.getAbsolutePath();
 						String root = compression.getParentRootFile().getAbsolutePath();
 						String newPath = oldPath.substring( root.length() );
 						
 						if ( !getFolder().matchesPath( folder ) ) {
-							System.out.println( "Relocating folder ..." + getFolder() );
-							setFolder( folder );                                        
-							System.out.println( getFolder() );
+							Log.info(getFolder() + " : Relocating folder");
+							setFolder( folder );               
 						}
 						
 						setLauncher( new Launcher( getFolder().getAbsolutePath() + "/" + newPath ) );

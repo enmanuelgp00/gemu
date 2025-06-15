@@ -64,7 +64,7 @@ public class GameInfo extends InfoFile {
 		}
 		GameInfo info = new GameInfo( file );
 		try {
-			BufferedReader reader = new BufferedReader( new FileReader( file ) );
+			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( file ), "utf-8"  ) );
 			int charCode;
 			String key = null;
 			String value = null;

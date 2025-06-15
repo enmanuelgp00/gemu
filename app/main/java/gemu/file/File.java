@@ -45,7 +45,6 @@ public class File extends java.io.File {
 	}
 	public String getNamedExtension() {
 		String name = getName();
-		System.out.println( isDirectory() );
 		if ( name.contains(".")) {
 			String extension = name.substring( name.lastIndexOf('.') + 1 );
 			return extension;

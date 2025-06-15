@@ -47,11 +47,11 @@ public class Gemu {
 		}
 	}
 	
-	private void findGames( File file ) {		
+	private void findGames( File file ) {
+	
 		if ( file.isDirectory() || CompactFile.isCompactFile( file ) ) {
 			if( !Games.hasPossibleGame( file , onPossibleGameFoundListener ) ) {
 				if ( file.isDirectory() && !file.matchesPath( ignoreFolder ) ) {
-					System.out.println( file.matchesPath( moreFileContainer ) );
 					for ( File f : file.listFiles() ) {
 						findGames( f );
 					}				
@@ -116,24 +116,29 @@ public class Gemu {
 		System.out.println("[ " + launchers.size() + " ] Launchers Found in : " + container );
 		System.out.println("Would you like to define this folder as a Game ? [ y / n ]");
 		if( ( answer = scan.nextLine() ).equals("y") ) {
-			int index = -1;
-			while( 0 > index || index > launchers.size() ) {
+			int index = -2;
+			while( -1 > index || index > launchers.size() ) {
 				int i = 0;
 				System.out.println("Please, select which is the main launcher");
+				System.out.println("[ -1 ] { Cancel }");
 				for ( Launcher l : launchers ) {
-					System.out.println("[" + i + "] " + l );
-					i++;
+					System.out.println( String.format("[ %2d ] %s", i, l.getAbsolutePath() ));
+					i ++ ;
 				}
 				try {
 					index = scan.nextInt();
 				} catch ( Exception e ) {}
 			}
 			
-			Launcher launcher = launchers.get(index);
-			if ( CompactFile.isCompactFile( launcher ) ) {
-				gamels.add( new Game( new CompactLauncher( launcher )));
-			} else {
-				gamels.add( new Game( launcher ));
+			if ( index != -1 ) {
+			
+				Launcher launcher = launchers.get(index);
+				if ( CompactFile.isCompactFile( launcher ) ) {
+					gamels.add( new Game( new CompactLauncher( launcher )));
+				} else {
+					gamels.add( new Game( launcher ));
+				}
+			
 			}
 			
 		} else {

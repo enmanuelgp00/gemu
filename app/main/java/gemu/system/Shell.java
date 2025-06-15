@@ -17,8 +17,8 @@ public final class Shell {
 				listener.onProcessStarted( process );												 
 			}
 			
-			String japaneseDecoder = "shift_jis";
-			BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream(), japaneseDecoder) );
+			String decoder = "Shift_JIS";
+			BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream(), decoder) );
 			String line = null;
 			while ( ( line = reader.readLine() ) != null ) {
 				listener.onStreamLineRead( line );

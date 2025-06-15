@@ -54,7 +54,7 @@ public final class Compressions {
 		void checkAnonymous() {} 		
 		@Override
 		public void start() {
-			OnCompressListener listener = (OnCompressListener) getListener();
+			OnCompressListener listener = ( OnCompressListener ) getListener();
 			listener.onStart();
 			
 			File file = getFile();
@@ -72,7 +72,7 @@ public final class Compressions {
 			File archive = new File( file.getAbsolutePath() + "\\" + file.getName() + ".7z" );
 			
 			if ( archive.exists() ) {
-				System.out.println("[ ERROR ] Compression process : \"" + archive + "\" already exists ");
+				Log.error(" Compression process : \"" + archive + "\" already exists ");
 				listener.onError();
 				
 			} else {
@@ -85,7 +85,6 @@ public final class Compressions {
 				List<String> cmdls = new ArrayList<String>( Arrays.<String>asList( cmd.toString().split("\\s+")) );
 				cmdls.add( archive.getAbsolutePath() );
 				cmdls.add( src + "\\." );
-				
 				if ( Shell.exec( new Shell.Command( null, cmdls.toArray( new String[cmdls.size()]) )) == 0 ) {	
 					listener.onSuccess( new CompactFile( archive ) );
 					src.delete();
@@ -116,24 +115,33 @@ public final class Compressions {
 			while( ( folder.hasSameName( folder.getParentFile() ) )) {			
 				folder = folder.getParentFolder();
 			}
+			
 			int count = 0;
 			for ( File f : folder.listFiles() ) {
 				if ( CompactFile.isCompactFile(f) ) {
+					System.out.println( f + " is compact file ");
 					count ++ ;
 				}
+				
 				if ( count > 1 ) {
+					listener.onNonSingleCompactFileFoundIn( new Folder ( folder ) );
 					folder = new File( folder.getAbsolutePath() + "\\" + file.getBaseName() );
+					
 					break;
 				}
+				
 			}
-			
+			if ( count == 1 ) {                            
+				listener.onSingleCompactFileFoundIn( new Folder( folder ) );				
+			}
 			if ( Shell.exec( new Shell.Command( "7z", "x", "-y", "-o" + folder.getAbsolutePath() , file.getAbsolutePath() ) ) == 0 ) {
-				listener.onSuccess( new Folder( folder ) );
+				
+				listener.onSuccess( new Folder( folder ));
 				
 				if ( file.delete() ) {
-					System.out.println( "[ Source file deleted : " + file + " ]" );
+					Log.info( "Source file deleted : " + file + "" );
 				} else {
-					System.out.println("[ There was an error trying to delete : " + file + " after decompression ]");
+					Log.error("There was an error trying to delete : " + file + " after decompression");
 				}
 				
 			} else {
@@ -184,5 +192,7 @@ public final class Compressions {
 	
 	public static abstract class OnDecompressListener extends OnSuccessListener {
 		public abstract void onSuccess( Folder folder );
+		public abstract void onSingleCompactFileFoundIn( Folder folder );
+		public abstract void onNonSingleCompactFileFoundIn( Folder folder );
 	}
 }

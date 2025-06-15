@@ -17,6 +17,9 @@ public final class Games {
 	private static String[] screenshotNames = new String[]{ "screenshot", "capture" };	
 	public static String MORE_FILE_NAME = ".more";
 	
+	public static File defineMoreFileIn( Folder folder ) {
+		return new File( folder.getAbsolutePath() + "\\" + MORE_FILE_NAME );
+	}
 	public static boolean isScreenshot( File f ) {
 		for ( String n : screenshotNames ) {
 			if ( f.getName().contains( n ) ) {
@@ -26,21 +29,13 @@ public final class Games {
 		return false;
 	}
 	
-	public static void createMoreFileIn( Folder folder ) {
-		try {
-			new File( folder.getAbsolutePath() + "\\" + MORE_FILE_NAME ).createNewFile();		
-		} catch ( IOException e ) {
-			e.printStackTrace();
-			System.exit( 1 );
-		}
-	}
-	
 	public static boolean isMoreFile( File file ) {
 		return file.getName().equals( MORE_FILE_NAME );
 	}
 	
 	public static boolean hasPossibleGame( File file, OnPossibleGameFoundListener listener ) {
 		boolean value = false;
+		boolean hasDirectories = false;
 		
 		List<File> screenshots = new ArrayList<File>();
 		List<Launcher> launcherLs = new ArrayList<Launcher>();
@@ -64,7 +59,9 @@ public final class Games {
 							compactLaunchers.add( new CompactLauncher( cf ) );
 						}
 					}
-					compactLaunchersMap.put( compactFile , compactLaunchers );
+					if ( compactLaunchers.size() > 0 ) {
+						compactLaunchersMap.put( compactFile , compactLaunchers );					
+					}
 				}
 			
 			} else if ( GameInfo.isGameInfoFile( f ) ) {
@@ -79,13 +76,25 @@ public final class Games {
 			} else if ( Launcher.isLauncherFile( f ) ) {
 				launcherLs.add( new Launcher( f ) );
 				
-			} else  if ( Games.isScreenshot( f ) ) {
+			} else if ( Games.isScreenshot( f ) ) {
 				screenshots.add( f );
-			} else  if ( Games.isMoreFile( f ) ) {
+			} else if ( Games.isMoreFile( f ) ) {
 				listener.onMoreFileFound( f );
+			} else if ( f.isDirectory() ) {
+				hasDirectories = true;
 			}
 		}
 		
+		if ( hasDirectories && compactGames.size() > 2 ) {
+			File more = Games.defineMoreFileIn( new Folder ( file ) );
+			if ( !more.exists() ) {
+				try {
+					more.createNewFile();
+				} catch ( Exception e ) {
+					Log.error( e.getMessage() );
+				}
+			}
+		}
 		
 		if ( games.size() > 0 ) {
 			if ( games.size() == 1 ) {
@@ -108,9 +117,21 @@ public final class Games {
 			value = true;
 		}
 		
-		if ( launcherLs.size() > 0 ) {
+		if ( launcherLs.size() > 0 ) { 
 			if ( launcherLs.size() == 1 ) {
-				listener.onGameFound( new Game( launcherLs.get( 0 ) ) );
+				Launcher l = launcherLs.get( 0 ); 
+				boolean gameFound = false;
+				
+				for ( Game g : games ) {
+					if ( g.getLauncher().matchesPath( l ) ) {
+						gameFound = true;
+						break;
+					}
+				}
+				
+				if ( !gameFound ) {
+					listener.onGameFound( new Game( l ));
+				}
 				return true;
 			}
 			
