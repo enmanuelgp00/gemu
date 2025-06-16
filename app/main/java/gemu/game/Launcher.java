@@ -71,7 +71,8 @@ public class Launcher extends File {
 			}
 			
 			if ( CompactFile.isCompactFile( this ) ) {
-				if ( !new CompactLauncher( this ).exists() ) {
+			
+				/*if ( !new CompactLauncher( this ).exists() ) {
 					throw new Exception() {
 						@Override
 						public void printStackTrace() {
@@ -79,7 +80,8 @@ public class Launcher extends File {
 							Log.error( getAbsolutePath() + " : this launcher does not exists ");
 						}
 					};
-				}
+				}*/
+				
 			} else {
 				if ( !exists() ) {
 					throw new Exception() {

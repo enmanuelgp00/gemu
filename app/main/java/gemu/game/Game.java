@@ -258,7 +258,6 @@ public class Game {
 			if ( isCompressed() ) { 
 			
 				CompactFile compression = new CompactFile( getLauncher() );
-				Launcher launcher = getLauncher();
 				
 				Compressions.add( new Compressions.DecompressProcess( compression , new Compressions.OnDecompressListener() {
 					@Override
@@ -298,18 +297,15 @@ public class Game {
 						listener.onError();
 					}
 					@Override
-					public void onSuccess( Folder folder ) {
+					public void onSuccess( Folder folder ) {  
+						
 						if ( !getFolder().matchesPath( folder ) ) {
 							setFolder( folder );  		
 						}
 						
-						for ( File f : folder.listFiles() ) {
-							if ( f.hasSameName( launcher ) ) {
-								System.out.println( f );
-								setLauncher( new Launcher( f ) );
-								break;
-							}
-						}
+						File file = Files.findExactNameFile( folder, getLauncher().getName() );	
+						
+						setLauncher( new Launcher( file ) );
 						/*
 						String oldPath = compression.getAbsolutePath();
 						String root = compression.getParentRootFile().getAbsolutePath();
