@@ -70,6 +70,7 @@ public class CompactFile extends File {
 	}
 	@Override
 	public boolean exists() {
+		System.out.println( this );
 		if ( isRootFile() ) {
 			return super.exists();
 		}

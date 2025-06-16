@@ -130,7 +130,9 @@ public final class Games {
 				}
 				
 				if ( !gameFound ) {
-					listener.onGameFound( new Game( l ));
+					Game game = new Game( l );
+					listener.onGameFound( game ); 
+					Log.info( game.getName() + " : New game found");
 				}
 				return true;
 			}
@@ -145,7 +147,9 @@ public final class Games {
 				if ( !compactGames.contains( key ) ) {
 					List<CompactLauncher> launchers = compactLaunchersMap.get( key );
 					if ( launchers.size() == 1 ) {
-						listener.onGameFound( new Game( launchers.get(0) ));
+						Game game = new Game( launchers.get(0) );
+						listener.onGameFound( game ); 
+						Log.info( game.getName() + " : New game found");
 					} else {
 						listener.onCompactLauncherListFound( launchers );
 					}

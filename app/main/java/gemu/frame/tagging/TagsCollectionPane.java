@@ -4,13 +4,25 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import gemu.game.Game;
+import gemu.frame.main.gamepanel.GamePanel;
 
 public class TagsCollectionPane extends JPanel {
-	TagsCollectionPane( Game game ) {
-		super();  
+	GamePanel gamePanel;
+	
+	TagsCollectionPane( GamePanel gamePanel ) {
+		super();
+		this.gamePanel = gamePanel;
+		refresh();
+		
+	}
+	public void refresh() {
+		Game game = gamePanel.getGame();
+		removeAll();
 		for ( String tag : Game.tagsCollection ) {
-			add( new TagCheckBox( game, tag ));
+			add( new TagCheckBox( gamePanel, tag ));
 		}
+		revalidate();
+		repaint();
 	}
 	/*
 	@Override

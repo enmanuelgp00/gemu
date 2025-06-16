@@ -11,6 +11,7 @@ import gemu.game.Game;
 public class MainFrame extends JFrame {
 	public MainFrame( List<Game> gamels ) {
 		add( new GameShelf( gamels ) );
+		setTitle("[ " + gamels.size() + " ] Games ");
 		setSize( 800, 600 );
 		setVisible( true );
 		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );

@@ -70,7 +70,7 @@ public class Gemu {
 	
 	Games.OnPossibleGameFoundListener onPossibleGameFoundListener = new Games.OnPossibleGameFoundListener() {
 		@Override
-		public void onGameFound( Game game ) {
+		public void onGameFound( Game game ) {			
 			gamels.add(game);
 		}		
 		
@@ -144,19 +144,14 @@ public class Gemu {
 		} else {
 			System.out.println("Would you like to create an ignore file ? [ y / n ]");
 			if ( ( answer = scan.nextLine() ).equals("y") ) {
-				if ( CompactFile.isCompactFile ( container ) ) {
-					container = container.getParentFile();						
+				try {                                                         						
+					GameInfo.createIgnoreFileIn( new Folder ( container ) );
+					System.out.println("An ignore file was created in folder : " + container );	
 					
-					try {                                                         						
-						GameInfo.createIgnoreFileIn( new Folder ( container ) );
-						System.out.println("An ignore file was created in folder : " + container );	
-					
-					} catch ( IOException e ) {
-						System.out.println( e.getMessage() );
-						System.out.println("Error: counld not create a ignore file");
-					}
+				} catch ( IOException e ) {
+					System.out.println( e.getMessage() );
+					System.out.println("Error: counld not create a ignore file");
 				}
-				
 			}
 		}
 	}

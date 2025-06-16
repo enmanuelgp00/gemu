@@ -115,6 +115,7 @@ public class Game {
 		return info.get( GameInfo.Key.tags );
 	}
 	
+	
 	public void play() {
 		getLauncher().run();
 	}
@@ -257,6 +258,7 @@ public class Game {
 			if ( isCompressed() ) { 
 			
 				CompactFile compression = new CompactFile( getLauncher() );
+				Launcher launcher = getLauncher();
 				
 				Compressions.add( new Compressions.DecompressProcess( compression , new Compressions.OnDecompressListener() {
 					@Override
@@ -266,6 +268,7 @@ public class Game {
 					}
 					@Override
 					public void onSingleCompactFileFoundIn( Folder folder ) {
+						/*
 						File more = Games.defineMoreFileIn( folder );
 						if ( !more.exists() ) {
 							try {
@@ -277,15 +280,18 @@ public class Game {
 								e.printStackTrace();
 							}
 						}
+						*/
 						
 					}                                                    
 					@Override
 					public void onNonSingleCompactFileFoundIn( Folder folder ) {
+						/*
 						File more = Games.defineMoreFileIn( folder );
 						if ( more.exists() ) {
 							more.delete();                                                            
 							Log.info("Single compact file found : more sign delete");
 						}
+						*/
 					}
 					@Override
 					public void onError() {
@@ -293,7 +299,17 @@ public class Game {
 					}
 					@Override
 					public void onSuccess( Folder folder ) {
+						if ( !getFolder().matchesPath( folder ) ) {
+							setFolder( folder );  		
+						}
 						
+						for ( File f : folder.listFiles() ) {
+							if ( f.hasSameName( launcher ) ) {
+								setLauncher( new Launcher( f ) );
+								break;
+							}
+						}
+						/*
 						String oldPath = compression.getAbsolutePath();
 						String root = compression.getParentRootFile().getAbsolutePath();
 						String newPath = oldPath.substring( root.length() );
@@ -304,6 +320,7 @@ public class Game {
 						}
 						
 						setLauncher( new Launcher( getFolder().getAbsolutePath() + "/" + newPath ) );
+						*/
 						listener.onSuccess();
 					}
 				}));

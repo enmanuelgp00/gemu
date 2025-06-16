@@ -60,25 +60,38 @@ public class Launcher extends File {
 	private void check() {
 		 try {
 			
-			if ( !exists() && !CompactFile.isCompactFile( this ) ) {
-				throw new Exception() {
-					@Override
-					public void printStackTrace() {
-						super.printStackTrace();
-						Log.error( getAbsolutePath() + " : this launcher does not exists ");
-					}
-				};
-			}
-			
 			if ( !Launcher.isLauncherFile( this ) ) {
 				throw new Exception() {
 					@Override
 					public void printStackTrace() {
 						super.printStackTrace();
-						System.out.println( "Is not a valid launcher name : " + getName() );
+						Log.error( getName() + "Is not a valid launcher name : " );
 					}
 				};
 			}
+			
+			if ( CompactFile.isCompactFile( this ) ) {
+				/*if ( !new CompactLauncher( this ).exists() ) {
+					throw new Exception() {
+						@Override
+						public void printStackTrace() {
+							super.printStackTrace();
+							Log.error( getAbsolutePath() + " : this launcher does not exists ");
+						}
+					};
+				} */
+			} else {
+				if ( !exists() ) {
+					throw new Exception() {
+						@Override
+						public void printStackTrace() {
+							super.printStackTrace();
+							Log.error( getAbsolutePath() + " : this launcher does not exists ");
+						}
+					};
+				}
+			}
+			
 		} catch(Exception e ) {
 			e.printStackTrace();
 			System.exit( 1 );

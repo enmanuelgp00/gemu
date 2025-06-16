@@ -1,6 +1,7 @@
 package gemu.frame.tagging;
 
 import gemu.game.Game; 
+import gemu.frame.main.gamepanel.GamePanel;
 import javax.swing.event.*;
 import javax.swing.*;
 import java.awt.*;   
@@ -10,8 +11,14 @@ import java.util.HashSet;
 import java.util.Arrays;
 
 public class TagCheckBox extends JCheckBox {
-	TagCheckBox( Game game, String tag ) {
+	GamePanel gamePanel;
+	Game game;
+	
+	TagCheckBox( GamePanel gamePanel, String tag ) {
 		super( tag );
+		this.gamePanel = gamePanel;
+		this.game = gamePanel.getGame();
+		
 		Set<String> tagSet = new HashSet<String>( Arrays.<String>asList( game.getTags() ) );
 		if ( tagSet.contains( tag ) ) {
 			setSelected( true );
@@ -25,7 +32,7 @@ public class TagCheckBox extends JCheckBox {
 				} else {               
 					game.removeTag( tag );
 				}
-				
+				gamePanel.updateTags();
 			}
 		});
 	}

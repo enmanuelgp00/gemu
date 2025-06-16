@@ -22,10 +22,8 @@ public class InfoFile	{
 	}	
 	
 	public void setFolder( Folder folder ) {;
-		this.folder = folder;    
-		File f = new File ( folder.getAbsolutePath() + "\\" + file.getName());
-		getFile().renameTo( f );
-		setFile( f );		
+		getFolder().renameTo( folder );    
+		getFile().renameTo( new File ( folder.getAbsolutePath() + "\\" + file.getName()) );
 	}
 	private void setFile( File file) {
 		this.file = file;
