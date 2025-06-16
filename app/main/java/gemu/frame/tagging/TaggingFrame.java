@@ -53,7 +53,7 @@ public class TaggingFrame extends JFrame {
 								if ( !Game.tagsCollection.contains( tag ) ) {
 									System.out.println("[" + tag + "] is a new tag ");
 									Game.tagsCollection.add( tag );
-									gamePanel.updateTags();
+									gamePanel.refreshTags();
 									tagsCollectionPane.refresh();
 								}
 							}

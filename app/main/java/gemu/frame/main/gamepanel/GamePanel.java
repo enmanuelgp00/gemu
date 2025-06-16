@@ -24,7 +24,7 @@ public class GamePanel extends JPanel {
 		conditionalBackground();
 		
 		MainLayer mainLayer = new MainLayer( game );
-		infoLayer = new InfoLayer( game );
+		infoLayer = new InfoLayer( this );
 		
 		add( infoLayer );
 		add( mainLayer );               
@@ -41,12 +41,12 @@ public class GamePanel extends JPanel {
 		});
 	}
 	
-	public void updateTags() {
-		infoLayer.updateTags();
+	public void refreshTags() {
+		infoLayer.refreshTags();
 	}
 	
-	public void updateFileLength() {
-		infoLayer.updateFileLength();
+	public void refreshFileLength() {
+		infoLayer.refreshFileLength();
 	}
 	public Game getGame() {
 		return game;

@@ -32,7 +32,7 @@ public class TagCheckBox extends JCheckBox {
 				} else {               
 					game.removeTag( tag );
 				}
-				gamePanel.updateTags();
+				gamePanel.refreshTags();
 			}
 		});
 	}

@@ -49,7 +49,7 @@ class PopupMenu extends JPopupMenu {
 						@Override
 						public void onSuccess() {
 							gamePanel.setBackground( Color.GRAY );
-							gamePanel.updateFileLength();
+							gamePanel.refreshFileLength();
 						} 
 						@Override
 						public void onError() { 
@@ -67,7 +67,7 @@ class PopupMenu extends JPopupMenu {
 						@Override
 						public void onSuccess() {
 							gamePanel.setBackground( Color.GREEN );
-							gamePanel.updateFileLength();
+							gamePanel.refreshFileLength();
 						}
 						@Override
 						public void onError() {

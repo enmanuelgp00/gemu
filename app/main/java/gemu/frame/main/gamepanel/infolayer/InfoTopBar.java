@@ -26,7 +26,7 @@ class InfoTopBar extends JPanel {
 		size = new Tag("");               		
 		size.setForeground( Color.WHITE );
 		size.setBackground( Color.BLACK );
-		updateFileLength();
+		refreshFileLength();
 		
 		add( size ); 
 		add( Box.createHorizontalGlue() );
@@ -34,7 +34,7 @@ class InfoTopBar extends JPanel {
 		
 	}
 
-	public void updateFileLength() {
+	public void refreshFileLength() {
 		 size.setText( Texts.bytesToHumanVerbose( game.length() ) );
 	}
 	

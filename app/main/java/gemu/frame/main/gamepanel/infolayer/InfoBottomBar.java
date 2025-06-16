@@ -12,8 +12,8 @@ public class InfoBottomBar extends Box {
 		setBackground( Color.GREEN );
 		setOpaque( false );
 		
-		VersionPane versionPane = new VersionPane( game );
-		tagsPane = new TagsPane( game );
+		VersionPane versionPane = new VersionPane( gamePanel.getGame() );
+		tagsPane = new TagsPane( gamePanel );
 		
 		add( tagsPane );
 		add( Box.createHorizontalGlue() );
@@ -22,7 +22,7 @@ public class InfoBottomBar extends Box {
 		setMaximumSize( getPreferredSize() );		
 	}
 	
-	public void updateTags() {
-		tagsPane.updateTags();
+	public void refreshTags() {
+		tagsPane.refresh();
 	}
 }

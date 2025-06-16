@@ -4,19 +4,23 @@ import gemu.game.Game;
 
 import javax.swing.*;
 import java.awt.*;
+import gemu.frame.main.gamepanel.GamePanel;
 
 public class InfoLayer extends JPanel {
 
 	InfoTopBar infoTopBar;
 	InfoBottomBar infoBottomBar;	
+	GamePanel gamePanel;
 	Game game;
 	
-	public InfoLayer( Game game ) {	
+	public InfoLayer( GamePanel gamePanel ) {	
 		super( new BorderLayout() );
-		this.game = game;
+		
+		this.gamePanel = gamePanel;
+		this.game = gamePanel.getGame();
 		
 		infoTopBar = new InfoTopBar( game );
-		infoBottomBar = new InfoBottomBar( game );
+		infoBottomBar = new InfoBottomBar( gamePanel );
 				
 		setOpaque( false );		
 		
@@ -35,12 +39,12 @@ public class InfoLayer extends JPanel {
 		return super.getPreferredSize();
 	}
 	
-	public void updateTags() {
-		infoBottomBar.updateTags();
+	public void refreshTags() {
+		infoBottomBar.refreshTags();
 	}
 
-	public void updateFileLength() {
-		infoTopBar.updateFileLength();
+	public void refreshFileLength() {
+		infoTopBar.refreshFileLength();
 	}
 	
 }

@@ -4,45 +4,27 @@ import gemu.frame.tagging.TaggingFrame;
 import gemu.game.Game;
 import javax.swing.*;
 import java.awt.*;    
-import java.awt.event.*;
+import java.awt.event.*;   
+import gemu.frame.main.gamepanel.GamePanel;
 
 class TagsPane extends JPanel {
+
+		GamePanel gamePanel;
 		Game game;
-		TagsPane( Game game ) {
+		
+		TagsPane( GamePanel gamePanel  ) {
 			super( new FlowLayout( FlowLayout.LEFT ) );
+			this.gamePanel = gamePanel;
+			this.game = gamePanel.getGame();
 			
 			setOpaque( false );
 			setBackground( Color.BLUE );
-			
-			this.game = game;
-			update();
+			refresh();
 			setPreferredSize( new Dimension( 143, 73 ));
 			setMaximumSize( getPreferredSize() );
 		}
-		/*
-		@Override
-		public Dimension getPreferredSize () {
-			LayoutManager layout = getLayout();
-			if ( layout != null ) {
-				layout.layoutContainer( this );
-			}
-			
-			int width = 0;
-			int height = 0;
-			
-			Component[] components = getComponents();
-			
-			if ( components.length > 0 ) {  
-				Rectangle bounds = components[ components.length - 1 ].getBounds();
-				width = bounds.width + bounds.x;
-				height = bounds.height + bounds.y;
-			}
-			Insets insets = getInsets();
-			
-			return new Dimension( width + insets.left + insets.right , height + insets.top + insets.bottom + 5 );
-		}
-		*/
-		public void update() {
+		
+		public void refresh() {
 			removeAll();
 			for ( String tag : game.getTags() ) {
 				add( new Tag( tag ) {
@@ -59,12 +41,14 @@ class TagsPane extends JPanel {
 							@Override
 							public void mousePressed( MouseEvent e ) {
 								if ( SwingUtilities.isLeftMouseButton(e) ) {
-									new TaggingFrame( game );
+									new TaggingFrame( gamePanel );
 								}
 							}
 						});
 					}
 				} );
 			}
+			revalidate();
+			repaint();
 		}
 	}
