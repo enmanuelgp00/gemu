@@ -41,7 +41,10 @@ public class GamePanel extends JPanel {
 		});
 	}
 	
-		
+	public void updateTags() {
+		infoLayer.updateTags();
+	}
+	
 	public void updateFileLength() {
 		infoLayer.updateFileLength();
 	}

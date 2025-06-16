@@ -87,7 +87,7 @@ class PopupMenu extends JPopupMenu {
 			addTags.addActionListener( new ActionListener() {
 				@Override
 				public void actionPerformed( ActionEvent e ) {
-					new TaggingFrame( gamePanel.getGame() );
+					new TaggingFrame( gamePanel );
 				}
 			});
 		}

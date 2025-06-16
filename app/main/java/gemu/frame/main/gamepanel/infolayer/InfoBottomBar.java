@@ -3,15 +3,17 @@ package gemu.frame.main.gamepanel.infolayer;
 import javax.swing.*;
 import java.awt.*;
 import gemu.game.Game;
+import gemu.frame.main.gamepanel.GamePanel;
 
 public class InfoBottomBar extends Box {
-	InfoBottomBar( Game game ) {
+	TagsPane tagsPane;
+	InfoBottomBar( GamePanel gamePanel ) {
 		super( BoxLayout.X_AXIS );		
 		setBackground( Color.GREEN );
 		setOpaque( false );
 		
 		VersionPane versionPane = new VersionPane( game );
-		TagsPane tagsPane = new TagsPane( game );
+		tagsPane = new TagsPane( game );
 		
 		add( tagsPane );
 		add( Box.createHorizontalGlue() );
@@ -21,6 +23,6 @@ public class InfoBottomBar extends Box {
 	}
 	
 	public void updateTags() {
-	
+		tagsPane.updateTags();
 	}
 }
