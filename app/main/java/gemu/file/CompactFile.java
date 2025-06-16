@@ -50,9 +50,9 @@ public class CompactFile extends File {
 						
 					} else if ( line.contains( attributeSign ) ) {
 						String attributes = line.substring( attributeSign.length() );
-						String archiveAttribute = "A";
+						String dirAttribute = "D";
 						
-						if ( attributes.contains( archiveAttribute ) ) {
+						if ( !attributes.contains( dirAttribute ) ) {
 							File file = new File( getAbsolutePath() + "/" + path );
 							lsCompactFile.add( new CompactFile( file ) );          
 						}
@@ -70,7 +70,6 @@ public class CompactFile extends File {
 	}
 	@Override
 	public boolean exists() {
-		System.out.println( this );
 		if ( isRootFile() ) {
 			return super.exists();
 		}

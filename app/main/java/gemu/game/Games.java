@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 public final class Games {
 
-	private static String[] screenshotNames = new String[]{ "screenshot", "capture" };	
+	private static String[] screenshotNames = new String[]{ "jpg", "png" };	
 	public static String MORE_FILE_NAME = ".more";
 	
 	public static File defineMoreFileIn( Folder folder ) {
@@ -22,7 +22,7 @@ public final class Games {
 	}
 	public static boolean isScreenshot( File f ) {
 		for ( String n : screenshotNames ) {
-			if ( f.getName().contains( n ) ) {
+			if ( f.hasExtension( n ) ) {
 				return true;
 			}
 		}

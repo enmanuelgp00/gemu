@@ -243,7 +243,7 @@ public class Game {
 						listener.onSuccess();
 					}
 					
-				}, "screenshot.jpg", "*." + GameInfo.EXTENSION ) );
+				}, "*.jpg","*.png", "*." + GameInfo.EXTENSION ) );
 			
 				
 			} else {
@@ -305,6 +305,7 @@ public class Game {
 						
 						for ( File f : folder.listFiles() ) {
 							if ( f.hasSameName( launcher ) ) {
+								System.out.println( f );
 								setLauncher( new Launcher( f ) );
 								break;
 							}
