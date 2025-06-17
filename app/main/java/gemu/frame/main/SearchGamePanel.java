@@ -21,6 +21,7 @@ class SearchGamePanel extends JPanel {
 		this.gamels = gamels;
 		
 		field = new JTextField();
+		field.setBorder( BorderFactory.createEmptyBorder( 2, 2, 2, 2 ) );
 		field.addKeyListener( searchOnTyping );
 		
 		add( field , BorderLayout.NORTH );
@@ -31,21 +32,28 @@ class SearchGamePanel extends JPanel {
 	KeyListener searchOnTyping = new KeyAdapter() {
 		@Override
 		public void keyReleased( KeyEvent ev ) {
-			if ( field.getText().length() == 0 ) {
-				System.out.println("Search bar is empty");
-				gameShelf.setGameList( gamels );
-			} else {
-				 
-				Set<Game> gameSearch = new HashSet<Game>();
+			if ((char)ev.getKeyCode() == '\n' ) {
+			
+				if ( field.getText().length() == 0 ) {
 				
-				for ( Game game : gamels ) {
-					if ( game.getName().contains( field.getText() ) ) {
-						//System.out.println( game.getName() );
-						gameSearch.add( game );
+					gameShelf.setGameList( gamels );
+				} else {
+					
+					Set<Game> gameSearch = new HashSet<Game>();
+					
+					for ( Game game : gamels ) {
+						if ( game.getName().toLowerCase().contains( field.getText() ) ) {
+							gameSearch.add( game );
+						} else {
+							for ( String tag : game.getTags() ) {
+								if ( tag.equals( field.getText() ) ) { 
+									gameSearch.add( game );
+								}
+							}
+						}
 					}
+					gameShelf.setGameList( gameSearch );
 				}
-				
-				gameShelf.setGameList( gameSearch );
 			}
 		}
 	};

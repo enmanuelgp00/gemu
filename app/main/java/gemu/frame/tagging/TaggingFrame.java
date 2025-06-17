@@ -20,7 +20,7 @@ public class TaggingFrame extends JFrame {
 		setTitle("Tagging: " + game.getName() );
 		
 		add( new Body() );		
-		
+		setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE );
 		setResizable( false );
 		setSize( 500, 500 );
 		setLocationRelativeTo( null );

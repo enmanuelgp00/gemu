@@ -38,8 +38,8 @@ public final class Games {
 		boolean hasDirectories = false;
 		
 		List<File> screenshots = new ArrayList<File>();
-		List<Launcher> launcherLs = new ArrayList<Launcher>();
-		List<Game> games = new ArrayList<Game>();
+		List<Launcher> launcherls = new ArrayList<Launcher>();
+		List<Game> gamels = new ArrayList<Game>();
 		List<CompactFile> compactGames = new ArrayList<CompactFile>();
 		HashMap< CompactFile, List<CompactLauncher>> compactLaunchersMap = new HashMap<CompactFile , List<CompactLauncher>>();
 		
@@ -66,7 +66,7 @@ public final class Games {
 			
 			} else if ( GameInfo.isGameInfoFile( f ) ) {
 				Game game = new Game( GameInfo.parse( f ) );
-				games.add( game );
+				gamels.add( game );
 				
 				if ( CompactFile.isCompactFile( game.getLauncher() ) ) {
 					compactGames.add( new CompactFile( game.getLauncher()).getParentRootFile() );
@@ -74,7 +74,7 @@ public final class Games {
 					
 			
 			} else if ( Launcher.isLauncherFile( f ) ) {
-				launcherLs.add( new Launcher( f ) );
+				launcherls.add( new Launcher( f ) );
 				
 			} else if ( Games.isScreenshot( f ) ) {
 				screenshots.add( f );
@@ -96,9 +96,9 @@ public final class Games {
 			}
 		}
 		
-		if ( games.size() > 0 ) {
-			if ( games.size() == 1 ) {
-				Game game = games.get( 0 );
+		if ( gamels.size() > 0 ) {
+			if ( gamels.size() == 1 ) {
+				Game game = gamels.get( 0 );
 				Set<File> gameScreenshots = new HashSet<File>( Arrays.<File>asList( game.getScreenshots() ) );
 				for ( File f : screenshots ) {				
 					if ( !gameScreenshots.contains(f)) {
@@ -108,21 +108,21 @@ public final class Games {
 				}
 				
 				listener.onGameFound( game );
-				value = true;
+				return true;
 			} else {				 
-				for ( Game game : games ) {
+				for ( Game game : gamels ) {
 					listener.onGameFound( game );
 				}
 			}
 			value = true;
 		}
 		
-		if ( launcherLs.size() > 0 ) { 
-			if ( launcherLs.size() == 1 ) {
-				Launcher l = launcherLs.get( 0 ); 
+		if ( launcherls.size() > 0 ) { 
+			if ( launcherls.size() == 1 ) {
+				Launcher l = launcherls.get( 0 ); 
 				boolean gameFound = false;
 				
-				for ( Game g : games ) {
+				for ( Game g : gamels ) {
 					if ( g.getLauncher().matchesPath( l ) ) {
 						gameFound = true;
 						break;
@@ -135,9 +135,12 @@ public final class Games {
 					Log.info( game.getName() + " : New game found");
 				}
 				return true;
+			} else {
+				if ( gamels.size() == 0 ) {
+					listener.onLauncherListFound( launcherls );
+				}
 			}
 			
-			listener.onLauncherListFound( launcherLs );
 			return true;
 		}
 		
