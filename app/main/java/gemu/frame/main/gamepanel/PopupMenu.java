@@ -92,12 +92,7 @@ class PopupMenu extends JPopupMenu {
 			openFolder.addActionListener( new ActionListener() {
 				@Override
 				public void actionPerformed( ActionEvent e ) {
-					new MessageBox( "Openning Folder ", "Are you sure you want to open this folder") {
-						@Override
-						public void onAccept( MessageBox message ) { 
-							gamePanel.getGame().openFolder();	
-						}
-					};
+					gamePanel.getGame().openFolder();
 				}
 			});
 			
