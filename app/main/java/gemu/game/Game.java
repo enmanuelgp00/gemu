@@ -33,7 +33,7 @@ public class Game {
 	}
 	
 	public String getName() {
-		String[] names = info.get( GameInfo.key.name );
+		String[] names = info.get( GameInfo.Key.name );
 		if ( names.length > 0 ) {
 			return names[0];			
 		}
@@ -50,13 +50,13 @@ public class Game {
 		String name = launcher.getAbsolutePath();
 		name = name.substring( getFolder().getAbsolutePath().length() );		
 		
-		info.set( GameInfo.key.launcher, name );	
+		info.set( GameInfo.Key.launcher, name );	
 		info.commit();
 	}
 	
 	public Launcher getLauncher() {
 		try {
-			return new Launcher ( getFolder() + info.get( GameInfo.key.launcher )[0] );		
+			return new Launcher ( getFolder() + info.get( GameInfo.Key.launcher )[0] );		
 		} catch( Exception e ) {
 			Log.error( e );
 			e.printStackTrace();
@@ -73,7 +73,7 @@ public class Game {
 	}
 	
 	public boolean isFavorite() {
-		String[] values = info.get( GameInfo.key.favorite );
+		String[] values = info.get( GameInfo.Key.favorite );
 		if ( values.length > 0 ) {
 			return Boolean.parseBoolean( values[0] );
 		}
@@ -82,16 +82,16 @@ public class Game {
 	}
 	
 	public void setFavorite( boolean value ) {
-		info.set( GameInfo.key.favorite, String.valueOf( value ));
+		info.set( GameInfo.Key.favorite, String.valueOf( value ));
 		info.commit();
 	}
 	
 	public String[] getTags() {
-		return info.get( GameInfo.key.tags );
+		return info.get( GameInfo.Key.tags );
 	}
 	
 	public void addTag( String tag ) {
-		Set<String> list = info.modif( GameInfo.key.tags );
+		Set<String> list = info.modif( GameInfo.Key.tags );
 		if ( !list.contains( tag ) ) {
 			list.add( tag );		
 			info.commit();
@@ -100,12 +100,12 @@ public class Game {
 	}
 	
 	public void removeTag( String tag ) {
-		info.modif( GameInfo.key.tags).remove( tag );
+		info.modif( GameInfo.Key.tags).remove( tag );
 		info.commit();
 	}
 	
 	public File[] getScreenshots() {
-		String[] names = info.get( GameInfo.key.screenshots );
+		String[] names = info.get( GameInfo.Key.screenshots );
 		if ( names.length == 0 ) {
 			return new File[0];
 		}
@@ -150,7 +150,7 @@ public class Game {
 	}
 	
 	public String getVersion() {
-		String[] names = info.get( GameInfo.key.version );
+		String[] names = info.get( GameInfo.Key.version );
 		if ( names.length > 0 ) {
 			return names[0];
 		}

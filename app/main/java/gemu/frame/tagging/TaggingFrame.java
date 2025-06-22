@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import gemu.game.Game;
+import gemu.game.Games;
 
 public class TaggingFrame extends JFrame {
 	
@@ -50,9 +51,9 @@ public class TaggingFrame extends JFrame {
 							if ( tag != "" ) {
 								game.addTag( tag );
 								setText("");
-								if ( !Game.tagsCollection.contains( tag ) ) {
+								if ( !Games.tagsCollection.contains( tag ) ) {
 									System.out.println("[" + tag + "] is a new tag ");
-									Game.tagsCollection.add( tag );
+									Games.tagsCollection.add( tag );
 									gamePanel.refreshTags();
 									tagsCollectionPane.refresh();
 								}

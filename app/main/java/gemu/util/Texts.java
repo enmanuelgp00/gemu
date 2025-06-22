@@ -14,12 +14,12 @@ public final class Texts {
 		return String.format( "%.2f %s", res , names[ pow ] );
 	}
 	
-	public static String inBrace( String key ) {
-		return "[ " + key + " ]";
+	public static String inBrace( String Key ) {
+		return "[ " + Key + " ]";
 	}
 	
-	public static String inCurlyBrace( String key ) {
-		return "{ " + key + " }";
+	public static String inCurlyBrace( String Key ) {
+		return "{ " + Key + " }";
 	}
 	
 	public static boolean isWordDelimiter( char ch ) {

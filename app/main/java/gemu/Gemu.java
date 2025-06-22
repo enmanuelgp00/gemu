@@ -11,6 +11,8 @@ import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
 
+import javax.swing.SwingUtilities;
+
 class Gemu {
 	
 	Scanner scan = new Scanner( System.in );
@@ -19,7 +21,12 @@ class Gemu {
 	Gemu( File file ) {
 		
 		findGames( file );	
-		new MainFrame( gamels );
+		SwingUtilities.invokeLater( new Runnable() {
+			@Override
+			public void run() { 
+				new MainFrame( gamels );
+			}
+		});
 		
 	}
 	

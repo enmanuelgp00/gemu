@@ -6,6 +6,7 @@ import java.util.*;
 
 public final class Games {
 
+	public static List<String> tagsCollection = new ArrayList<String>();
 	public static int STATE_RUNNING = 1;
 	public static int STATE_COMPRESSING = 2;
 	public static int STATE_EXTRACTING = 3;
@@ -155,6 +156,7 @@ public final class Games {
 		if ( file.isDirectory() ) {			
 			for ( File f : file.listFiles() ) {
 				if ( isIgnoreFile( f ) ) {
+					Log.info( file.getAbsolutePath() + " : Ignored");
 					return true;
 				}
 			}

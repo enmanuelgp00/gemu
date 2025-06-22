@@ -21,7 +21,7 @@ import java.io.IOException;
 public class GameInfo {
 	File file;
 	
-	HashMap< key, Set<String> > map = new HashMap< key, Set<String> >();
+	HashMap< Key, Set<String> > map = new HashMap< Key, Set<String> >();
 	public static String EXTENSION = "gemu";
 	
 	private GameInfo( File file ) {
@@ -36,8 +36,8 @@ public class GameInfo {
 		errorIfExists(); 
 		loadkeys();
 		String relative = launcher.getAbsolutePath().substring( folder.getAbsolutePath().length() );
-		map.get( key.launcher ).add( relative );
-		map.get( key.favorite ).add( "false" );
+		map.get( Key.launcher ).add( relative );
+		map.get( Key.favorite ).add( "false" );
 		commit();
 	}
 	
@@ -49,18 +49,18 @@ public class GameInfo {
 		errorIfExists(); 
 		loadkeys();
 		String relative = launcher.getAbsolutePath().substring( folder.getAbsolutePath().length() );
-		map.get( key.launcher ).add( relative );
-		map.get( key.favorite ).add( "false" );
+		map.get( Key.launcher ).add( relative );
+		map.get( Key.favorite ).add( "false" );
 		commit();
 	}
 	
-	public void set( key k, String value ) {
+	public void set( Key k, String value ) {
 		Set<String> list = map.get( k );
 		list.clear();
 		list.add( value );
 	}
 	
-	Set<String> modif( key k ) {
+	Set<String> modif( Key k ) {
 		return map.get( k );
 	}
 	
@@ -74,7 +74,7 @@ public class GameInfo {
 		file = n;
 	}
 	
-	public String[] get( key k ) {
+	public String[] get( Key k ) {
 		Set<String> list = map.get( k );
 		return list.toArray( new String[ list.size() ] );
 	}
@@ -92,7 +92,7 @@ public class GameInfo {
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		for ( key k : map.keySet() ) {
+		for ( Key k : map.keySet() ) {
 			sb.append( k.value + " {\n" );
 			Set<String> items = map.get( k );
 			if ( items.size() > 0 ) {				
@@ -140,7 +140,7 @@ public class GameInfo {
 					if ( Texts.isWordDelimiter( ch ) ) {
 						if ( sb.length() > 0 ) {						
 							if ( inCurlyBrace ) {
-								info.modif( key.get( k ) ).add( sb.toString() ) ;
+								info.modif( Key.get( k ) ).add( sb.toString() ) ;
 								sb.setLength( 0 );
 							} else {
 								k = sb.toString();
@@ -207,19 +207,19 @@ public class GameInfo {
 	}
 	
 	private void loadkeys() {		
-		for ( key k : key.set ) {
+		for ( Key k : GameInfo.Key.set ) {
 			map.put( k , new TreeSet<String>() );
 		}
 	}
-	public static final class key {
+	public static final class Key {
 	
 		public String value;
-		private key( String n ) {
+		private Key( String n ) {
 			this.value = n;
 		}
 		
-		public static key get( String n ) {
-			for (key k : key.set ) {
+		public static Key get( String n ) {
+			for (Key k : Key.set ) {
 				if ( k.value.equals( n ) ) {
 					return k;
 				}	
@@ -227,22 +227,22 @@ public class GameInfo {
 			return null;
 		}
 		
-		public static key name;
-		public static key launcher;
-		public static key tags;
-		public static key screenshots;
-		public static key sites;      
-		public static key version;
-		public static key favorite;
+		public static Key name;
+		public static Key launcher;
+		public static Key tags;
+		public static Key screenshots;
+		public static Key sites;      
+		public static Key version;
+		public static Key favorite;
 		
-		static key[] set = new key[] {
-			name = new key("name"),
-			launcher = new key("exe"),
-			tags = new key("tags"),
-			screenshots = new key("screenshots"),
-			sites = new key("sites"),      
-			version = new key("version"),
-			favorite = new key("star")
+		static Key[] set = new Key[] {
+			name = new Key("name"),
+			launcher = new Key("exe"),
+			tags = new Key("tags"),
+			screenshots = new Key("screenshots"),
+			sites = new Key("sites"),      
+			version = new Key("version"),
+			favorite = new Key("star")
 		};
 		
 	}

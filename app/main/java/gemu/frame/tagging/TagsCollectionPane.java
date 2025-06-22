@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import gemu.game.Game;
+import gemu.game.Games;
 import gemu.frame.main.gamepanel.GamePanel;
 
 public class TagsCollectionPane extends JPanel {
@@ -18,7 +19,7 @@ public class TagsCollectionPane extends JPanel {
 	public void refresh() {
 		Game game = gamePanel.getGame();
 		removeAll();
-		for ( String tag : Game.tagsCollection ) {
+		for ( String tag : Games.tagsCollection ) {
 			add( new TagCheckBox( gamePanel, tag ));
 		}
 		revalidate();

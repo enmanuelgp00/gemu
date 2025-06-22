@@ -11,11 +11,11 @@ public final class Log {
 		print( Texts.inBrace("INF"), message );
 	}
 	
-	private static void print( String key, Object[] objs ) {
+	private static void print( String Key, Object[] objs ) {
 		StringBuilder str = new StringBuilder();
 		for ( Object ob : objs ) {
 			str.append( ob.toString());
 		}
-		System.out.println( key + " " + str.toString() );
+		System.out.println( Key + " " + str.toString() );
 	}
 }
