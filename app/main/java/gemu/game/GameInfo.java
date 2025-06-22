@@ -1,235 +1,249 @@
-package gemu.game;
+package gemu.game;    
 
-import java.util.*;
-import gemu.file.File;
-import gemu.file.*;
-import java.io.*;
+import gemu.system.Log;  
+import gemu.io.File;
+import gemu.util.Texts;
 
-public class GameInfo extends InfoFile {
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.TreeSet;
+import java.io.BufferedWriter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.FileInputStream;  
+import java.io.FileOutputStream;
+import java.io.IOException;
 
-	static final String IGNORE = ".gemuignore";
-	
-	private HashMap<String, List<String>> map = new HashMap<String, List<String>>();
-	
-	Folder folder;
+
+public class GameInfo {
 	File file;
 	
-	private GameInfo( File file ) {  
-		super( file );
-		for (Key k : Key.set ) {
-			map.put( k.value, new ArrayList<String>() );
-		}	
+	HashMap< key, Set<String> > map = new HashMap< key, Set<String> >();
+	public static String EXTENSION = "gemu";
+	
+	private GameInfo( File file ) {
+		this.file = new File( file );
+		loadkeys();
 	}
 	
-	GameInfo( Launcher launcher ) {
-		super( launcher );
-		try {
-			if ( getFile().exists() ) {
-				 throw new IOException();
-			}
-			for (Key k : Key.set ) {
-				map.put( k.value, new ArrayList<String>() );
-			}
-		} catch ( Exception e ) {
-			e.printStackTrace();
-			System.exit( 1 );
-		}
+	public GameInfo( Launcher launcher ) {
+		File folder = launcher.getParentFile();
+		String name = folder.getAbsolutePath() + "/" + folder.getName() + "." + EXTENSION ;
+		this.file = new File( name );
+		errorIfExists(); 
+		loadkeys();
+		String relative = launcher.getAbsolutePath().substring( folder.getAbsolutePath().length() );
+		map.get( key.launcher ).add( relative );
+		map.get( key.favorite ).add( "false" );
+		commit();
 	}
 	
-	GameInfo( CompactLauncher compactLauncher ) {
-		super( compactLauncher.getParentRootFile() );
-		try {
-			if ( getFile().exists() ) {
-				 throw new IOException();
-			}
-			for (Key k : Key.set ) {
-				map.put( k.value, new ArrayList<String>() );
-			}
-		} catch ( Exception e ) {
-			System.out.println( compactLauncher );
-			e.printStackTrace();
-			System.exit( 1 );
-		}
+	public GameInfo( CompactLauncher launcher ) {
+		File rootfile = launcher.getParentRootFile();
+		File folder = rootfile.getParentFile();
+		String name = folder.getAbsolutePath() + "/" + rootfile.getBaseName() + "." + EXTENSION ;
+		this.file = new File( name );
+		errorIfExists(); 
+		loadkeys();
+		String relative = launcher.getAbsolutePath().substring( folder.getAbsolutePath().length() );
+		map.get( key.launcher ).add( relative );
+		map.get( key.favorite ).add( "false" );
+		commit();
 	}
 	
-	public static GameInfo parse( File file ) {
-		try {			
-			if ( !GameInfo.isGameInfoFile( file ) && !file.exists() ) {
-				throw new Exception();
-			}
-		} catch ( Exception e ) {
-			System.out.println( file + " is not a valid info file ");
-			e.printStackTrace();
-			System.exit( 1 );		
-		}
-		GameInfo info = new GameInfo( file );
-		try {
-			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( file ), "utf-8"  ) );
-			int charCode;
-			String key = null;
-			String value = null;
-			StringBuilder str = new StringBuilder();
-			
-			boolean inCurlyBrace = false;
-			boolean inQuotes = false;
-			while( ( charCode = reader.read()) != -1 ) {
-				char ch = (char) charCode;
-				switch( ch ) {
-					case '{':
-						inCurlyBrace = true;
-					break;    
-					case '}':               
-						inCurlyBrace = false;
-					break;
-					case '"':
-						inQuotes = !inQuotes;
-					break;
-				}
-				
-				if ( inQuotes ) {
-					if ( ch != '"') { 
-						str.append( ch ); 
-					} 
-				} else {					
-					if ( isWordDelimiter( ch ) ) {						
-						if ( str.length() > 0 ) {							
-							if ( inCurlyBrace ) {
-								value = str.toString();
-								info.modif( GameInfo.Key.get( key ) ).add( value );
-								str.setLength( 0 );
-							} else {
-								key = str.toString();
-								str.setLength( 0 );
-							}
-						}
-					} else {
-						str.append( ch );
-					}
-				}
-				
-			}
-			reader.close();
-		} catch ( Exception e ) {
-			e.printStackTrace();
-			System.out.println( file );
-			System.exit( 1 );
-		}
-		return info;
+	public void set( key k, String value ) {
+		Set<String> list = map.get( k );
+		list.clear();
+		list.add( value );
 	}
 	
-	List<String> modif( Key key ) {
-		return map.get( key.value );
+	Set<String> modif( key k ) {
+		return map.get( k );
 	}
 	
-	private static boolean isWordDelimiter( char ch ) {
-		char[] delims = new char[] {'{','}',' ', '\n', '"', (char)13, '\t'};	
-		for ( char c : delims ) {
-			if ( c == ch ) {
-				return true;
-			}
-		}
-		return false;
-	}
-	public static void createIgnoreFileIn( Folder folder ) throws IOException {
-		File ignoreFile = new File( folder.getAbsolutePath() + "\\" + IGNORE );
-		boolean isCreated = ignoreFile.createNewFile();
-		if ( !isCreated ) {
-			throw new IOException();
-		}		
-	}
-	public static boolean hasIgnoreFile( File file ) {
-		for ( File f : file.listFiles() ) {
-			if ( GameInfo.isIgnoreFile(f)) {
-				return true;
-			}
-		}
-		return false;
+	public File getFolder() {
+		return file.getParentFile();
 	}
 	
-	public static boolean isIgnoreFile( File file ) {
-		return file.getName().equals( IGNORE );
-	}
-	public static boolean isGameInfoFile( File file ) {
-		return file.hasExtension( EXTENSION ); //getName().equals( NAME_FILE );
-	}
-	
-	void set( Key key, String value ) {
-		List<String> list = map.get( key.value );
-		if ( list.size() > 0 ) {
-			list.set( 0, value);		
-		} else {
-			list.add( value );
-		}
-		
+	public void setFolder( File folder ) {
+		File n = new File ( folder.getAbsolutePath() + "/" + file.getName() );
+		file.renameTo( n );
+		file = n;
 	}
 	
-	String[] get( Key key ) {
-		return map.get( key.value ).toArray( new String[ 0 ] );
-	}
-	
-	void add( Key key, String value ) {
-		map.get(key.value ).add(value);
+	public String[] get( key k ) {
+		Set<String> list = map.get( k );
+		return list.toArray( new String[ list.size() ] );
 	}
 	
 	public void commit() {
 		try {
-			BufferedWriter writer = new BufferedWriter( new FileWriter( getFile() , false ) );
+			BufferedWriter writer = new BufferedWriter( new OutputStreamWriter( new FileOutputStream( file ), "utf-8" ) );
 			writer.write( toString() );
 			writer.close();
 		} catch ( Exception e ) {
 			e.printStackTrace();
+			Log.error( e.getMessage() );
 		}
 	}
 	
 	public String toString() {
-		StringBuilder str = new StringBuilder();
-		for (String k : map.keySet() ) {
-			str.append( k + " {\n");
-			for ( String v : map.get(k)) {
-				str.append( "\t\"" + v + "\"\n" );
+		StringBuilder sb = new StringBuilder();
+		for ( key k : map.keySet() ) {
+			sb.append( k.value + " {\n" );
+			Set<String> items = map.get( k );
+			if ( items.size() > 0 ) {				
+				for ( String item : map.get( k ) ) {
+					sb.append("\t\"" + item + "\"\n");
+				}  
+			} else {
+				sb.append("\n");
 			}
-			str.append( "\n}\n\n");
+			sb.append( "}\n\n" );
 		}
-		return str.toString();
+		return sb.toString();
 	}
 	
-	final static class Key {
-		final String value;
-		private Key ( String value ) {
-			this.value = value;
-		}
+	public static GameInfo parse( File file ) {
+		parseFileVerification( file );
+		GameInfo info = new GameInfo( file );
 		
-		public static final Key name; 
-		public static final Key launcher;
-		public static final Key version;
-		public static final Key tags;
-		public static final Key screenshots;
-		public static final Key favorite;
-		
-		public static final Set<Key> set = new HashSet<Key>( Arrays.asList( new Key[] {
-			name = new Key("name"),
-			launcher = new Key("exe"),
-			version = new Key("version"),
-			tags = new Key("tags"),
-			screenshots = new Key("screenshots"),
-			favorite = new Key("star")
-		}));
-		
-		public static Key get( String name ) throws Exception {
-			for ( Key k : Key.set ) {
-				if ( k.value.equals( name ) ) {
-					return k;
+		try {
+			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( file ), "utf-8" ) );
+			
+			StringBuilder sb = new StringBuilder();
+			String k = null;
+			int code;                   
+			boolean inCurlyBrace = false;
+			boolean inQuotes = false;
+			
+			while ( ( code = reader.read() ) != -1 ) {
+				char ch = ( char ) code;
+				switch ( ch ) {
+					case '{': 
+						inCurlyBrace = true ;
+					break;					
+					case '}': 
+						inCurlyBrace = false ;
+					break;					
+					case '"': inQuotes = !inQuotes ;
+					break;
+				}
+				if ( inQuotes ) {
+					if ( ch != '"') {
+						sb.append( ch ); 					
+					}
+				} else {					
+					if ( Texts.isWordDelimiter( ch ) ) {
+						if ( sb.length() > 0 ) {						
+							if ( inCurlyBrace ) {
+								info.modif( key.get( k ) ).add( sb.toString() ) ;
+								sb.setLength( 0 );
+							} else {
+								k = sb.toString();
+								sb.setLength( 0 );
+							}
+						}
+					} else {
+						sb.append( ch );
+					}
 				}
 			}
-			
-			throw new Exception() {
-				@Override
-				public void printStackTrace() {
-					System.out.println( "\n[ \"" + name + "\" is not a valid key name ]");
-					super.printStackTrace();
-				}
-			};
+			reader.close();
+		} catch ( Exception e ) {
+			Log.error( e.getMessage() );
+			e.printStackTrace();
+			System.exit( 1 );
 		}
+		return info;
+		
+	}
+	
+	
+	private static void parseFileVerification( File file ) {
+		try {
+			if ( !file.exists() ) {
+				throw new IOException() {
+					@Override
+					public String getMessage() {
+						return file + " : file most exits for parsing ";
+					}
+				};
+			}
+			
+			if ( !Games.isGameInfo( file ) ) {
+				throw new IOException() {
+					@Override
+					public String getMessage() {
+						return file + " : file most have extension " + Texts.inBrace( EXTENSION ) ;
+					}
+				};
+			}
+			
+		} catch ( Exception e ) {  
+			e.printStackTrace();
+			Log.error( e.getMessage() );
+			System.exit( 1 );
+		}
+	}
+	private void errorIfExists() {
+		try {
+			if ( this.file.exists() ) {
+				throw new IOException() {
+					@Override
+					public String getMessage() {
+						return file + " : File already exists ";
+					}
+				};
+			}
+		} catch ( Exception exc ) {
+			exc.printStackTrace();
+			Log.error( exc.getMessage() );
+			System.exit( 1 );
+		}
+	}
+	
+	private void loadkeys() {		
+		for ( key k : key.set ) {
+			map.put( k , new TreeSet<String>() );
+		}
+	}
+	public static final class key {
+	
+		public String value;
+		private key( String n ) {
+			this.value = n;
+		}
+		
+		public static key get( String n ) {
+			for (key k : key.set ) {
+				if ( k.value.equals( n ) ) {
+					return k;
+				}	
+			}
+			return null;
+		}
+		
+		public static key name;
+		public static key launcher;
+		public static key tags;
+		public static key screenshots;
+		public static key sites;      
+		public static key version;
+		public static key favorite;
+		
+		static key[] set = new key[] {
+			name = new key("name"),
+			launcher = new key("exe"),
+			tags = new key("tags"),
+			screenshots = new key("screenshots"),
+			sites = new key("sites"),      
+			version = new key("version"),
+			favorite = new key("star")
+		};
 		
 	}
 }

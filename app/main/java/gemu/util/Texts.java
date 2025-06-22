@@ -1,19 +1,35 @@
 package gemu.util;
 
 public final class Texts {
-	public static String bytesToHumanVerbose( long bytes ) {
-		double result = 0;
-		int p = 1;
+	
+	public static String bytesToHumanVerbose( long l ) {
 		int scale = 1024;
-		String type;
-			
-		while ( result < 1 || result > scale ) {
-			result = bytes / Math.pow( scale, p ) ;
-			p ++ ;
+		int pow = 1;
+		double res;
+		String[] names = new String[]{ "b", "kib", "mib" ,"gib","tib" };
+		while( ( res = l / Math.pow( scale, pow ) ) > scale ) {
+			pow ++;
 		}
 		
-		String[] binary = new String[]{ "bytes", "Kib", "Mib","Gib", "Tib" };
+		return String.format( "%.2f %s", res , names[ pow ] );
+	}
+	
+	public static String inBrace( String key ) {
+		return "[ " + key + " ]";
+	}
+	
+	public static String inCurlyBrace( String key ) {
+		return "{ " + key + " }";
+	}
+	
+	public static boolean isWordDelimiter( char ch ) {
+		char[] delims = new char[] { ' ', '\n', '\t', '{', '}', '"', ( char ) 13 };
+		for ( char c : delims ) {
+			if ( c == ch ) {
+				return true;
+			}
+		}
 		
-		return String.format("%.2f %s", result , binary[ p - 1 ] );
+		return false;
 	}
 }

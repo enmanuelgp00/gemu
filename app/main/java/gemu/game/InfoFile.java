@@ -1,6 +1,6 @@
 package gemu.game;
 
-import gemu.file.File;
+import gemu.io.File;
 import gemu.file.*;
 import java.io.IOException;
 	

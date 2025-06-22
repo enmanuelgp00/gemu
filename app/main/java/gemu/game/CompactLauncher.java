@@ -1,15 +1,14 @@
 package gemu.game;
 
-import gemu.file.*;
+import gemu.io.*;
 
-public class CompactLauncher extends CompactFile {
+public class CompactLauncher extends CompactFile implements Launch {
 	public CompactLauncher( String name ) {
 		super( name );
 	}
-	public CompactLauncher( CompactFile file ) {
+	
+	public CompactLauncher( File file ) {
 		super( file );
 	}
-	public CompactLauncher( Launcher launcher ) {
-		super( launcher );
-	}
+	
 }

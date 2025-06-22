@@ -3,7 +3,9 @@ package gemu.frame.main.gamepanel;
 import gemu.frame.main.MessageBox;
 import gemu.frame.tagging.TaggingFrame;
 import gemu.game.Game;
+import gemu.game.Games;
 import gemu.system.*;
+import gemu.system.event.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -49,15 +51,17 @@ class PopupMenu extends JPopupMenu {
 						@Override
 						public void onAccept( MessageBox message ) {
 							gamePanel.setBackground( Color.BLUE );
-							gamePanel.getGame().compress( new OnSuccessListener() {
+							gamePanel.getGame().compress( new OnProcessAdapter() {
 								@Override
-								public void onSuccess() {
-									gamePanel.setBackground( Color.GRAY );
-									gamePanel.refreshFileLength();
-								} 
-								@Override
-								public void onError() { 
-									gamePanel.setBackground( Color.RED );							
+								public void onProcessFinished( Process process, int exitCode ) {
+									if ( exitCode == 0 ) {  
+										gamePanel.setBackground( Color.GRAY );
+										gamePanel.refreshFileLength();
+									
+									} else {  
+										gamePanel.setBackground( Color.RED );	
+									
+									}
 								}
 							} );	
 						}
@@ -68,20 +72,22 @@ class PopupMenu extends JPopupMenu {
 			decompress.addActionListener( new ActionListener() {
 				@Override
 				public void actionPerformed( ActionEvent e ) {
-					new MessageBox( "Decompress", "Are you sure you want to decompress [" + gamePanel.getGame().getName() + "]") {
+					new MessageBox( "Extraction", "Are you sure you want to extract [" + gamePanel.getGame().getName() + "]") {
 						@Override
 						public void onAccept( MessageBox message ) { 
 							   
 							gamePanel.setBackground( Color.BLUE );  							
-							gamePanel.getGame().decompress( new OnSuccessListener() {
+							gamePanel.getGame().extract( new OnProcessAdapter() {
 								@Override
-								public void onSuccess() {
-									gamePanel.setBackground( Color.GREEN );
-									gamePanel.refreshFileLength();
-								}
-								@Override
-								public void onError() {
-									gamePanel.setBackground( Color.RED );
+								public void onProcessFinished( Process process, int exitCode ) {
+									if ( exitCode == 0 ) {  
+										gamePanel.setBackground( Color.GREEN );
+										gamePanel.refreshFileLength();
+									
+									} else {
+										gamePanel.setBackground( Color.RED );
+									
+									}
 								}
 							} );
 						}
@@ -109,7 +115,7 @@ class PopupMenu extends JPopupMenu {
 		@Override
 		public void show( Component c, int x, int y ) {
 			super.show( c, x, y );
-			if ( gamePanel.getGame().getCompressionState() == Game.COMPRESSION_STATE_FREE ) { 
+			if ( gamePanel.getGame().getState() == Games.STATE_FREE ) { 
 			
 				if ( gamePanel.getGame().isCompressed() ) {
 					play.setEnabled( false );

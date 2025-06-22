@@ -1,162 +1,189 @@
 package gemu;
 
 import gemu.system.*;
-import gemu.game.*; 
-import gemu.file.*;
+import gemu.system.event.*;
+import gemu.io.*;
+import gemu.game.*;
+import gemu.util.*;
 import gemu.frame.main.MainFrame;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import java.io.IOException;
 
-
+import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Scanner;
 
-public class Gemu {
-	File ignoreFolder = new File("") ;
-	File moreFileContainer =  new File("");
-	private List<Game> gamels = new ArrayList<Game>();
+class Gemu {
 	
-	Gemu( Folder folder ) {		
-		findGames( folder );
-		moveFavoritesToTop();
+	Scanner scan = new Scanner( System.in );
+	List<Game> gamels = new ArrayList<Game>();
+	
+	Gemu( File file ) {
 		
-		SwingUtilities.invokeLater( new Runnable() {
-			@Override
-			public void run () {
-				 new MainFrame( gamels );
-			}
-		});
+		findGames( file );	
+		new MainFrame( gamels );
 		
 	}
 	
-	private void moveFavoritesToTop() {
-		int f = 0;
-		for ( int i = 0; i < gamels.size(); i++ ) {
-			Game gm = gamels.get(i);
+	void consoleInterface() {
+		while( true ) {
+			StringBuilder sb = new StringBuilder();
 			
-			if( gm.isFavorite() ) {
-				if (i != f ) {     				
-					Game tmp = gamels.get(f);
-					gamels.set( i, tmp );
-					gamels.set( f, gm );					
-				}                       				
-				f ++ ;
-			}         
+			for ( int i = 0; i < gamels.size() ; i++ ) {
+				Game game = gamels.get( i );
+				sb.append("\n[" + i + "] " + game.getName() + " { compressed : " + game.isCompressed() + " }" );		
+			}
+			System.out.println("\n" + sb.toString() );
+			
+			Game game = gamels.get( scan.nextInt() );
+			System.out.println("\n" + game.getName() );
+			System.out.println("[ 0 ] play\n[ 1 ] compress/extract ");
+			switch( scan.nextInt() ) {
+				case 0:
+					game.play();
+				break;
+				case 1:
+					if( game.isCompressed() ) {
+						game.extract( new OnProcessAdapter() {} );
+					} else {
+						game.compress( new OnProcessAdapter() {} );
+					}
+				break;
+			}
 		}
 	}
 	
-	private void findGames( File file ) {
-	
-		if ( file.isDirectory() || CompactFile.isCompactFile( file ) ) {
-			if( !Games.hasPossibleGame( file , onPossibleGameFoundListener ) ) {
-				if ( file.isDirectory() && !file.matchesPath( ignoreFolder ) ) {
-					for ( File f : file.listFiles() ) {
-						findGames( f );
-					}				
-				} 
-			}
-			
-			if ( file.matchesPath( moreFileContainer ) ) {
-				for ( File sf : file.listFiles() ) {
-					if ( sf.isDirectory()) {
-						findGames( sf );
+	void findGames( File file ) {
+		Games.findPossibleGames( file, new Games.OnGameFoundListener() {
+					@Override
+					public void onGameFound( Game game ) {
+						gamels.add( game );
+					}
+					@Override
+					public void onLaunchersFound( Launcher[] launchers ) {
+						handleMultipleLaunchers( launchers );					
+					}
+					@Override
+					public void onCompactLaunchersFound( CompactLauncher[] launchers ) {
+						handleMultipleLaunchers( launchers );					
 					}
 				}
+			);
+		}
+
+	private void handleMultipleLaunchers( CompactLauncher[] compactLaunchers ) {
+		Launcher[] launchers = new Launcher[ compactLaunchers.length ];
+		
+		for ( int i = 0; i < compactLaunchers.length; i++ ) {
+			try {
+				launchers[ i ] = new Launcher( compactLaunchers[ i ] );			
+			} catch ( Exception e ) {
+				Log.error( e.getMessage() );
 			}
 		}
+		
+		handleMultipleLaunchers( launchers );
 	}
 	
-	Games.OnPossibleGameFoundListener onPossibleGameFoundListener = new Games.OnPossibleGameFoundListener() {
-		@Override
-		public void onGameFound( Game game ) {			
-			gamels.add(game);
-		}		
-		
-		public void onIgnoreFileFound( File f ) {
-			System.out.println( f.getParentFile() + "\\ --> [ IGNORED ]");
-			ignoreFolder = f.getParentFile();
-		}
-		
-		@Override
-		public void onLauncherListFound( List<Launcher> launchers ) {
-			handleNewLaunchers( launchers );
-		}
-		
-		@Override
-		public void onCompactLauncherListFound( List<CompactLauncher> launchers ) {
-			handleNewCompactLaunchers( launchers );
-		}
-		@Override
-		public void onMoreFileFound( File file ) {   			
-			moreFileContainer = file.getParentFile();
-		}
-	};
-	
-	
-	private void handleNewCompactLaunchers( List<CompactLauncher> launchers ) {
-		List<Launcher> list = new ArrayList<Launcher>();
-		for ( CompactLauncher l : launchers ) {
-			list.add( new Launcher(l) );
-		}
-		handleNewLaunchers( list );
-	}
-	
-	private void handleNewLaunchers( List<Launcher> launchers ) {
-		Scanner scan = new Scanner( System.in );
-		String answer = null;
-		File container = null;
-		
-		if ( CompactFile.isCompactFile( launchers.get(0))) {
-			container = new CompactFile( launchers.get(0)).getParentRootFile();
+	private void handleMultipleLaunchers( Launcher[] launchers ) {
+		File container;
+		if ( CompactFiles.isCompactFile( launchers[ 0 ] ) ) {
+			container = new CompactFile( launchers[ 0 ] ).getParentRootFile();
 		} else {
-			container =  launchers.get(0).getParentFile();
+			container = launchers[ 0 ].getParentFile();
 		}
-		System.out.println("[ " + launchers.size() + " ] Launchers Found in : " + container );
-		System.out.println("Would you like to define this folder as a Game ? [ y / n ]");
-		if( ( answer = scan.nextLine() ).equals("y") ) {
-			int index = -2;
-			while( -1 > index || index > launchers.size() ) {
-				int i = 0;
-				System.out.println("Please, select which is the main launcher");
-				System.out.println("[ -1 ] { Cancel }");
-				for ( Launcher l : launchers ) {
-					System.out.println( String.format("[ %2d ] %s", i, l.getAbsolutePath() ));
-					i ++ ;
-				}
+		
+		System.out.println( "\n[More than a single launcher found in \"" + container + "\"]"); 
+		System.out.println("Would you like to define \"" + container + "\" as a game ? [ y / n]");		
+		if ( positiveAnswer() ) {
+			selectMainLauncher( launchers );
+			
+		} else {
+			System.out.println("\nWould you like to create a ignore file?");
+			if ( positiveAnswer() ) {
 				try {
-					index = scan.nextInt();
-				} catch ( Exception e ) {}
-			}
-			
-			if ( index != -1 ) {
-			
-				Launcher launcher = launchers.get(index);
-				if ( CompactFile.isCompactFile( launcher ) ) {
-					gamels.add( new Game( new CompactLauncher( launcher )));
-				} else {
-					gamels.add( new Game( launcher ));
-				}
-			
-			}
-			
-		} else {
-			System.out.println("Would you like to create an ignore file ? [ y / n ]");
-			if ( ( answer = scan.nextLine() ).equals("y") ) {
-				try {                                                         						
-					GameInfo.createIgnoreFileIn( new Folder ( container ) );
-					System.out.println("An ignore file was created in folder : " + container );	
-					
-				} catch ( IOException e ) {
-					System.out.println( e.getMessage() );
-					System.out.println("Error: counld not create a ignore file");
+					File folder = container;
+					if ( CompactFiles.isCompactFile( container ) ) {
+						folder = container.getParentFile();
+					}
+					new File( folder.getAbsolutePath() + "/" + Games.FILE_NAME_IGNORE ).createNewFile();
+				} catch ( Exception e ) {
+					Log.error( e.getMessage() );
 				}
 			}
 		}
+		
+		
+		
+	}	
+	
+	private void selectMainLauncher( Launcher[] launchers ) {
+		StringBuilder sb = new StringBuilder();
+		for ( int i = 0; i < launchers.length; i++ ) {
+			sb.append( String.format( "[ %2d] %s\n", i, launchers[i].getAbsolutePath()) );
+		}
+		int answer = -2;
+		do {
+		
+			System.out.println("\nPlease select the main launcher");
+			System.out.println("[ -1] quit");
+			System.out.println( sb.toString());
+			
+			try {
+				answer = Integer.parseInt( scan.nextLine() );
+			} catch ( Exception e ) {
+			
+			}
+			
+		
+		} while( !( -2 < answer && answer < launchers.length ) );
+		if ( answer != -1 ) {
+			gamels.add( new Game( launchers[ answer ]));
+		}
 	}
 	
-	public static void main ( String[] args ) {		
-		new Gemu( new Folder(args[0]) );
+	private boolean positiveAnswer() {
+		String answer = null;
+		do {
+			try {
+				answer = scan.nextLine();
+				
+			} catch ( Exception e ) {
+			
+			}
+			
+		} while ( !isValidAnswer( answer ) );
+		
+		switch( answer.toLowerCase() ) {
+			case "y":                   
+			case "yes":
+				return true;
+		}
+		
+		return false;
+	}
+	
+	private boolean isValidAnswer( String answer ) {
+		String[] possibles = new String[] {"yes","no","n","y" };
+		for ( String p : possibles ) {
+			if ( p.equals( answer.toLowerCase() )) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	
+	
+	public static void main( String[] args ) {
+		File file;
+		if ( args.length > 0 ) {
+			file = new File( args[0] );
+			if ( !file.isDirectory() ) {
+				Log.error("Parameter most be a directory");
+				System.exit( 1 );
+			}
+		} else {
+			file = new File(".");
+		}
+		new Gemu( file );
 	}
 }

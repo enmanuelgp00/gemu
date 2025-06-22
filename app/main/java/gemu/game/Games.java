@@ -1,179 +1,176 @@
 package gemu.game;
-
-import gemu.system.*;
-import gemu.file.*;
-import java.io.IOException;
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Set;     
-import java.util.TreeSet;     
-import java.util.HashSet;     
-import java.util.HashMap;
-
+				   
+import gemu.system.Log;
+import gemu.io.*;
+import java.util.*;
 
 public final class Games {
 
-	private static String[] screenshotNames = new String[]{ "jpg", "png" };	
-	public static String MORE_FILE_NAME = ".more";
+	public static int STATE_RUNNING = 1;
+	public static int STATE_COMPRESSING = 2;
+	public static int STATE_EXTRACTING = 3;
+	public static int STATE_FREE = 0;
 	
-	public static File defineMoreFileIn( Folder folder ) {
-		return new File( folder.getAbsolutePath() + "\\" + MORE_FILE_NAME );
+	public static String FILE_NAME_IGNORE = ".gemuignore";  
+	public static String FILE_NAME_MORE = ".more";
+	
+	public static boolean isCompactLauncher( File file ) {
+		return isLauncher( file ) && CompactFiles.isCompactFile( file );
 	}
-	public static boolean isScreenshot( File f ) {
-		for ( String n : screenshotNames ) {
-			if ( f.hasExtension( n ) ) {
-				return true;
+	
+	public static boolean isGameInfo( File file ) {
+		return file.hasExtension( GameInfo.EXTENSION );
+	}
+	
+	public static boolean isLauncher( File file ) {
+		if ( !file.isDirectory() && file.hasExtension("exe") ) {			
+			String name = file.getName().toLowerCase();
+			String[] exceptions = new String[] {"crash", "unins", "setting", "config"};
+			boolean found = false;
+			for ( String exception : exceptions ) {
+				if ( name.contains( exception ) ) {
+					return false;
+				}
 			}
+			return true;
 		}
 		return false;
 	}
 	
 	public static boolean isMoreFile( File file ) {
-		return file.getName().equals( MORE_FILE_NAME );
+		return !file.isDirectory() && file.getName().equals( FILE_NAME_MORE );
 	}
 	
-	public static boolean hasPossibleGame( File file, OnPossibleGameFoundListener listener ) {
-		boolean value = false;
-		boolean hasDirectories = false;
-		
-		List<File> screenshots = new ArrayList<File>();
-		List<Launcher> launcherls = new ArrayList<Launcher>();
-		List<Game> gamels = new ArrayList<Game>();
-		List<CompactFile> compactGames = new ArrayList<CompactFile>();
-		HashMap< CompactFile, List<CompactLauncher>> compactLaunchersMap = new HashMap<CompactFile , List<CompactLauncher>>();
-		
-		for ( File f : file.listFiles() ) {
-		
-			if ( GameInfo.isIgnoreFile( f ) ) {
-				listener.onIgnoreFileFound( f );
-				return false;
+	public static boolean isGameContainer( File file ) {
+		return file.isDirectory() || CompactFiles.isCompactFile( file );
+	}
+	
+	public static void findPossibleGames( File file, OnGameFoundListener listener ) {
+		if ( isGameContainer( file ) && !containsIgnoreFile( file ) ) {
+			boolean hasMore = false;
+			Set<File> folderSet = new HashSet<File>();
+			Set<Game> gameSet = new HashSet<Game>();
+			List<Launcher> launcherls = new ArrayList<Launcher>();
+			List<CompactFile> compactFilels = new ArrayList<CompactFile>();
+			List<CompactFile> compactGameRootFiles = new ArrayList<CompactFile>();
+
+			for ( File f : file.listFiles() ) {
+				if ( isMoreFile( f ) ) {
+					hasMore = true;
+					
+				} else if ( isLauncher( f ) ) {
+					try {
+						launcherls.add( new Launcher( f ));					
+					} catch ( Exception e ) {
+						e.printStackTrace();
+						Log.error( e.getMessage() );
+					}
+					
+				} else if ( CompactFiles.isCompactFile( f ) ) { 
+					compactFilels.add( new CompactFile( f ) );
 				
-			} else if ( CompactFile.isCompactFile( f ) ) {
-				CompactFile compactFile = new CompactFile( f );
-				
-				if ( compactFile.isRootFile() ) {
-					List<CompactLauncher> compactLaunchers = new ArrayList<CompactLauncher>();				
-					for ( CompactFile cf : compactFile.listFiles() ) {
-						if ( Launcher.isLauncherFile( cf ) ) {					
-							compactLaunchers.add( new CompactLauncher( cf ) );
+				} else if ( f.isDirectory() ) {
+					folderSet.add( f );
+					
+				} else if ( isGameInfo( f )) {
+					Game game = new Game( GameInfo.parse( f ) );
+					gameSet.add( game );
+					
+					if ( game.isCompressed() ) {
+						compactGameRootFiles.add( new CompactFile ( game.getLauncher()).getParentRootFile() );
+					}
+				}
+			}
+			
+			if ( launcherls.size() > 0 ) {
+				if ( launcherls.size() == 1 ) {
+					
+					boolean gameFound = false;
+					Launcher launcher = launcherls.get( 0 );
+					
+					for ( Game game : gameSet ) {
+						
+						if ( game.getLauncher().matchesPath( launcher ) ) {
+							gameFound = true;
+							break;
 						}
 					}
-					if ( compactLaunchers.size() > 0 ) {
-						compactLaunchersMap.put( compactFile , compactLaunchers );					
-					}
-				}
-			
-			} else if ( GameInfo.isGameInfoFile( f ) ) {
-				Game game = new Game( GameInfo.parse( f ) );
-				gamels.add( game );
-				
-				if ( CompactFile.isCompactFile( game.getLauncher() ) ) {
-					compactGames.add( new CompactFile( game.getLauncher()).getParentRootFile() );
-				}
 					
-			
-			} else if ( Launcher.isLauncherFile( f ) ) {
-				launcherls.add( new Launcher( f ) );
-				
-			} else if ( Games.isScreenshot( f ) ) {
-				screenshots.add( f );
-			} else if ( Games.isMoreFile( f ) ) {
-				listener.onMoreFileFound( f );
-			} else if ( f.isDirectory() ) {
-				hasDirectories = true;
-			}
-		}
-		
-		if ( hasDirectories && compactGames.size() > 2 ) {
-			File more = Games.defineMoreFileIn( new Folder ( file ) );
-			if ( !more.exists() ) {
-				try {
-					more.createNewFile();
-				} catch ( Exception e ) {
-					Log.error( e.getMessage() );
-				}
-			}
-		}
-		
-		if ( gamels.size() > 0 ) {
-			if ( gamels.size() == 1 ) {
-				Game game = gamels.get( 0 );
-				Set<File> gameScreenshots = new HashSet<File>( Arrays.<File>asList( game.getScreenshots() ) );
-				for ( File f : screenshots ) {				
-					if ( !gameScreenshots.contains(f)) {
-						System.out.println("New screenshot in game : [ " + game.getName() + " ] ");
-						game.addScreenshot( f );
+					if ( !gameFound ) {
+						gameSet.add( new Game( launcher ) );
 					}
-				}
-				
-				listener.onGameFound( game );
-				return true;
-			} else {				 
-				for ( Game game : gamels ) {
-					listener.onGameFound( game );
-				}
-			}
-			value = true;
-		}
-		
-		if ( launcherls.size() > 0 ) { 
-			if ( launcherls.size() == 1 ) {
-				Launcher l = launcherls.get( 0 ); 
-				boolean gameFound = false;
-				
-				for ( Game g : gamels ) {
-					if ( g.getLauncher().matchesPath( l ) ) {
-						gameFound = true;
-						break;
+				} else {
+					boolean found = false;
+					for ( Game game : gameSet ) {
+						for ( Launcher launcher : launcherls ) {
+							if ( game.getLauncher().matchesPath( launcher ) ) {
+								found = true;
+								break;
+							}
+						}
 					}
-				}
-				
-				if ( !gameFound ) {
-					Game game = new Game( l );
-					listener.onGameFound( game ); 
-					Log.info( game.getName() + " : New game found");
-				}
-				return true;
-			} else {
-				if ( gamels.size() == 0 ) {
-					listener.onLauncherListFound( launcherls );
+					if ( !found ) {
+						listener.onLaunchersFound( launcherls.toArray( new Launcher[ launcherls.size() ]) );					
+					}
 				}
 			}
 			
-			return true;
-		}
-		
-		if ( compactLaunchersMap.keySet().size() > 0 ) {
-			for ( CompactFile key : compactLaunchersMap.keySet() ) { 
-				
-				if ( !compactGames.contains( key ) ) {
-					List<CompactLauncher> launchers = compactLaunchersMap.get( key );
-					if ( launchers.size() == 1 ) {
-						Game game = new Game( launchers.get(0) );
-						listener.onGameFound( game ); 
-						Log.info( game.getName() + " : New game found");
-					} else {
-						listener.onCompactLauncherListFound( launchers );
+			for ( CompactFile compactFile : compactFilels ) {
+				if ( !compactGameRootFiles.contains( compactFile ) ) {
+					List<CompactLauncher> compactLaunchers = new ArrayList<CompactLauncher>();
+					for ( CompactFile cf : compactFile.listFiles() ) {
+						if ( isCompactLauncher( cf ) ) {
+							compactLaunchers.add( new CompactLauncher( cf ) );						
+						}
 					}
+					if ( compactLaunchers.size() > 0 ) {					  
+						if ( compactLaunchers.size() == 1 ) {
+							listener.onGameFound( new Game( compactLaunchers.get(0) ) );
+						} else {
+							listener.onCompactLaunchersFound( compactLaunchers.toArray( new CompactLauncher[ compactLaunchers.size() ] ) );
+						}
+					} 
 				}
 				
 			}
-			return true;
+			
+			for ( Game g : gameSet ) {
+				listener.onGameFound( g );
+			}
+			
+			if ( launcherls.size() == 0 ) {
+				for ( File folder : folderSet ) {
+					findPossibleGames( folder, listener );
+				}
+			}
+		
 		}
 		
-		return value;
+		
+		
+		
 	}
 	
-	public interface OnPossibleGameFoundListener {
+	public static boolean containsIgnoreFile( File file ) {
+		if ( file.isDirectory() ) {			
+			for ( File f : file.listFiles() ) {
+				if ( isIgnoreFile( f ) ) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	public static boolean isIgnoreFile( File file ) {
+		return !file.isDirectory() && file.getName().equals(FILE_NAME_IGNORE);
+	}
+	
+	public interface OnGameFoundListener {
 		public void onGameFound( Game game );
-		public void onLauncherListFound( List<Launcher> launchers );
-		public void onCompactLauncherListFound( List<CompactLauncher> launchers );
-		public void onIgnoreFileFound( File file );                                 
-		public void onMoreFileFound( File file );
+		public void onLaunchersFound( Launcher[] launcherls);
+		public void onCompactLaunchersFound( CompactLauncher[] launcherls);
+		
 	}
-	
-	
 }
-
-

@@ -1,334 +1,262 @@
 package gemu.game;
 
+import gemu.system.Compressions;
+import gemu.system.event.*;
+import gemu.io.*;
 import gemu.system.*;
-import gemu.file.*;
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Set;     
-import java.util.TreeSet;     
-import java.util.HashSet;     
-import java.util.HashMap;
+import gemu.system.event.*;
+import java.util.Set;
 
 public class Game {
-	private GameInfo info;
+	private long length = 0;
+	private int state = Games.STATE_FREE;
+	GameInfo info;
 	
-	public static final Set<String> tagsCollection = new TreeSet<String>();
-	
-	public static final int COMPRESSION_STATE_FREE = 0;
-	public static final int COMPRESSION_STATE_COMPRESSING = 1;
-	public static final int COMPRESSION_STATE_DECOMPRESSING = -1;
+	public Game( GameInfo gameInfo ) {
+		this.info = gameInfo;
+	}
 	
 	public Game( Launcher launcher ) {
 		this.info = new GameInfo( launcher );
-		setLauncher( launcher ).
-		setFavorite( false );
-		
-		addTagsToCollection();
 	}
 	
-	private void addTagsToCollection() {
-		for ( String s : getTags() ) {
-			Game.tagsCollection.add( s );
+	public Game( CompactLauncher compactLauncher ) {
+		this.info = new GameInfo( compactLauncher );
+	}
+	
+	public void play() {
+		try {
+			getLauncher().run();		
+		} catch ( Exception e ) {
+			Log.error( e.getMessage() );
 		}
-	}
-	
-	public Game( CompactLauncher launcher ) {		
-		this.info = new GameInfo( launcher );
-		setLauncher( launcher ).
-		setFavorite( false ); 
-		addTagsToCollection();
-	}
-	
-	public Game( GameInfo info ) {
-		this.info = info;
-		if ( info.get( GameInfo.Key.name ).length == 0 ) {
-			GameNames.interpret( this , new GameNames.InterpreterListener() {
-				@Override
-				public void onVersionInterpreted( String v ) {
-					System.out.println( v );
-				}
-				@Override
-				public void onSitesInterpreted( String[] sites ) {
-					System.out.println( sites );
-				
-				}
-				@Override
-				public void onNameInterpreted( String name ) {
-					System.out.println( name );
-				
-				}
-			});
-		}  
-		addTagsToCollection();
-	}
-	
-	
-	public Game setLauncher( Launcher launcher ) {
-		String path = launcher.getAbsolutePath().substring( getFolder().getAbsolutePath().length() );
-		info.set( GameInfo.Key.launcher, path );
-		info.commit();
-		return this;
-	}
-	
-	public Game setLauncher( CompactLauncher launcher ) {
-		String path = launcher.getAbsolutePath().substring( getFolder().getAbsolutePath().length() );
-		info.set( GameInfo.Key.launcher, path );
-		info.commit();		
-		return this;
-	}
-	
-	public Launcher getLauncher() {
-		return new Launcher ( info.getFolder().getAbsolutePath() + "/" + info.get( GameInfo.Key.launcher )[0] );
-	}	
-	
-	public Game setName( String name ) {
-		info.set( GameInfo.Key.name, name );
-		info.commit();
-		return this;
 	}
 	
 	public String getName() {
-		String[] names = info.get( GameInfo.Key.name );
-		if ( names.length > 0 ) { 
-			return names[0];
-		}
-		Launcher launcher = getLauncher();
-		if ( CompactFile.isCompactFile( launcher ) ) {
-			return new CompactFile( launcher ).getParentRootFile().getBaseName();
+		String[] names = info.get( GameInfo.key.name );
+		if ( names.length > 0 ) {
+			return names[0];			
 		}
 		
+		Launcher launcher = getLauncher();
+		if ( CompactFiles.isCompactFile( launcher ) ) {
+			return new CompactLauncher( launcher ).getParentRootFile().getBaseName();
+		}
 		return getFolder().getName();
-	}
-	public Game removeTag( String tag ) {
-		info.modif( GameInfo.Key.tags ).remove( tag );
+		
+	};
+	
+	private void setLauncher( Launcher launcher ) {
+		String name = launcher.getAbsolutePath();
+		name = name.substring( getFolder().getAbsolutePath().length() );		
+		
+		info.set( GameInfo.key.launcher, name );	
 		info.commit();
-		return this;
-	}
-	public Game addTag( String tag ) {
-		info.add( GameInfo.Key.tags, tag );
-		info.commit();
-		return this;
 	}
 	
-	public String[] getTags() {
-		return info.get( GameInfo.Key.tags );
-	}
+	public Launcher getLauncher() {
+		try {
+			return new Launcher ( getFolder() + info.get( GameInfo.key.launcher )[0] );		
+		} catch( Exception e ) {
+			Log.error( e );
+			e.printStackTrace();
+		}
+		return null;
+	} 
 	
-	
-	public void play() {
-		getLauncher().run();
-	}
-	public void setFolder( Folder folder ) {
-		info.setFolder( folder );
-	}
-	public Folder getFolder() {
+	public File getFolder() {
 		return info.getFolder();
 	}
 	
-	public void addScreenshot( File file ) {
-		if ( file.exists() ) {
-			info.modif( GameInfo.Key.screenshots ).add( file.getName() );
-			info.commit();		
-		}
-	}
-	
-	public File[] getScreenshots() {
-		String[] names = info.get( GameInfo.Key.screenshots );
-		File[] screenshots = new File[ names.length ];
-		
-		for ( int i = 0; i < names.length; i++ ) {
-			screenshots[i] = new File( getFolder() + "\\" + names[i] );
-		}
-		
-		return screenshots;
-	}
-	public long length() {
-		Launcher launcher = getLauncher();
-		if ( CompactFile.isCompactFile( launcher )) {
-			return new CompactFile( launcher ).getParentRootFile().length();
-		}
-		return getFolder().length();
-	}
-	
-	public Game setFavorite( boolean b ) {
-		info.set( GameInfo.Key.favorite, String.valueOf( b ) );
-		info.commit();
-		return this;
+	private void setFolder( File folder ) {
+		info.setFolder( folder );
 	}
 	
 	public boolean isFavorite() {
-		String[] arr = info.get( GameInfo.Key.favorite );
-		if ( arr.length > 0 ) {
-			return Boolean.parseBoolean( info.get( GameInfo.Key.favorite )[0] );		
+		String[] values = info.get( GameInfo.key.favorite );
+		if ( values.length > 0 ) {
+			return Boolean.parseBoolean( values[0] );
 		}
+		setFavorite( false );
 		return false;
 	}
 	
-	public Game setVersion( String value ) {
-		if ( value.charAt(0) != 'v') {
-			value = 'v' + value;
-		}
-		info.set( GameInfo.Key.version, value );
+	public void setFavorite( boolean value ) {
+		info.set( GameInfo.key.favorite, String.valueOf( value ));
 		info.commit();
-		return this;
 	}
 	
-	public String getVersion() {
-		String[] list = info.get( GameInfo.Key.version );
-		if ( list.length > 0 ) {
-			String value = list[0];
-			if ( value.charAt(0) != 'v') {
-				value = 'v' + value;
-			};
-			setVersion( value );
-			return value;
+	public String[] getTags() {
+		return info.get( GameInfo.key.tags );
+	}
+	
+	public void addTag( String tag ) {
+		Set<String> list = info.modif( GameInfo.key.tags );
+		if ( !list.contains( tag ) ) {
+			list.add( tag );		
+			info.commit();
 		}
-		return null;
+		
 	}
 	
-	public boolean isCompressed() {
-		return CompactFile.isCompactFile( getLauncher() );
+	public void removeTag( String tag ) {
+		info.modif( GameInfo.key.tags).remove( tag );
+		info.commit();
+	}
+	
+	public File[] getScreenshots() {
+		String[] names = info.get( GameInfo.key.screenshots );
+		if ( names.length == 0 ) {
+			return new File[0];
+		}
+		File[] screenshots = new File[ names.length ];
+		for ( int i = 0; i < names.length; i ++ ) {
+			screenshots[ i ] = new File( getFolder().getAbsolutePath() + "/" + names[ i ] );
+		}
+		return screenshots;
+	}
+	
+	public int getState() {
+		return state;
+	}
+	public void setState( int state ) {
+		this.state = state;
+	}
+	
+	public long length() {
+		Launcher launcher = getLauncher();
+		if ( CompactFiles.isCompactFile( launcher ) ) {
+			length = new CompactFile( launcher ).getParentRootFile().length();
+		} else {
+			length = 0;
+			calculateLength( getFolder() );
+		}
+		
+		return length;
+	}
+	
+	private void calculateLength( File file ) {
+		if ( file.isDirectory() ) {
+			for ( File f : file.listFiles() ) {
+				calculateLength( f );
+			}
+		} else {
+			length += file.length();
+		}
 	}
 	
 	public void openFolder() {
-		Shell.exec( new Shell.Command("explorer", getFolder().getAbsolutePath() ) );
+		Shell.exec( new Shell.Command( null, new OnProcessAdapter() {}, "explorer", getFolder().getAbsolutePath() ));
 	}
 	
-	public int getCompressionState() {
-		for ( Compressions.CProcess p : Compressions.getList() ) {
-			File f = p.getFile();
-			File tmp = null;
-			if ( f.matchesPath( getFolder() ) ) {
-				return COMPRESSION_STATE_COMPRESSING;
-			} else if ( ( tmp = new CompactFile( getLauncher() ).getParentRootFile() ) != null ) {
-				if ( tmp.matchesPath( f ) ) {
-					return COMPRESSION_STATE_DECOMPRESSING;				
+	public String getVersion() {
+		String[] names = info.get( GameInfo.key.version );
+		if ( names.length > 0 ) {
+			return names[0];
+		}
+		return "";
+	}
+	
+	public boolean isCompressed() {
+		return CompactFiles.isCompactFile( getLauncher() );
+	}
+	
+	public void compress( OnProcessListener listener ) {
+		if ( !isCompressed() && getState() == Games.STATE_FREE ) { 
+			setState( Games.STATE_COMPRESSING );
+			String name = getName() + ".7z";
+			String launcherName = getLauncher().getName();
+			
+			Compressions.carryOut( new Compressions.CompressProcess( 
+				name, 
+				getFolder(), 
+				new OnProcessAdapter() {
+					@Override
+					public void onProcessStarted( Process process ) {
+						Log.info("Compressing : " + getName()); 
+						listener.onProcessStarted( process );
+					}
+					@Override
+					public void onStreamLineRead( String line ) {
+						System.out.println( line ); 
+						listener.onStreamLineRead( line );
+					}
+					@Override
+					public void onProcessFinished( Process process, int exitCode ) {
+						if ( exitCode == 0 ) {
+							CompactFile compactFile = new CompactFile( getFolder() + "/" + name );
+							CompactFile c = Files.find( compactFile, launcherName );
+							System.out.println( c );
+							setLauncher( new Launcher( c ) );
+							setState( Games.STATE_FREE );
+						} 
+						listener.onProcessFinished( process, exitCode );
+					}
+				}, 
+				new String[] { "*.jpg", "*.png", "*.gemu" } ) 
+			);
+		} else {
+			Log.error( getName() + " : is already compressed");
+		}
+	}  	
+	
+	public void extract( OnProcessListener listener ) {
+		if ( isCompressed() && getState() == Games.STATE_FREE ) { 
+			setState( Games.STATE_EXTRACTING );
+			CompactFile compression = new CompactFile( getLauncher()).getParentRootFile();
+			String name = compression.getWrapperNameInside();
+			String folderPath = getFolder().getAbsolutePath();
+			
+			File extractionFolder;
+			
+			if ( name == null ) {
+				name = compression.getBaseName();
+				extractionFolder = new File( folderPath + "/" + name );
+				if ( !extractionFolder.exists() ) {
+					extractionFolder.mkdir();      
 				}
-			}
-		}
-		
-		return COMPRESSION_STATE_FREE;
-		
-	}
-	
-	
-	public void compress( OnSuccessListener listener ) {
-		if ( getCompressionState() == COMPRESSION_STATE_FREE ) {
-		
-			if ( !isCompressed() ) {  			
-				File folder = getFolder();
-				Launcher launcher = getLauncher();
-				
-				Compressions.add( new Compressions.CompressProcess( folder, new Compressions.OnCompressListener() {
-					@Override
-					public void onStart() {
-						System.out.println("\n[ Compressing : " + getName() + " ]"); 
-						listener.onStart();
-					}
-					@Override
-					public void onError() {
-						listener.onError(); 
-					}
-					@Override
-					public void onSuccess( CompactFile compactFile ) {
-					
-						for ( CompactFile f : compactFile.listFiles() ) {
-							if (f.hasSameName( launcher )) {           
-								Log.info( f + " : Relocating launcher");
-								setLauncher( new CompactLauncher( f ));
-								break;
-							}
-						}
-						listener.onSuccess();
-					}
-					
-				}, "*.jpg","*.png", "*." + GameInfo.EXTENSION ) );
-			
-				
 			} else {
-				System.out.println( "[ " + getName() + " ] : is already compressed");
-			}  		
-		}      		
-	}
-	
-	public void decompress( OnSuccessListener listener ) {
-		if ( getCompressionState() == COMPRESSION_STATE_FREE ) {
-		
-			if ( isCompressed() ) { 
-			
-				CompactFile compression = new CompactFile( getLauncher() );
-				
-				Compressions.add( new Compressions.DecompressProcess( compression , new Compressions.OnDecompressListener() {
-					@Override
-					public void onStart() {					
-						Log.info("\n[ Decompressing : " + getName() + " ]" );
-						listener.onStart();
-					}
-					@Override
-					public void onSingleCompactFileFoundIn( Folder folder ) {
-						/*
-						File more = Games.defineMoreFileIn( folder );
-						if ( !more.exists() ) {
-							try {
-								more.createNewFile();
-								Log.info("More than a single compact file found : more sign created");
-							
-							} catch ( Exception e) {
-								Log.error( e.getMessage() );
-								e.printStackTrace();
-							}
-						}
-						*/
-						
-					}                                                    
-					@Override
-					public void onNonSingleCompactFileFoundIn( Folder folder ) {
-						/*
-						File more = Games.defineMoreFileIn( folder );
-						if ( more.exists() ) {
-							more.delete();                                                            
-							Log.info("Single compact file found : more sign delete");
-						}
-						*/
-					}
-					@Override
-					public void onError() {
-						listener.onError();
-					}
-					@Override
-					public void onSuccess( Folder folder ) {  
-						
-						if ( !getFolder().matchesPath( folder ) ) {
-							setFolder( folder );  		
-						}
-						
-						File file = Files.findExactNameFile( folder, getLauncher().getName() );	
-						
-						setLauncher( new Launcher( file ) );
-						/*
-						String oldPath = compression.getAbsolutePath();
-						String root = compression.getParentRootFile().getAbsolutePath();
-						String newPath = oldPath.substring( root.length() );
-						
-						if ( !getFolder().matchesPath( folder ) ) {
-							Log.info(getFolder() + " : Relocating folder");
-							setFolder( folder );               
-						}
-						
-						setLauncher( new Launcher( getFolder().getAbsolutePath() + "/" + newPath ) );
-						*/
-						listener.onSuccess();
-					}
-				}));
-			
-			} else {
-				System.out.println( "[ " + getName() + " ] : is not compressed");
+				extractionFolder = getFolder();
 			}
+			
+			File gameContainer = new File( folderPath + "/" + name );
+			
+			
+			Compressions.carryOut( new Compressions.ExtractProcess(  extractionFolder, compression, new OnProcessAdapter() {			
+				@Override
+				public void onProcessStarted( Process process ) {
+					Log.info("Extracting : " + getName());
+					listener.onProcessStarted( process );
+				}
+				@Override
+				public void onStreamLineRead( String line ) {
+					System.out.println( line );
+					listener.onStreamLineRead( line );
+				}
+				@Override
+				public void onProcessFinished( Process process, int exitCode ) {
+					if ( exitCode == 0 ) {
+											
+						String name = getLauncher().getName();					
+						if ( !getFolder().matchesPath( gameContainer ) ) {
+							setFolder( gameContainer );
+						}
+						setLauncher( new Launcher( Files.find( getFolder(), name ) ) );	
+						compression.delete();  
+						setState( Games.STATE_FREE );
+					} 
+					
+					listener.onProcessFinished( process, exitCode );
+					
+				}
+			} ) );
+			
+		} else {
+			Log.error( getName() + " : is already extracted");
 		}
-		
 	}
 	
+	public void delete() {
 	
-	
+	}
 }
