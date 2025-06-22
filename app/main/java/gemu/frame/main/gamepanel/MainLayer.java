@@ -44,9 +44,9 @@ class MainLayer extends JPanel {
 			
 			if ( screenshots.length > 0 ) {			
 				setOpaque( true );
-				
+				File source = screenshots[0];
 				try {
-					screenshot = ImageIO.read( screenshots[0] );
+					screenshot = ImageIO.read( source );
 					
 					float widthSc = size.width / (float) screenshot.getWidth( null );
 					float heightSc = size.height / (float) screenshot.getHeight( null );
@@ -62,7 +62,9 @@ class MainLayer extends JPanel {
 					
 					
 				} catch ( IOException ex ) {
-				   System.out.println( ex.getMessage() );
+				   System.out.println( source.getAbsolutePath() + ex.getMessage() );
+				   ex.printStackTrace();
+				   
 				}
 				
 			} else {

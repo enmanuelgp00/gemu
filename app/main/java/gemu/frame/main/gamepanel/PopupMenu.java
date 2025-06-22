@@ -115,7 +115,7 @@ class PopupMenu extends JPopupMenu {
 		@Override
 		public void show( Component c, int x, int y ) {
 			super.show( c, x, y );
-			if ( gamePanel.getGame().getState() == Games.STATE_FREE ) { 
+			if ( gamePanel.getGame().getState() == Games.STATE_STANDBY ) { 
 			
 				if ( gamePanel.getGame().isCompressed() ) {
 					play.setEnabled( false );

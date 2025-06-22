@@ -9,11 +9,16 @@ import java.util.Set;
 
 public class Game {
 	private long length = 0;
-	private int state = Games.STATE_FREE;
 	GameInfo info;
 	
 	public Game( GameInfo gameInfo ) {
 		this.info = gameInfo;
+		int state = getState();
+		if ( state != Games.STATE_DELETED ) {
+			if ( state != Games.STATE_STANDBY ) {
+				setState( Games.STATE_STANDBY );
+			}
+		}
 	}
 	
 	public Game( Launcher launcher ) {
@@ -25,12 +30,22 @@ public class Game {
 	}
 	
 	public void play() {
-		try {
-			getLauncher().run();		
-		} catch ( Exception e ) {
-			Log.error( e.getMessage() );
+		if ( getState() == Games.STATE_STANDBY ) {
+			Thread th = new Thread( new Runnable() {
+				@Override
+				public void run() {
+					try {
+						setState( Games.STATE_RUNNING );
+						getLauncher().run();		
+						setState( Games.STATE_STANDBY );
+					} catch ( Exception e ) {
+						Log.error( e.getMessage() );
+					}				
+				}
+			});
+			th.start();		
 		}
-	}
+	}	
 	
 	public String getName() {
 		String[] names = info.get( GameInfo.Key.name );
@@ -69,6 +84,9 @@ public class Game {
 	}
 	
 	private void setFolder( File folder ) {
+		for ( File f : getScreenshots() ) {
+			f.renameTo( new File( folder.getAbsolutePath() + "/" + f.getName()) );
+		}
 		info.setFolder( folder );
 	}
 	
@@ -117,10 +135,21 @@ public class Game {
 	}
 	
 	public int getState() {
-		return state;
+		String[] names = info.get( GameInfo.Key.state );
+		if ( names.length > 0 ) {
+			try {
+				return Integer.parseInt( names[0] );
+			} catch ( Exception e ) {
+				e.printStackTrace();
+				System.exit( 1 );
+			}
+		}
+		setState( Games.STATE_STANDBY );
+		return Games.STATE_STANDBY;
 	}
 	public void setState( int state ) {
-		this.state = state;
+		info.set( GameInfo.Key.state, String.valueOf( state ) );
+		info.commit();
 	}
 	
 	public long length() {
@@ -162,7 +191,7 @@ public class Game {
 	}
 	
 	public void compress( OnProcessListener listener ) {
-		if ( !isCompressed() && getState() == Games.STATE_FREE ) { 
+		if ( !isCompressed() && getState() == Games.STATE_STANDBY ) { 
 			setState( Games.STATE_COMPRESSING );
 			String name = getName() + ".7z";
 			String launcherName = getLauncher().getName();
@@ -188,7 +217,7 @@ public class Game {
 							CompactFile c = Files.find( compactFile, launcherName );
 							System.out.println( c );
 							setLauncher( new Launcher( c ) );
-							setState( Games.STATE_FREE );
+							setState( Games.STATE_STANDBY );
 						} 
 						listener.onProcessFinished( process, exitCode );
 					}
@@ -201,7 +230,7 @@ public class Game {
 	}  	
 	
 	public void extract( OnProcessListener listener ) {
-		if ( isCompressed() && getState() == Games.STATE_FREE ) { 
+		if ( isCompressed() && getState() == Games.STATE_STANDBY ) { 
 			setState( Games.STATE_EXTRACTING );
 			CompactFile compression = new CompactFile( getLauncher()).getParentRootFile();
 			String name = compression.getWrapperNameInside();
@@ -209,7 +238,25 @@ public class Game {
 			
 			File extractionFolder;
 			
-			if ( name == null ) {
+			//if in origin folder are folders or are 7z file
+			boolean hasDirectories = false;
+			int compactFilesCount = 0;
+			for ( File f : getFolder().listFiles() ) {
+				if ( f.isDirectory() ) {
+					hasDirectories = true;
+					
+				} else {
+					if ( CompactFiles.isCompactFile( f ) ) {
+						compactFilesCount ++;
+					}
+				}
+				
+				if ( compactFilesCount > 1 && hasDirectories ) {
+					break;
+				}
+			}
+			
+			if ( name == null && ( hasDirectories || compactFilesCount > 1 ) ) {
 				name = compression.getBaseName();
 				extractionFolder = new File( folderPath + "/" + name );
 				if ( !extractionFolder.exists() ) {
@@ -218,9 +265,6 @@ public class Game {
 			} else {
 				extractionFolder = getFolder();
 			}
-			
-			File gameContainer = new File( folderPath + "/" + name );
-			
 			
 			Compressions.carryOut( new Compressions.ExtractProcess(  extractionFolder, compression, new OnProcessAdapter() {			
 				@Override
@@ -238,12 +282,12 @@ public class Game {
 					if ( exitCode == 0 ) {
 											
 						String name = getLauncher().getName();					
-						if ( !getFolder().matchesPath( gameContainer ) ) {
-							setFolder( gameContainer );
+						if ( !getFolder().matchesPath( extractionFolder ) ) {
+							setFolder( extractionFolder );
 						}
 						setLauncher( new Launcher( Files.find( getFolder(), name ) ) );	
 						compression.delete();  
-						setState( Games.STATE_FREE );
+						setState( Games.STATE_STANDBY );
 					} 
 					
 					listener.onProcessFinished( process, exitCode );
@@ -256,7 +300,28 @@ public class Game {
 		}
 	}
 	
-	public void delete() {
+	public File getGameContainer() {
+		Launcher launcher = getLauncher();
+		if ( CompactFiles.isCompactFile( launcher )) {
+			return new CompactFile( launcher ).getParentRootFile();
+		} else {
+			return getFolder();
+		}
+	}
 	
+	public void delete() {
+		if ( getState() == Games.STATE_STANDBY ) {			
+			setState( Games.STATE_DELETED );
+			File container = getGameContainer();
+			if ( CompactFiles.isCompactFile( container )) {
+				System.out.println( container + " is propoused to be deleted ");
+			} else {
+				for ( File f : container.listFiles() ) {
+					if ( !Games.isScreenshot( f ) && !Games.isGameInfo( f ) ) {
+						System.out.println( f + " is propoused to be deleted ");
+					} 
+				}
+			}
+		}
 	}
 }

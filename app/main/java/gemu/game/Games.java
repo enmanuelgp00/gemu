@@ -7,10 +7,11 @@ import java.util.*;
 public final class Games {
 
 	public static List<String> tagsCollection = new ArrayList<String>();
-	public static int STATE_RUNNING = 1;
-	public static int STATE_COMPRESSING = 2;
-	public static int STATE_EXTRACTING = 3;
-	public static int STATE_FREE = 0;
+	public static final int STATE_RUNNING = 1;
+	public static final int STATE_COMPRESSING = 2;
+	public static final int STATE_EXTRACTING = 3;
+	public static final int STATE_STANDBY = 0;
+	public static final int STATE_DELETED = -1;
 	
 	public static String FILE_NAME_IGNORE = ".gemuignore";  
 	public static String FILE_NAME_MORE = ".more";
@@ -163,6 +164,10 @@ public final class Games {
 		}
 		
 		return false;
+	}
+	
+	public static boolean isScreenshot( File file ) {
+		return file.hasExtension("jpg", "jpeg", "png");
 	}
 	
 	public static boolean isIgnoreFile( File file ) {
