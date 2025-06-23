@@ -4,6 +4,7 @@ import gemu.io.*;
 import gemu.system.Shell;
 import gemu.system.event.OnProcessListener;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class Launcher extends File implements Launch {
 	public Launcher ( String name ) {
@@ -16,11 +17,17 @@ public class Launcher extends File implements Launch {
 		errorIfNotExists();
 	}
 	
-	public void run( OnProcessListener listener ) {
+	public void run( boolean asAdmin , OnProcessListener listener ) {
 		errorIfNotExists();
 		try {    		 
 			if ( !CompactFiles.isCompactFile( this ) ) {			
-				Shell.exec( new Shell.Command( getParentFile(), listener , getAbsolutePath() ) );
+				String[] command;
+				if ( asAdmin ) {
+					command = new String[] { "powershell", "start-process", "-verb", "runas", "-wait", "-filepath", "'"+ getAbsolutePath() + "'"};
+				} else {
+					command = new String[] { getAbsolutePath() };
+				}				
+				Shell.exec( new Shell.Command( getParentFile(), listener , command ) );
 			} else {
 				throw new Exception() {
 					@Override

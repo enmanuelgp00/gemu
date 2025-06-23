@@ -234,7 +234,8 @@ public class GameInfo {
 		public static Key sites;      
 		public static Key version;
 		public static Key favorite;
-		public static Key state;
+		public static Key state; 
+		public static Key admin;
 		
 		static Key[] set = new Key[] {
 			name = new Key("name"),
@@ -244,7 +245,9 @@ public class GameInfo {
 			sites = new Key("sites"),      
 			version = new Key("version"),
 			favorite = new Key("star"),
-			state = new Key("state")
+			state = new Key("state"),
+			admin = new Key("admin")
+			
 		};
 		
 	}

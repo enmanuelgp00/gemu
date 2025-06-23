@@ -50,6 +50,7 @@ class PopupMenu extends JPopupMenu {
 								gamePanel.getGame().findNewScreenshots();
 								gamePanel.refreshBackground();
 							}
+							System.out.println( exitCode );
 						}
 					});
 				}

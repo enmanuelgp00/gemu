@@ -38,7 +38,7 @@ public class Game {
 				public void run() {
 					try {
 						setState( Games.STATE_RUNNING );
-						getLauncher().run( listener );		
+						getLauncher().run( needsAdmin(), listener);   						
 						setState( Games.STATE_STANDBY );
 					} catch ( Exception e ) {
 						Log.error( e.getMessage() );
@@ -48,6 +48,19 @@ public class Game {
 			th.start();		
 		}
 	}	
+	
+	public boolean needsAdmin() {
+		String[] names = info.get( GameInfo.Key.admin );
+		if ( names.length > 0 ) {
+			try {
+				return Boolean.parseBoolean( names[0] );
+			} catch( Exception e ) {
+			}
+		}
+		info.set( GameInfo.Key.admin , "false");
+		info.commit();
+		return false;
+	}
 	
 	public String getName() {
 		String[] names = info.get( GameInfo.Key.name );
