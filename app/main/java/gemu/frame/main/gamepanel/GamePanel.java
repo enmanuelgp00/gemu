@@ -2,6 +2,7 @@ package gemu.frame.main.gamepanel;
 
 import gemu.frame.main.gamepanel.infolayer.InfoLayer;
 import gemu.game.Game;
+import gemu.game.Games;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,9 +10,15 @@ import java.awt.event.*;
 
 public class GamePanel extends JPanel {
 
+	public static Color COLOR_COMPRESSED = Color.LIGHT_GRAY;
+	public static Color COLOR_STANDBY = Color.GREEN;
+	public static Color COLOR_DELETED = Color.GRAY;
+	public static Color COLOR_ERROR = Color.RED;
+
 	InfoLayer infoLayer;	
 	Game game;
 	PopupMenu popupMenu;
+	MainLayer mainLayer;
 	
 	public GamePanel( Game game ) {
 		super();                    
@@ -23,7 +30,7 @@ public class GamePanel extends JPanel {
 		popupMenu = new PopupMenu( this );
 		conditionalBackground();
 		
-		MainLayer mainLayer = new MainLayer( game );
+		mainLayer = new MainLayer( game );
 		infoLayer = new InfoLayer( this );
 		
 		add( infoLayer );
@@ -41,6 +48,14 @@ public class GamePanel extends JPanel {
 		});
 	}
 	
+	public void refreshBackground() {
+		mainLayer.revalidate();
+		mainLayer.repaint();
+		setPreferredSize( mainLayer.getPreferredSize() );
+		revalidate();
+		repaint();
+	}
+	
 	public void refreshTags() {
 		infoLayer.refreshTags();
 	}
@@ -48,15 +63,24 @@ public class GamePanel extends JPanel {
 	public void refreshFileLength() {
 		infoLayer.refreshFileLength();
 	}
+	
 	public Game getGame() {
 		return game;
 	}
 
 	private void conditionalBackground() {
-	   if ( game.isCompressed() ) {
-			 setBackground( Color.GRAY);
-		} else {                          
-			 setBackground( Color.GREEN );		
+		switch( game.getState() ) {
+		
+			case Games.STATE_DELETED :
+				setBackground( COLOR_DELETED );
+			break;                        
+			case Games.STATE_STANDBY:
+				if ( !game.isCompressed() ) {
+					setBackground( COLOR_STANDBY );				
+				} else {                 
+					setBackground( COLOR_COMPRESSED );				
+				}
+			break;
 		}
 	}
 	

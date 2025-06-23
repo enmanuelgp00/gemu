@@ -6,7 +6,7 @@ import java.util.*;
 
 public final class Games {
 
-	public static List<String> tagsCollection = new ArrayList<String>();
+	public static Set<String> tagsCollection = new TreeSet<String>();
 	public static final int STATE_RUNNING = 1;
 	public static final int STATE_COMPRESSING = 2;
 	public static final int STATE_EXTRACTING = 3;
@@ -15,6 +15,42 @@ public final class Games {
 	
 	public static String FILE_NAME_IGNORE = ".gemuignore";  
 	public static String FILE_NAME_MORE = ".more";
+	
+	public static void sort( List<Game> games ) {
+		
+		
+		Set<Game> ready = new HashSet<Game>();
+		Set<Game> fav = new HashSet<Game>();
+		Set<Game> compressed = new HashSet<Game>();
+		Set<Game> deleted = new HashSet<Game>();
+		
+		List< Set<Game> > setList = new ArrayList< Set<Game> > ();
+		setList.add( ready );
+		setList.add( fav );
+		setList.add( compressed);
+		setList.add( deleted );
+		
+		for ( Game game :  games ) {
+			if ( game.getState() == STATE_DELETED ) {
+				deleted.add( game );
+			} else if( game.isCompressed() ) {
+				if ( game.isFavorite() ) {
+					fav.add( game );
+				} else {
+					compressed.add( game );
+				}
+			} else {
+				ready.add( game );
+			}
+		}
+		
+		games.clear();
+		for ( Set<Game> set : setList ) {
+			for ( Game game : set ) {
+				games.add( game );
+			}
+		}
+	}
 	
 	public static boolean isCompactLauncher( File file ) {
 		return isLauncher( file ) && CompactFiles.isCompactFile( file );
@@ -77,7 +113,9 @@ public final class Games {
 				} else if ( isGameInfo( f )) {
 					Game game = new Game( GameInfo.parse( f ) );
 					gameSet.add( game );
-					
+					for ( String tag : game.getTags() ) {
+						tagsCollection.add( tag );
+					}
 					if ( game.isCompressed() ) {
 						compactGameRootFiles.add( new CompactFile ( game.getLauncher()).getParentRootFile() );
 					}
@@ -137,6 +175,7 @@ public final class Games {
 			}
 			
 			for ( Game g : gameSet ) {
+				g.findNewScreenshots();
 				listener.onGameFound( g );
 			}
 			

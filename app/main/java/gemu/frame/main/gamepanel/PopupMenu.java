@@ -17,6 +17,7 @@ class PopupMenu extends JPopupMenu {
 		JMenuItem decompress;
 		JMenuItem openFolder;
 		JMenuItem addTags;
+		JMenuItem delete;
 		
 		GamePanel gamePanel;
 		
@@ -30,7 +31,8 @@ class PopupMenu extends JPopupMenu {
 				compress = new JMenuItem("Compress"),
 				decompress = new JMenuItem("Extract"),
 				openFolder = new JMenuItem("Open Folder"),
-				addTags = new JMenuItem("Tagging")
+				addTags = new JMenuItem("Tagging"),
+				delete = new JMenuItem("Delete Game")
 			};
 			
 			for ( JMenuItem item : items ) {
@@ -40,7 +42,16 @@ class PopupMenu extends JPopupMenu {
 			play.addActionListener( new ActionListener() {
 				@Override
 				public void actionPerformed( ActionEvent e ) {
-					gamePanel.getGame().play();
+					gamePanel.getGame().play( new OnProcessAdapter() {
+						@Override
+						public void onProcessFinished( Process process, int exitCode ) {
+							if ( exitCode == 0 ) {
+								System.out.println("update game panel");
+								gamePanel.getGame().findNewScreenshots();
+								gamePanel.refreshBackground();
+							}
+						}
+					});
 				}
 			});
 			
@@ -55,11 +66,11 @@ class PopupMenu extends JPopupMenu {
 								@Override
 								public void onProcessFinished( Process process, int exitCode ) {
 									if ( exitCode == 0 ) {  
-										gamePanel.setBackground( Color.GRAY );
+										gamePanel.setBackground( GamePanel.COLOR_COMPRESSED );
 										gamePanel.refreshFileLength();
 									
 									} else {  
-										gamePanel.setBackground( Color.RED );	
+										gamePanel.setBackground( GamePanel.COLOR_ERROR );	
 									
 									}
 								}
@@ -81,11 +92,11 @@ class PopupMenu extends JPopupMenu {
 								@Override
 								public void onProcessFinished( Process process, int exitCode ) {
 									if ( exitCode == 0 ) {  
-										gamePanel.setBackground( Color.GREEN );
+										gamePanel.setBackground( GamePanel.COLOR_STANDBY );
 										gamePanel.refreshFileLength();
 									
 									} else {
-										gamePanel.setBackground( Color.RED );
+										gamePanel.setBackground( GamePanel.COLOR_ERROR );
 									
 									}
 								}
@@ -108,6 +119,18 @@ class PopupMenu extends JPopupMenu {
 					new TaggingFrame( gamePanel );
 				}
 			});
+			
+			delete.addActionListener( new ActionListener() {
+				@Override
+				public void actionPerformed( ActionEvent e ) {
+					new MessageBox( "Delete", "Are you sure you want to delete [" + gamePanel.getGame().getName() + "]") {
+						@Override
+						public void onAccept( MessageBox message ) { 							
+							gamePanel.getGame().delete();
+						}
+					};
+				}
+			});
 		}
 		
 		
@@ -125,11 +148,13 @@ class PopupMenu extends JPopupMenu {
 					play.setEnabled( true );
 					compress.setEnabled( true );
 					decompress.setEnabled( false );
-				}
+				} 
+				delete.setEnabled( true );
 			} else {
 				play.setEnabled( false );
 				compress.setEnabled( false );
 				decompress.setEnabled( false );
+				delete.setEnabled( false );
 			}
 		}
 	}

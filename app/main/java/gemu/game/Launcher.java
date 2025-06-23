@@ -2,11 +2,11 @@ package gemu.game;
   
 import gemu.io.*;
 import gemu.system.Shell;
-import gemu.system.event.OnProcessAdapter;
+import gemu.system.event.OnProcessListener;
 import java.io.IOException;
 
 public class Launcher extends File implements Launch {
-	public Launcher ( String name ) throws IOException {
+	public Launcher ( String name ) {
 		super( name );
 		errorIfNotExists();
 	}
@@ -16,11 +16,11 @@ public class Launcher extends File implements Launch {
 		errorIfNotExists();
 	}
 	
-	public void run() {
+	public void run( OnProcessListener listener ) {
 		errorIfNotExists();
 		try {    		 
 			if ( !CompactFiles.isCompactFile( this ) ) {			
-				Shell.exec( new Shell.Command( getParentFile(), new OnProcessAdapter() { }, getAbsolutePath() ) );
+				Shell.exec( new Shell.Command( getParentFile(), listener , getAbsolutePath() ) );
 			} else {
 				throw new Exception() {
 					@Override

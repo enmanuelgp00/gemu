@@ -4,8 +4,10 @@ import gemu.system.Compressions;
 import gemu.system.event.*;
 import gemu.io.*;
 import gemu.system.*;
-import gemu.system.event.*;
+import gemu.system.event.*; 
+import java.util.Arrays;
 import java.util.Set;
+import java.util.HashSet;
 
 public class Game {
 	private long length = 0;
@@ -29,14 +31,14 @@ public class Game {
 		this.info = new GameInfo( compactLauncher );
 	}
 	
-	public void play() {
+	public void play( OnProcessListener listener ) {
 		if ( getState() == Games.STATE_STANDBY ) {
 			Thread th = new Thread( new Runnable() {
 				@Override
 				public void run() {
 					try {
 						setState( Games.STATE_RUNNING );
-						getLauncher().run();		
+						getLauncher().run( listener );		
 						setState( Games.STATE_STANDBY );
 					} catch ( Exception e ) {
 						Log.error( e.getMessage() );
@@ -53,6 +55,9 @@ public class Game {
 			return names[0];			
 		}
 		
+		if ( getState() == Games.STATE_DELETED ) {
+			return getFolder().getName();
+		}
 		Launcher launcher = getLauncher();
 		if ( CompactFiles.isCompactFile( launcher ) ) {
 			return new CompactLauncher( launcher ).getParentRootFile().getBaseName();
@@ -70,13 +75,12 @@ public class Game {
 	}
 	
 	public Launcher getLauncher() {
-		try {
-			return new Launcher ( getFolder() + info.get( GameInfo.Key.launcher )[0] );		
-		} catch( Exception e ) {
-			Log.error( e );
-			e.printStackTrace();
-		}
-		return null;
+		if ( !( getState() == Games.STATE_DELETED ) ) { 
+			return new Launcher ( getFolder() + info.get( GameInfo.Key.launcher )[0] );	
+				
+		} else {
+			return null;
+		}	
 	} 
 	
 	public File getFolder() {
@@ -134,6 +138,25 @@ public class Game {
 		return screenshots;
 	}
 	
+	public void addScreenshot( File file ) {
+		String name = file.getAbsolutePath();
+		name = name.substring( getFolder().getAbsolutePath().length() );
+		info.modif( GameInfo.Key.screenshots ).add( name );
+		info.commit();
+	}
+	
+	public void findNewScreenshots() {
+		Set<File> screenshots = new HashSet<File>( Arrays.<File>asList( getScreenshots() ));
+		for ( File f : getFolder().listFiles() ) {
+			if ( Games.isScreenshot( f ) ) {
+				if ( !screenshots.contains(f) ) {
+					Log.info( getName() + ", New screenshot : " + f.getName() );
+					addScreenshot( f );				
+				}
+			}
+		}
+	}
+	
 	public int getState() {
 		String[] names = info.get( GameInfo.Key.state );
 		if ( names.length > 0 ) {
@@ -153,6 +176,9 @@ public class Game {
 	}
 	
 	public long length() {
+		if ( getState() == Games.STATE_DELETED ) {
+			return 0l;
+		}
 		Launcher launcher = getLauncher();
 		if ( CompactFiles.isCompactFile( launcher ) ) {
 			length = new CompactFile( launcher ).getParentRootFile().length();
@@ -187,6 +213,9 @@ public class Game {
 	}
 	
 	public boolean isCompressed() {
+		if ( getState() == Games.STATE_DELETED ) {
+			return false;
+		}
 		return CompactFiles.isCompactFile( getLauncher() );
 	}
 	
@@ -238,7 +267,6 @@ public class Game {
 			
 			File extractionFolder;
 			
-			//if in origin folder are folders or are 7z file
 			boolean hasDirectories = false;
 			int compactFilesCount = 0;
 			for ( File f : getFolder().listFiles() ) {
@@ -314,11 +342,13 @@ public class Game {
 			setState( Games.STATE_DELETED );
 			File container = getGameContainer();
 			if ( CompactFiles.isCompactFile( container )) {
-				System.out.println( container + " is propoused to be deleted ");
+				System.out.println( container + " has been deleted ");
+				container.delete();
 			} else {
 				for ( File f : container.listFiles() ) {
 					if ( !Games.isScreenshot( f ) && !Games.isGameInfo( f ) ) {
-						System.out.println( f + " is propoused to be deleted ");
+						System.out.println( f + " has been deleted  ");
+						f.delete();
 					} 
 				}
 			}

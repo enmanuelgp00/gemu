@@ -20,7 +20,8 @@ class Gemu {
 	
 	Gemu( File file ) {
 		
-		findGames( file );	
+		findGames( file );
+		Games.sort( gamels );
 		SwingUtilities.invokeLater( new Runnable() {
 			@Override
 			public void run() { 
@@ -28,34 +29,6 @@ class Gemu {
 			}
 		});
 		
-	}
-	
-	void consoleInterface() {
-		while( true ) {
-			StringBuilder sb = new StringBuilder();
-			
-			for ( int i = 0; i < gamels.size() ; i++ ) {
-				Game game = gamels.get( i );
-				sb.append("\n[" + i + "] " + game.getName() + " { compressed : " + game.isCompressed() + " }" );		
-			}
-			System.out.println("\n" + sb.toString() );
-			
-			Game game = gamels.get( scan.nextInt() );
-			System.out.println("\n" + game.getName() );
-			System.out.println("[ 0 ] play\n[ 1 ] compress/extract ");
-			switch( scan.nextInt() ) {
-				case 0:
-					game.play();
-				break;
-				case 1:
-					if( game.isCompressed() ) {
-						game.extract( new OnProcessAdapter() {} );
-					} else {
-						game.compress( new OnProcessAdapter() {} );
-					}
-				break;
-			}
-		}
 	}
 	
 	void findGames( File file ) {

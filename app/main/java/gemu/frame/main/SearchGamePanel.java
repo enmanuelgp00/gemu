@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
-import gemu.game.Game;                     
+import gemu.game.Game;
+import gemu.game.Games;                     
 import gemu.frame.main.gameshelf.GameShelf;
 
 class SearchGamePanel extends JPanel {
@@ -35,7 +36,7 @@ class SearchGamePanel extends JPanel {
 			if ((char)ev.getKeyCode() == '\n' ) {
 			
 				if ( field.getText().length() == 0 ) {
-				
+					Games.sort( gamels );
 					gameShelf.setGameList( gamels );
 				} else {
 					

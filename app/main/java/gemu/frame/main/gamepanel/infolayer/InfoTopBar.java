@@ -36,6 +36,8 @@ class InfoTopBar extends JPanel {
 
 	public void refreshFileLength() {
 		size.setText( Texts.bytesToHumanVerbose( game.length() ));
+		size.revalidate();
+		size.repaint();
 	}
 	
 	class Star extends JPanel {
