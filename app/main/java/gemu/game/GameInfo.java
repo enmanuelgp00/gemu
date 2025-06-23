@@ -64,6 +64,10 @@ public class GameInfo {
 		return map.get( k );
 	}
 	
+	public File getFile() {
+		return file;
+	}
+	
 	public File getFolder() {
 		return file.getParentFile();
 	}
@@ -140,7 +144,13 @@ public class GameInfo {
 					if ( Texts.isWordDelimiter( ch ) ) {
 						if ( sb.length() > 0 ) {						
 							if ( inCurlyBrace ) {
-								info.modif( Key.get( k ) ).add( sb.toString() ) ;
+								try {
+									info.modif( Key.get( k ) ).add( sb.toString() ) ;								
+								} catch ( Exception e ) {
+									e.printStackTrace();
+									Log.error( "Error parsing : " + info.getFile() );
+									System.exit( 1 );
+								}
 								sb.setLength( 0 );
 							} else {
 								k = sb.toString();
@@ -218,13 +228,18 @@ public class GameInfo {
 			this.value = n;
 		}
 		
-		public static Key get( String n ) {
+		public static Key get( String n ) throws Exception {
 			for (Key k : Key.set ) {
 				if ( k.value.equals( n ) ) {
 					return k;
 				}	
 			}
-			return null;
+			throw new Exception () {
+				@Override
+				public String getMessage() {
+					return " key with value : " + n + " not found";
+				}
+			};
 		}
 		
 		public static Key name;
