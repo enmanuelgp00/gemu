@@ -12,6 +12,7 @@ public abstract class MessageBox extends JFrame {
 	public MessageBox( String title, String message ) {
 		super();
 		lblmessage = new JLabel( "<html><p style=text-align:center; >" + message + "</p></html>" );
+		lblmessage.setBackground( Color.PINK );
 		lblmessage.setBorder( BorderFactory.createEmptyBorder( 2, 2, 2, 2) );
 		plbuttons = new JPanel();
 		plbuttons.add( new JButton("Accept") {

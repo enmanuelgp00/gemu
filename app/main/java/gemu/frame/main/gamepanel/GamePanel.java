@@ -12,7 +12,7 @@ public class GamePanel extends JPanel {
 
 	public static Color COLOR_COMPRESSED = Color.LIGHT_GRAY;
 	public static Color COLOR_STANDBY = Color.GREEN;
-	public static Color COLOR_DELETED = Color.GRAY;
+	public static Color COLOR_DELETED = Color.PINK;
 	public static Color COLOR_ERROR = Color.RED;
 
 	InfoLayer infoLayer;	

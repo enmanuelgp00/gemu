@@ -50,7 +50,6 @@ class PopupMenu extends JPopupMenu {
 								gamePanel.getGame().findNewScreenshots();
 								gamePanel.refreshBackground();
 							}
-							System.out.println( exitCode );
 						}
 					});
 				}
@@ -127,7 +126,10 @@ class PopupMenu extends JPopupMenu {
 					new MessageBox( "Delete", "Are you sure you want to delete [" + gamePanel.getGame().getName() + "]") {
 						@Override
 						public void onAccept( MessageBox message ) { 							
-							gamePanel.getGame().delete();
+							gamePanel.getGame().delete(); 
+							gamePanel.setBackground( GamePanel.COLOR_DELETED );
+							gamePanel.refreshFileLength();
+							
 						}
 					};
 				}

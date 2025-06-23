@@ -14,12 +14,11 @@ import java.util.ArrayList;
 import javax.swing.SwingUtilities;
 
 class Gemu {
-	
 	Scanner scan = new Scanner( System.in );
 	List<Game> gamels = new ArrayList<Game>();
 	
-	Gemu( File file ) {
-		
+	Gemu( File file ) {		
+	
 		findGames( file );
 		Games.sort( gamels );
 		SwingUtilities.invokeLater( new Runnable() {

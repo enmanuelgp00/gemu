@@ -275,10 +275,11 @@ public class Game {
 		if ( isCompressed() && getState() == Games.STATE_STANDBY ) { 
 			setState( Games.STATE_EXTRACTING );
 			CompactFile compression = new CompactFile( getLauncher()).getParentRootFile();
-			String name = compression.getWrapperNameInside();
+			String wrapperName = compression.getWrapperNameInside();
 			String folderPath = getFolder().getAbsolutePath();
 			
 			File extractionFolder;
+			File gameContainer;
 			
 			boolean hasDirectories = false;
 			int compactFilesCount = 0;
@@ -297,14 +298,16 @@ public class Game {
 				}
 			}
 			
-			if ( name == null && ( hasDirectories || compactFilesCount > 1 ) ) {
-				name = compression.getBaseName();
-				extractionFolder = new File( folderPath + "/" + name );
+			if ( wrapperName == null && ( hasDirectories || compactFilesCount > 1 ) ) {
+				wrapperName = compression.getBaseName();
+				extractionFolder = new File( folderPath + "/" + wrapperName );
+				gameContainer = extractionFolder;
 				if ( !extractionFolder.exists() ) {
 					extractionFolder.mkdir();      
 				}
 			} else {
 				extractionFolder = getFolder();
+				gameContainer = new File( extractionFolder + "/" + wrapperName );
 			}
 			
 			Compressions.carryOut( new Compressions.ExtractProcess(  extractionFolder, compression, new OnProcessAdapter() {			
@@ -322,10 +325,11 @@ public class Game {
 				public void onProcessFinished( Process process, int exitCode ) {
 					if ( exitCode == 0 ) {
 											
-						String name = getLauncher().getName();					
-						if ( !getFolder().matchesPath( extractionFolder ) ) {
-							setFolder( extractionFolder );
+						String name = getLauncher().getName();						
+						if ( !getFolder().matchesPath( gameContainer ) ) {
+							setFolder( gameContainer );
 						}
+						
 						setLauncher( new Launcher( Files.find( getFolder(), name ) ) );	
 						compression.delete();  
 						setState( Games.STATE_STANDBY );
@@ -351,8 +355,7 @@ public class Game {
 	}
 	
 	public void delete() {
-		if ( getState() == Games.STATE_STANDBY ) {			
-			setState( Games.STATE_DELETED );
+		if ( getState() == Games.STATE_STANDBY ) {	
 			File container = getGameContainer();
 			if ( CompactFiles.isCompactFile( container )) {
 				System.out.println( container + " has been deleted ");
@@ -360,11 +363,20 @@ public class Game {
 			} else {
 				for ( File f : container.listFiles() ) {
 					if ( !Games.isScreenshot( f ) && !Games.isGameInfo( f ) ) {
-						System.out.println( f + " has been deleted  ");
-						f.delete();
+						delete( f );
 					} 
 				}
+			}		
+			setState( Games.STATE_DELETED );
+		}
+	}
+	
+	private void delete( File file ) {
+		if ( file.isDirectory() ) {
+			for ( File f : file.listFiles() ) {
+				delete( f );
 			}
 		}
+		file.delete();
 	}
 }

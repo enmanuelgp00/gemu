@@ -129,10 +129,11 @@ public final class Games {
 					Launcher launcher = launcherls.get( 0 );
 					
 					for ( Game game : gameSet ) {
-						
-						if ( game.getLauncher().matchesPath( launcher ) ) {
-							gameFound = true;
-							break;
+						if ( game.getState() != STATE_DELETED ) {						
+							if ( game.getLauncher().matchesPath( launcher ) ) {
+								gameFound = true;
+								break;
+							}
 						}
 					}
 					
