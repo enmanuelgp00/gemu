@@ -298,16 +298,28 @@ public class Game {
 				}
 			}
 			
-			if ( wrapperName == null && ( hasDirectories || compactFilesCount > 1 ) ) {
+			boolean hasWrapper = ( wrapperName != null );
+			if (!hasWrapper ) {
 				wrapperName = compression.getBaseName();
+			}
+			
+			
+			if ( hasDirectories || compactFilesCount > 1 ) {
+			
 				extractionFolder = new File( folderPath + "/" + wrapperName );
 				gameContainer = extractionFolder;
+				
 				if ( !extractionFolder.exists() ) {
 					extractionFolder.mkdir();      
 				}
+				
 			} else {
 				extractionFolder = getFolder();
-				gameContainer = new File( extractionFolder + "/" + wrapperName );
+				if ( hasWrapper ) {
+					gameContainer = new File( extractionFolder + "/" + wrapperName );				
+				} else {
+					gameContainer = extractionFolder;
+				}
 			}
 			
 			Compressions.carryOut( new Compressions.ExtractProcess(  extractionFolder, compression, new OnProcessAdapter() {			
@@ -329,8 +341,11 @@ public class Game {
 						if ( !getFolder().matchesPath( gameContainer ) ) {
 							setFolder( gameContainer );
 						}
-						
-						setLauncher( new Launcher( Files.find( getFolder(), name ) ) );	
+						File l = Files.find( gameContainer, name ); 
+						System.out.println( name );
+						System.out.println( gameContainer );
+						System.out.println( l );
+						setLauncher( new Launcher( l ));	
 						compression.delete();  
 						setState( Games.STATE_STANDBY );
 					} 

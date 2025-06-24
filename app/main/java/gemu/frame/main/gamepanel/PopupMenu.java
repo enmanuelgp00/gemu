@@ -46,7 +46,6 @@ class PopupMenu extends JPopupMenu {
 						@Override
 						public void onProcessFinished( Process process, int exitCode ) {
 							if ( exitCode == 0 ) {
-								System.out.println("update game panel");
 								gamePanel.getGame().findNewScreenshots();
 								gamePanel.refreshBackground();
 							}
