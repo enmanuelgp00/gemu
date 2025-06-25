@@ -63,7 +63,7 @@ public final class Games {
 	public static boolean isLauncher( File file ) {
 		if ( !file.isDirectory() && file.hasExtension("exe") ) {			
 			String name = file.getName().toLowerCase();
-			String[] exceptions = new String[] {"crash", "unins", "setting", "config"};
+			String[] exceptions = new String[] {"crash", "unins", "setting", "config", "helper"};
 			boolean found = false;
 			for ( String exception : exceptions ) {
 				if ( name.contains( exception ) ) {

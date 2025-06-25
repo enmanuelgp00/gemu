@@ -115,7 +115,12 @@ class Gemu {
 		
 		} while( !( -2 < answer && answer < launchers.length ) );
 		if ( answer != -1 ) {
-			gamels.add( new Game( launchers[ answer ]));
+			Launcher launcher = launchers[ answer ];
+			if ( CompactFiles.isCompactFile( launcher ) ) {	
+				gamels.add( new Game( new CompactLauncher( launcher ) ));
+			} else {
+				gamels.add( new Game( launcher ));			
+			}
 		}
 	}
 	
