@@ -189,6 +189,25 @@ public class Game {
 	}
 	
 	public long length() {
+		String[] names = info.get( GameInfo.Key.length );
+		long currentLength = currentLength();
+		long value = 0;
+		
+		if ( names.length == 1 ) {
+			try {
+				value = Long.parseLong( names[0] );
+			} catch ( Exception e ) { }
+		}
+			
+		if ( currentLength > value ) {
+			info.set( GameInfo.Key.length, String.valueOf( currentLength ));
+			return currentLength;
+		} else {
+			return value;
+		}
+		
+	}
+	public long currentLength() {
 		if ( getState() == Games.STATE_DELETED ) {
 			return 0l;
 		}
