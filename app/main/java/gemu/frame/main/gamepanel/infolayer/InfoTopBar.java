@@ -35,7 +35,7 @@ class InfoTopBar extends JPanel {
 	}
 
 	public void refreshFileLength() {
-		size.setText( Texts.bytesToHumanVerbose( game.currentLength() ) + " - " + Texts.bytesToHumanVerbose( game.length() ) );
+		size.setText( Texts.bytesToHumanVerbose( game.currentLength() ) + " [" + Texts.bytesToHumanVerbose( game.length() ) + "]");
 		size.revalidate();
 		size.repaint();
 	}
