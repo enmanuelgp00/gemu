@@ -44,7 +44,6 @@ public class Game {
 						setState( Games.STATE_RUNNING );
 						getLauncher().run( needsAdmin(), listener);   						
 						setState( Games.STATE_STANDBY );
-						System.out.println("Current running games :" + Games.runningGamesIds.size() );
 						Games.runningGamesIds.remove( processId );
 					} catch ( Exception e ) {
 						Log.error( e.getMessage() );
@@ -55,13 +54,24 @@ public class Game {
 			Thread checkProcessId = new Thread( new Runnable() {
 				@Override
 				public void run() {
-					ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", "get-process", getLauncher().getBaseName() });
+					ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", "$process = get-process " + getLauncher().getBaseName() + "; foreach ( $p in $process ){ if ( $p.MainWindowHandle -ne 0 ) { $p.Id  } }",  });
 					try {
 						Thread.sleep(3000);
 						Process process = powershellGetsId.start();
 						try ( BufferedReader idReader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ){
 							String line;
 							while( ( line = idReader.readLine() ) != null ) {
+								try {
+									int id = Integer.parseInt( line );
+									if ( !Games.runningGamesIds.keySet().contains(id)) {
+										Games.runningGamesIds.put(id, Game.this);
+										processId = id;
+									}  
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+
+								/*
 								ArrayList<String> tokens = new ArrayList<>( Arrays.<String>asList(line.split("\\s+")));
 								tokens.removeIf( str -> str == null || str.isEmpty() || str.equals("\n") );
 								
@@ -70,13 +80,10 @@ public class Game {
 									try { 														 
 										int id = Integer.parseInt(tokens.get(5));
 										
-										if ( !Games.runningGamesIds.keySet().contains(id)) {
-											Games.runningGamesIds.put(id, Game.this);
-											processId = id;
-											
-										}  
+										
 									} catch( Exception e ) { }
 								}
+								*/
 							
 								
 							}
@@ -89,6 +96,11 @@ public class Game {
 					
 					
 					Log.info( getName() + " has started with id: " + processId );
+					
+					Log.info("Current running games : [" + Games.runningGamesIds.size() + "]");
+					for ( int id : Games.runningGamesIds.keySet()) {
+						System.out.println( String.valueOf(id) + " = " + Games.runningGamesIds.get(id).getName() );
+					}
 				}
 			});
 			
