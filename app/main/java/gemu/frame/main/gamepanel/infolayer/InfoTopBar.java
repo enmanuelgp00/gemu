@@ -1,6 +1,7 @@
 package gemu.frame.main.gamepanel.infolayer;
 
 import gemu.game.Game;
+import gemu.game.Games;
 
 import gemu.util.Texts;
 
@@ -9,7 +10,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 class InfoTopBar extends JPanel {
-	Tag size;
+	LengthPane lengthPane;
 	Star star;
 	
 	Game game;
@@ -23,27 +24,79 @@ class InfoTopBar extends JPanel {
 		this.game = game;
 		
 		
-		size = new Tag("");               		
-		size.setForeground( Color.WHITE );
-		size.setBackground( Color.BLACK );
+		lengthPane = new LengthPane();             
 		refreshFileLength();
 		
-		add( size ); 
+		add( lengthPane ); 
 		add( Box.createHorizontalGlue() );
 		add( new Star() );
 		
 	}
 
 	public void refreshFileLength() {
-		size.setText( Texts.bytesToHumanVerbose( game.currentLength() ) + " [" + Texts.bytesToHumanVerbose( game.length() ) + "]");
-		size.revalidate();
-		size.repaint();
+		lengthPane.refresh();
+	}
+	
+	class LengthPane extends JPanel {
+		Tag current,
+			length,
+			compactlength;
+			
+		Color selectColor = Color.LIGHT_GRAY;
+		Color selectForeground = Color.BLACK;
+		Color defaultColor = Color.GRAY;
+		Color defaultForeground = Color.LIGHT_GRAY;
+		
+		LengthPane () {
+			super();
+			setBackground( defaultColor );
+			setLayout( new BoxLayout(this, BoxLayout.Y_AXIS ));
+			
+			Tag[] labels = new Tag[] { 
+				length = new Tag(),  
+				compactlength = new Tag()
+			};
+			
+			for ( Tag l : labels ) {
+				l.setAlignmentX( 1.0f);
+				l.setBackground( defaultColor );
+				add( l );
+			}
+		}
+		
+		public void refresh() {			
+			
+			if ( game.getState() != Games.STATE_DELETED ) {			
+				if ( game.isCompressed() ) {
+					selectStateColor( compactlength );
+					defaultStateColor( length );
+				} else {
+					defaultStateColor( compactlength );   
+					selectStateColor( length );
+				}
+			}
+			
+			length.setText( Texts.bytesToHumanVerbose( game.length() ) );
+			compactlength.setText( Texts.bytesToHumanVerbose( game.compactLength() ) );
+			
+			revalidate();
+			repaint();
+		}
+		
+		public void selectStateColor( Tag tg ) {
+			tg.setBackground( selectColor );
+			tg.setForeground( selectForeground );
+		}
+		
+		public void defaultStateColor( Tag tg ) {
+			tg.setBackground( defaultColor );
+			tg.setForeground( defaultForeground );
+		}
 	}
 	
 	class Star extends JPanel {
 		Star() {
 			super();
-			setAlignmentY( Component.BOTTOM_ALIGNMENT );
 			setPreferredSize( new Dimension( 10, 10 ) );
 			setMaximumSize( getPreferredSize() );			
 			setBorder( BorderFactory.createLineBorder( Color.BLACK, 1 ) );

@@ -4,13 +4,17 @@ import gemu.system.Compressions;
 import gemu.system.event.*;
 import gemu.io.*;
 import gemu.system.*;
-import gemu.system.event.*; 
-import java.util.Arrays;
+import gemu.system.event.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader; 
+import java.util.Arrays;             
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 
 public class Game {
 	private long length = 0;
+	private int processId = -1;
 	GameInfo info;
 	
 	public Game( GameInfo gameInfo ) {
@@ -33,19 +37,62 @@ public class Game {
 	
 	public void play( OnProcessListener listener ) {
 		if ( getState() == Games.STATE_STANDBY ) {
-			Thread th = new Thread( new Runnable() {
+			Thread playGame = new Thread( new Runnable() {
 				@Override
 				public void run() {
 					try {
 						setState( Games.STATE_RUNNING );
 						getLauncher().run( needsAdmin(), listener);   						
 						setState( Games.STATE_STANDBY );
+						Games.gameProcessIds.remove( processId );
 					} catch ( Exception e ) {
 						Log.error( e.getMessage() );
 					}				
 				}
 			});
-			th.start();		
+			
+			Thread checkProcessId = new Thread( new Runnable() {
+				@Override
+				public void run() {
+					ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", "get-process", getLauncher().getBaseName() });
+					try {
+						Thread.sleep(3000);
+						Process process = powershellGetsId.start();
+						try ( BufferedReader idReader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ){
+							String line;
+							while( ( line = idReader.readLine() ) != null ) {
+								ArrayList<String> tokens = new ArrayList<String>( Arrays.<String>asList(line.split("\\s+")));
+								tokens.removeIf( str -> str == null || str.isEmpty() || str == "\n" );
+								
+				
+								if ( tokens.size() > 7 ) {
+									try { 														 
+										int id = Integer.parseInt(tokens.get(5));
+										
+										if ( !Games.gameProcessIds.contains( id )) {
+											Games.gameProcessIds.add( processId );
+											processId = id;
+											
+										}  
+									} catch( Exception e ) {				}
+								}
+							
+								
+							}
+						} catch( Exception e ) { 
+							e.printStackTrace();
+						}
+					} catch( Exception e ) {
+						e.printStackTrace();
+					}
+					
+					
+					Log.info( getName() + " has started with id: " + processId );
+				}
+			});
+			
+			playGame.start();
+			checkProcessId.start();
 		}
 	}	
 	
@@ -62,7 +109,7 @@ public class Game {
 		return false;
 	}
 	
-	public String getName() {
+	public String getName() {         
 		String[] names = info.get( GameInfo.Key.name );
 		if ( names.length > 0 ) {
 			return names[0];			
@@ -183,6 +230,7 @@ public class Game {
 		setState( Games.STATE_STANDBY );
 		return Games.STATE_STANDBY;
 	}
+	
 	public void setState( int state ) {
 		info.set( GameInfo.Key.state, String.valueOf( state ) );
 		info.commit();
@@ -207,6 +255,28 @@ public class Game {
 		}
 		
 	}
+	
+	public long compactLength() {
+		String[] names = info.get( GameInfo.Key.compactLength );
+		long currentLength = currentLength();
+		long value = 0;
+		
+		if ( names.length == 1 ) {
+			try {
+				value = Long.parseLong( names[0] );
+			} catch ( Exception e ) { }
+		}
+			
+		if ( currentLength != value && isCompressed() && getState() == Games.STATE_STANDBY  ) {
+			info.set( GameInfo.Key.compactLength, String.valueOf( currentLength ));  
+			info.commit();
+			return currentLength;
+		} else {
+			return value;
+		}
+		
+	}
+	
 	public long currentLength() {
 		if ( getState() == Games.STATE_DELETED ) {
 			return 0l;
@@ -413,4 +483,20 @@ public class Game {
 		}
 		file.delete();
 	}
+
+	public int getProcessId() {
+		if ( !isRunning() ) {
+			return -1;
+		}
+		return processId;
+	}
+
+	public boolean isRunning() {
+		return getState() == Games.STATE_RUNNING;
+	}
+
+	public void takeScreenshot( OnProcessListener listener ) {
+		Shell.takeScreenshot( listener, getName(), getProcessId(), getFolder() );
+	}
+
 }

@@ -251,7 +251,8 @@ public class GameInfo {
 		public static Key favorite;
 		public static Key state; 
 		public static Key admin;
-		public static Key length;
+		public static Key length;   
+		public static Key compactLength;
 		
 		static Key[] set = new Key[] {
 			name = new Key("name"),
@@ -263,7 +264,8 @@ public class GameInfo {
 			favorite = new Key("star"),
 			state = new Key("state"),
 			admin = new Key("admin"),
-			length = new Key("length")
+			length = new Key("length"), 
+			compactLength = new Key("compactLength")
 		};
 		
 	}

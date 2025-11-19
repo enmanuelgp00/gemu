@@ -7,6 +7,7 @@ import java.util.*;
 public final class Games {
 
 	public static Set<String> tagsCollection = new TreeSet<String>();
+	public static Set<Integer> gameProcessIds = new HashSet<>();
 	public static final int STATE_RUNNING = 1;
 	public static final int STATE_COMPRESSING = 2;
 	public static final int STATE_EXTRACTING = 3;

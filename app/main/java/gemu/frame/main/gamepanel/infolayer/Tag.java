@@ -11,4 +11,12 @@ class Tag extends JLabel {
 		setBorder( BorderFactory.createEmptyBorder( 2, 3, 0, 3 ));			
 		setFont( new Font( "Consolas", Font.PLAIN, 13 ) );
 	}
+	
+	Tag() {
+		super();
+		setOpaque( true );
+		setBackground( Color.PINK );
+		setBorder( BorderFactory.createEmptyBorder( 2, 3, 0, 3 ));			
+		setFont( new Font( "Consolas", Font.PLAIN, 13 ) );
+	}
 }
