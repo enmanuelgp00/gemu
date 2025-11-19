@@ -1,6 +1,7 @@
 package gemu.frame.main.gamepanel;
 
 import gemu.frame.main.gamepanel.infolayer.InfoLayer;
+import gemu.frame.main.SearchGamePanel;
 import gemu.game.Game;
 import gemu.game.Games;
 
@@ -20,14 +21,14 @@ public class GamePanel extends JPanel {
 	PopupMenu popupMenu;
 	MainLayer mainLayer;
 	
-	public GamePanel( Game game ) {
+	public GamePanel( Game game, SearchGamePanel searchGamePanel ) {
 		super();                    
 		this.game = game; 
 		setLayout( new OverlayLayout( this ) );
 		
-		setBorder( BorderFactory.createEmptyBorder( 7, 7, 7, 7 ));
+		setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1 ));
 			
-		popupMenu = new PopupMenu( this );
+		popupMenu = new PopupMenu( this, searchGamePanel );
 		conditionalBackground();
 		
 		mainLayer = new MainLayer( game );

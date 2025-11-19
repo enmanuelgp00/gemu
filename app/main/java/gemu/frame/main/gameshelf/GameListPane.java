@@ -1,6 +1,7 @@
 package gemu.frame.main.gameshelf;
 
 import gemu.frame.main.gamepanel.GamePanel;
+import gemu.frame.main.SearchGamePanel;
 import gemu.game.Game;
 import javax.swing.JPanel;
 import java.awt.*;
@@ -9,8 +10,11 @@ import java.util.Set;
 import gemu.frame.main.gamepanel.GamePanel;
 
 class GameListPane extends JPanel {
-		GameListPane() {
+		SearchGamePanel searchGamePanel;
+		GameListPane( SearchGamePanel searchGamePanel ) {
 			super( new FlowLayout( FlowLayout.CENTER ) );
+			setBackground( new java.awt.Color(0x232122) );
+			this.searchGamePanel = searchGamePanel;
 		}
 		
 		void setList( List<Game> list ) {
@@ -19,7 +23,7 @@ class GameListPane extends JPanel {
 			}
 			
 			for ( Game g : list ) {
-				add( new GamePanel( g ));
+				add( new GamePanel( g, searchGamePanel ));
 			}
 			
 			revalidate();
@@ -32,7 +36,7 @@ class GameListPane extends JPanel {
 			}
 			
 			for ( Game g : list ) {
-				add( new GamePanel( g ));
+				add( new GamePanel( g, searchGamePanel ));
 			}
 			
 			revalidate();

@@ -1,6 +1,7 @@
 package gemu.frame.main.gamepanel;
 
 import gemu.frame.main.MessageBox;
+import gemu.frame.main.SearchGamePanel;
 import gemu.frame.tagging.TaggingFrame;
 import gemu.game.Game;
 import gemu.game.Games;
@@ -21,7 +22,7 @@ class PopupMenu extends JPopupMenu {
 		
 		GamePanel gamePanel;
 		
-		PopupMenu( GamePanel gamePanel ) {
+		PopupMenu( GamePanel gamePanel, SearchGamePanel searchGamePanel ) {
 			super();			
 			
 			this.gamePanel = gamePanel;
@@ -44,7 +45,12 @@ class PopupMenu extends JPopupMenu {
 				public void actionPerformed( ActionEvent e ) {
 					gamePanel.getGame().play( new OnProcessAdapter() {
 						@Override
+						public void onProcessStarted( Process p ) {
+							searchGamePanel.setEnabledScreenshotButton( true );
+						}
+						@Override
 						public void onProcessFinished( Process process, int exitCode ) {
+							searchGamePanel.setEnabledScreenshotButton( false );
 							if ( exitCode == 0 ) {
 								gamePanel.getGame().findNewScreenshots();
 								gamePanel.refreshBackground();

@@ -13,7 +13,7 @@ import gemu.game.Games;
 import gemu.frame.main.gameshelf.GameShelf;
 import gemu.system.event.*;
 
-class SearchGamePanel extends JPanel {
+public class SearchGamePanel extends JPanel {
 	GameShelf gameShelf;
 	List<Game> gamels;
 	JTextField field;
@@ -21,11 +21,12 @@ class SearchGamePanel extends JPanel {
 	
 	SearchGamePanel( List<Game> gamels ) {
 		super( new BorderLayout() );
-		this.gameShelf = new GameShelf( gamels );
+		this.gameShelf = new GameShelf( gamels, this );
 		this.gamels = gamels;
 		
 		field = new JTextField();
 		screenshotButton = new JButton("Take Screenshot Opened Games");
+		screenshotButton.setEnabled( false );
 		screenshotButton.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
@@ -58,7 +59,10 @@ class SearchGamePanel extends JPanel {
 		
 	}
 	
-
+	public void setEnabledScreenshotButton( boolean state ) {
+		screenshotButton.setEnabled( state );
+	}
+	
 	KeyListener searchOnTyping = new KeyAdapter() {
 		@Override
 		public void keyReleased( KeyEvent ev ) {
