@@ -26,7 +26,7 @@ public final class Shell {
 					}
 				}
 			});
-
+			errorThread.start();
 			BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream() , "Shift-JIS") );
 			String line;
 			while ( ( line = reader.readLine() ) != null ) {
@@ -58,6 +58,7 @@ public final class Shell {
 	}
 
 	public static void takeScreenshot( OnProcessListener listener, String name, int processId , File location ) {
+		/*
 		int copies = 0;
 		String filename = name + "_screenshot_";
 		File screenshot;
@@ -67,7 +68,7 @@ public final class Shell {
 		}
 
 		filename = filename + String.valueOf(copies);
-
+		*/
 		try {
 
 			String jarPath = Shell.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
@@ -76,9 +77,7 @@ public final class Shell {
 			StringBuilder scriptContent = new StringBuilder();
 
 			String[] scriptParams = new String[]{
-				"$id = \"" + String.valueOf(processId) + "\"",
-				"[string]$filename = \"" + String.valueOf(filename) + "\"",
-				"[string]$location = \"" + location.getAbsolutePath() + "\""
+				"$id = \"" + String.valueOf(processId) + "\""
 			};
 			for ( String s : scriptParams ) {
 				scriptContent.append(s + "\n");

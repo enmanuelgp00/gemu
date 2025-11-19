@@ -50,65 +50,58 @@ public class Game {
 					}				
 				}
 			});
-			
-			Thread checkProcessId = new Thread( new Runnable() {
-				@Override
-				public void run() {
-					ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", "$process = get-process " + getLauncher().getBaseName() + "; foreach ( $p in $process ){ if ( $p.MainWindowHandle -ne 0 ) { $p.Id  } }",  });
-					try {
-						Thread.sleep(3000);
-						Process process = powershellGetsId.start();
-						try ( BufferedReader idReader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ){
-							String line;
-							while( ( line = idReader.readLine() ) != null ) {
-								try {
-									int id = Integer.parseInt( line );
-									if ( !Games.runningGamesIds.keySet().contains(id)) {
-										Games.runningGamesIds.put(id, Game.this);
-										processId = id;
-									}  
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-
-								/*
-								ArrayList<String> tokens = new ArrayList<>( Arrays.<String>asList(line.split("\\s+")));
-								tokens.removeIf( str -> str == null || str.isEmpty() || str.equals("\n") );
-								
-				
-								if ( tokens.size() > 7 ) {
-									try { 														 
-										int id = Integer.parseInt(tokens.get(5));
-										
-										
-									} catch( Exception e ) { }
-								}
-								*/
-							
-								
-							}
-						} catch( Exception e ) { 
-							e.printStackTrace();
-						}
-					} catch( Exception e ) {
-						e.printStackTrace();
-					}
-					
-					
-					Log.info( getName() + " has started with id: " + processId );
-					
-					Log.info("Current running games : [" + Games.runningGamesIds.size() + "]");
-					for ( int id : Games.runningGamesIds.keySet()) {
-						System.out.println( String.valueOf(id) + " = " + Games.runningGamesIds.get(id).getName() );
-					}
-				}
-			});
-			
+						
 			playGame.start();
-			checkProcessId.start();
+			checkProcessId();
 		}
 	}	
 	
+	public void checkProcessId() {
+		Thread checkProcessIdThread = new Thread( new Runnable() {
+			@Override
+			public void run() {
+				ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", "$process = get-process " + getLauncher().getBaseName() + "; foreach ( $p in $process ){ if ( $p.MainWindowHandle -ne 0 ) { $p.Id  } }",  });
+				try {
+					Thread.sleep(500);
+					Process process = powershellGetsId.start();
+					try ( BufferedReader idReader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ){
+						String line;
+						int lineCount = 0; 
+						while( ( line = idReader.readLine() ) != null ) {
+							try {
+								int id = Integer.parseInt( line );
+								if ( !Games.runningGamesIds.keySet().contains(id)) {
+									Games.runningGamesIds.put(id, Game.this);
+									processId = id;
+								}  
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+							lineCount++;
+						}
+						if ( lineCount == 0 ) { 
+							checkProcessId();
+						} else {								
+							Log.info( getName() + " has started with id: " + processId );
+
+							Log.info("Current running games : [" + Games.runningGamesIds.size() + "]");
+							for ( int id : Games.runningGamesIds.keySet()) {
+								System.out.println( "[id] " + String.valueOf(id) + " = " + Games.runningGamesIds.get(id).getName() );
+							}
+						}
+					} catch( Exception e ) { 
+						e.printStackTrace();
+					}
+				} catch( Exception e ) {
+					e.printStackTrace();
+				}
+					
+				
+			}
+		});
+		checkProcessIdThread.start();
+	}
+
 	public boolean needsAdmin() {
 		String[] names = info.get( GameInfo.Key.admin );
 		if ( names.length > 0 ) {

@@ -1,6 +1,6 @@
 package gemu.frame.main;
 
-import gemu.system.Shell;
+import gemu.system.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -41,7 +41,9 @@ class SearchGamePanel extends JPanel {
 						public void onProcessStarted( Process p ) {}
 						@Override
 						public void onProcessFinished( Process p, int exitcode ) {
-							System.out.println( "exit_code : " + String.valueOf(exitcode));
+							if(exitcode == 0) {
+								Log.info( "Screenshot taken");
+							};
 						}
 					}, game.getLauncher().getName(), id, game.getFolder() );
 				}
