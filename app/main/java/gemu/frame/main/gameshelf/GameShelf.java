@@ -4,7 +4,6 @@ import gemu.game.Game;
 import java.util.List;
 import java.util.Set;
 import javax.swing.JScrollPane;
-import java.util.ArrayList;
 
 public class GameShelf extends JScrollPane {
 	GameListPane gameListPane;
@@ -28,14 +27,5 @@ public class GameShelf extends JScrollPane {
 		gameListPane.setList( list );
 	}
 	
-	public Game[] getRunningGames() {
-		ArrayList<Game> runningGames = new ArrayList<Game>();
-		for ( Game g : gamels ) {
-			if(g.isRunning()) {
-				runningGames.add( g );
-			}
-		}
-		return runningGames.toArray( new Game[]{} );
-		
-	}
+	
 }

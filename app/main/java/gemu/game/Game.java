@@ -44,7 +44,8 @@ public class Game {
 						setState( Games.STATE_RUNNING );
 						getLauncher().run( needsAdmin(), listener);   						
 						setState( Games.STATE_STANDBY );
-						Games.gameProcessIds.remove( processId );
+						System.out.println("Current running games :" + Games.runningGamesIds.size() );
+						Games.runningGamesIds.remove( processId );
 					} catch ( Exception e ) {
 						Log.error( e.getMessage() );
 					}				
@@ -61,20 +62,20 @@ public class Game {
 						try ( BufferedReader idReader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ){
 							String line;
 							while( ( line = idReader.readLine() ) != null ) {
-								ArrayList<String> tokens = new ArrayList<String>( Arrays.<String>asList(line.split("\\s+")));
-								tokens.removeIf( str -> str == null || str.isEmpty() || str == "\n" );
+								ArrayList<String> tokens = new ArrayList<>( Arrays.<String>asList(line.split("\\s+")));
+								tokens.removeIf( str -> str == null || str.isEmpty() || str.equals("\n") );
 								
 				
 								if ( tokens.size() > 7 ) {
 									try { 														 
 										int id = Integer.parseInt(tokens.get(5));
 										
-										if ( !Games.gameProcessIds.contains( id )) {
-											Games.gameProcessIds.add( processId );
+										if ( !Games.runningGamesIds.keySet().contains(id)) {
+											Games.runningGamesIds.put(id, Game.this);
 											processId = id;
 											
 										}  
-									} catch( Exception e ) {				}
+									} catch( Exception e ) { }
 								}
 							
 								
@@ -484,19 +485,10 @@ public class Game {
 		file.delete();
 	}
 
-	public int getProcessId() {
-		if ( !isRunning() ) {
-			return -1;
-		}
-		return processId;
-	}
 
 	public boolean isRunning() {
 		return getState() == Games.STATE_RUNNING;
 	}
 
-	public void takeScreenshot( OnProcessListener listener ) {
-		Shell.takeScreenshot( listener, getName(), getProcessId(), getFolder() );
-	}
 
 }

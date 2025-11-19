@@ -1,5 +1,6 @@
 package gemu.frame.main;
 
+import gemu.system.Shell;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -24,21 +25,25 @@ class SearchGamePanel extends JPanel {
 		this.gamels = gamels;
 		
 		field = new JTextField();
-		screenshotButton = new JButton("Take Screenshot Open Games");
+		screenshotButton = new JButton("Take Screenshot Opened Games");
 		screenshotButton.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				for ( Game runningGame : gameShelf.getRunningGames() ) {
-					runningGame.takeScreenshot( new OnProcessListener() {
+				Game game;
+				for ( int id : Games.runningGamesIds.keySet() ) {
+					game = Games.runningGamesIds.get(id);
+					Shell.takeScreenshot( new OnProcessListener() {
 						@Override
-						public void onStreamLineRead( String line ) {}
+						public void onStreamLineRead( String line ) {
+							System.out.println( line );
+						}
 						@Override
 						public void onProcessStarted( Process p ) {}
 						@Override
 						public void onProcessFinished( Process p, int exitcode ) {
 							System.out.println( "exit_code : " + String.valueOf(exitcode));
 						}
-					});
+					}, game.getLauncher().getName(), id, game.getFolder() );
 				}
 			}
 		});

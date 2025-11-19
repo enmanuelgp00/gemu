@@ -4,7 +4,6 @@ import gemu.system.event.*;
 import java.io.*;
 
 public final class Shell {
-	private static File screenshot_script = new File("screenshot_script.ps1");
 	public static void exec( Command  command ) {
 		try {
 			ProcessBuilder pb = new ProcessBuilder( command.command );
@@ -61,31 +60,51 @@ public final class Shell {
 	public static void takeScreenshot( OnProcessListener listener, String name, int processId , File location ) {
 		int copies = 0;
 		String filename = name + "_screenshot_";
-		String script;
 		File screenshot;
 
 		while ( ( screenshot = new File( location + "/" + filename + String.valueOf(copies))).exists() ) {
 			copies++;
 		}
 
-		try (BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream(screenshot_script), "Shift-JIS"))) {
-			
-			int code;
-			char ch;
-			StringBuilder scriptcontent = new StringBuilder();
-			while( ( code = reader.read() ) != -1 ) {
-				ch = (char) code;
+		filename = filename + String.valueOf(copies);
 
-				if ( ch == '"') {
-					scriptcontent.append( '\\');
-				}
-				scriptcontent.append( ch );
+		try {
+
+			String jarPath = Shell.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+			String path = jarPath.substring( 0, jarPath.lastIndexOf('/'));
+			File screenshotScript = new File ( path + "/screenshot_script.ps1");
+			StringBuilder scriptContent = new StringBuilder();
+
+			String[] scriptParams = new String[]{
+				"$id = \"" + String.valueOf(processId) + "\"",
+				"[string]$filename = \"" + String.valueOf(filename) + "\"",
+				"[string]$location = \"" + location.getAbsolutePath() + "\""
+			};
+			for ( String s : scriptParams ) {
+				scriptContent.append(s + "\n");
 			}
+			char ch;
+			int code;
+			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream(screenshotScript), "Shift-JIS"));
+			while ( ( code = reader.read() ) != -1 ) {
+				ch = (char) code;
+				if ( ch == '"' ) {
+					scriptContent.append('\\');
+				}
+				scriptContent.append(ch);
+			}
+			
+			reader.close();
 
-			exec( new Command( location, listener, "powershell", scriptcontent.toString()));
-		} catch (Exception e) {
+			exec( new Command( location, listener, "powershell", scriptContent.toString() ));
+			
+			
+			
+		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
+		
+		
 
 
 		
