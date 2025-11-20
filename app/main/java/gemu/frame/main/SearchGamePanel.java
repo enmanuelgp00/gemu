@@ -44,9 +44,9 @@ public class SearchGamePanel extends JPanel {
 						@Override
 						public void onProcessFinished( Process p, int exitcode ) {
 							if(exitcode == 0) {
-								Log.info( "Screenshot taken");
-								Games.runningGamesIds.get(id).getGamePanel().refreshBackground();
+								Log.info( "Screenshot taken"); 
 								Games.runningGamesIds.get(id).findNewScreenshots();
+								Games.runningGamesIds.get(id).getGamePanel().refreshBackground();
 							};
 						}
 					}, game.getLauncher().getName(), id, game.getFolder() );

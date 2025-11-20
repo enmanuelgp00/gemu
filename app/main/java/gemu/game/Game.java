@@ -59,7 +59,7 @@ public class Game {
 	}	
 	
 	public void setGamePanel( GamePanel gamePanel ) {
-		 this.gamePanel = gamePanel;
+		this.gamePanel = gamePanel;
 	}
 	
 	public GamePanel getGamePanel() {
@@ -220,17 +220,18 @@ public class Game {
 		}
 		return screenshots;
 	}
-	public void removeScreenshot( File file ) {
+	
+	public void removeScreenshot( File file ) { 
 		if ( file.exists() ) {
 			if ( !file.delete() ) {
 				Log.error( " Counld not delete screenshot file: " + file.getAbsolutePath() );
 			}
 		}
 		
-		info.modif( GameInfo.Key.screenshots ).remove( file.getName() );
-		info.commit();
-		
+		info.modif( GameInfo.Key.screenshots ).remove( "\\" + file.getName() );
+		info.commit();   
 	}
+	
 	public void addScreenshot( File file ) {
 		String name = file.getAbsolutePath();
 		name = name.substring( getFolder().getAbsolutePath().length() );

@@ -2,11 +2,13 @@ package gemu.frame.main.gamepanel;
 
 import gemu.io.File;
 import gemu.game.Game;
-
+import gemu.system.Log;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 class MainLayer extends JPanel {
 	
@@ -40,22 +42,36 @@ class MainLayer extends JPanel {
 		@Override
 		public Dimension getPreferredSize() {
 			Dimension size = new Dimension( DEFAULT_WIDTH, DEFAULT_HEIGHT );
-			File[] screenshots = game.getScreenshots();
+			ArrayList<File> screenshots = new ArrayList<>( Arrays.<File>asList( game.getScreenshots() ) );
 			
-			if ( screenshots.length > 0 ) {			
+			if ( screenshots.size() > 0 ) {			
 				setOpaque( true );
 				File source = null;
 				boolean mainScreenshotFound = false;
 				for ( File s : screenshots ) {
+					if (!s.exists()) {
+						screenshots.remove(s);
+						game.removeScreenshot(s);
+					}
+					
 					if ( s.getName().equals("main_screenshot.png") ) {
 						source = s;
 						mainScreenshotFound = true;
-						break;
+						
 					}
 				}
 				
 				if ( !mainScreenshotFound ) {
-					source = screenshots[0];
+					source = screenshots.get(0);
+				} else {
+					for ( File f : screenshots ) {
+						if (f.getName().equals("screenshot.jpg") || f.getName().equals("screenshot.png") ) {
+							
+							if ( f.delete() ) {
+								Log.info("Residual screeshot removed : " + f.getAbsolutePath() );
+							};
+						}
+					}
 				}
 				
 				if ( !source.exists() ) {
