@@ -198,7 +198,7 @@ public final class Games {
 		if ( file.isDirectory() ) {			
 			for ( File f : file.listFiles() ) {
 				if ( isIgnoreFile( f ) ) {
-					Log.info( file.getAbsolutePath() + " : Ignored");
+					Log.info( "Ignored : " + file.getAbsolutePath());
 					return true;
 				}
 			}

@@ -60,25 +60,32 @@ public class Game {
 		Thread checkProcessIdThread = new Thread( new Runnable() {
 			@Override
 			public void run() {
-				ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", "$process = get-process " + getLauncher().getBaseName() + "; foreach ( $p in $process ){ if ( $p.MainWindowHandle -ne 0 ) { $p.Id  } }",  });
+				ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", 
+					"[string]$processName = '" + getLauncher().getBaseName() + "'; $process = get-process $processName; foreach ( $p in $process ){ if ( $p.MainWindowHandle -ne 0 ) { $p.Id  } }" });
 				try {
-					Thread.sleep(500);
+					Thread.sleep(500);                                                                                                  
 					Process process = powershellGetsId.start();
 					try ( BufferedReader idReader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ){
 						String line;
-						int lineCount = 0; 
+						int lineCount = 0;
+						Log.info( "Checking for id ");
 						while( ( line = idReader.readLine() ) != null ) {
-							try {
-								int id = Integer.parseInt( line );
-								if ( !Games.runningGamesIds.keySet().contains(id)) {
-									Games.runningGamesIds.put(id, Game.this);
-									processId = id;
-								}  
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-							lineCount++;
+							//System.out.println( line );
+							if ( Character.isDigit( line.charAt(0) ) ) {
+								try {
+									int id = Integer.parseInt( line );
+									if ( !Games.runningGamesIds.keySet().contains(id)) {
+										Games.runningGamesIds.put(id, Game.this);
+										processId = id;
+									}  
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								  	
+								lineCount++;					
+							}							
 						}
+						
 						if ( lineCount == 0 ) { 
 							checkProcessId();
 						} else {								
@@ -203,7 +210,17 @@ public class Game {
 		}
 		return screenshots;
 	}
-	
+	public void removeScreenshot( File file ) {
+		if ( file.exists() ) {
+			if ( !file.delete() ) {
+				Log.error( " Counld not delete screenshot file: " + file.getAbsolutePath() );
+			}
+		}
+		
+		info.modif( GameInfo.Key.screenshots ).remove( file.getName() );
+		info.commit();
+		
+	}
 	public void addScreenshot( File file ) {
 		String name = file.getAbsolutePath();
 		name = name.substring( getFolder().getAbsolutePath().length() );
@@ -216,7 +233,6 @@ public class Game {
 		for ( File f : getFolder().listFiles() ) {
 			if ( Games.isScreenshot( f ) ) {
 				if ( !screenshots.contains(f) ) {
-					Log.info( getName() + ", New screenshot : " + f.getName() );
 					addScreenshot( f );				
 				}
 			}
