@@ -11,11 +11,13 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
+import gemu.frame.main.gamepanel.GamePanel;
 
 public class Game {
 	private long length = 0;
 	private int processId = -1;
 	GameInfo info;
+	GamePanel gamePanel;
 	
 	public Game( GameInfo gameInfo ) {
 		this.info = gameInfo;
@@ -55,6 +57,14 @@ public class Game {
 			checkProcessId();
 		}
 	}	
+	
+	public void setGamePanel( GamePanel gamePanel ) {
+		 this.gamePanel = gamePanel;
+	}
+	
+	public GamePanel getGamePanel() {
+		return gamePanel;
+	}
 	
 	public void checkProcessId() {
 		Thread checkProcessIdThread = new Thread( new Runnable() {

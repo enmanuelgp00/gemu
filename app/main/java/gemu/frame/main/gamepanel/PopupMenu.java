@@ -54,8 +54,8 @@ class PopupMenu extends JPopupMenu {
 							searchGamePanel.setEnabledScreenshotButton( false );
 							if ( exitCode == 0 ) {   
 								Log.info( "Closing :" + gamePanel.getGame().getName() );
-								gamePanel.getGame().findNewScreenshots();
-								gamePanel.refreshBackground();
+								//gamePanel.getGame().findNewScreenshots();
+								//gamePanel.refreshBackground();
 							} else {                  
 								Log.error( "Closing :" + gamePanel.getGame().getName() );
 							}

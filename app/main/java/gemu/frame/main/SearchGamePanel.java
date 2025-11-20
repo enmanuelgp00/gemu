@@ -37,6 +37,7 @@ public class SearchGamePanel extends JPanel {
 						@Override
 						public void onStreamLineRead( String line ) {
 							System.out.println( line );
+							
 						}
 						@Override
 						public void onProcessStarted( Process p ) {}
@@ -44,6 +45,8 @@ public class SearchGamePanel extends JPanel {
 						public void onProcessFinished( Process p, int exitcode ) {
 							if(exitcode == 0) {
 								Log.info( "Screenshot taken");
+								Games.runningGamesIds.get(id).getGamePanel().refreshBackground();
+								Games.runningGamesIds.get(id).findNewScreenshots();
 							};
 						}
 					}, game.getLauncher().getName(), id, game.getFolder() );

@@ -23,7 +23,8 @@ public class GamePanel extends JPanel {
 	
 	public GamePanel( Game game, SearchGamePanel searchGamePanel ) {
 		super();                    
-		this.game = game; 
+		this.game = game;
+		game.setGamePanel( this );
 		setLayout( new OverlayLayout( this ) );
 		
 		setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1 ));
