@@ -47,8 +47,10 @@ class MainLayer extends JPanel {
 			if ( screenshots.size() > 0 ) {			
 				setOpaque( true );
 				File source = null;
+				File[] initScreenshots = game.getScreenshots();
+				
 				boolean mainScreenshotFound = false;
-				for ( File s : screenshots ) {
+				for ( File s : initScreenshots ) {
 					if (!s.exists()) {
 						screenshots.remove(s);
 						game.removeScreenshot(s);

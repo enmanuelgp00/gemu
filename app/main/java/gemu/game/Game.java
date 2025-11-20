@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 import gemu.frame.main.gamepanel.GamePanel;
+import java.util.Calendar;
 
 public class Game {
 	private long length = 0;
@@ -230,6 +231,33 @@ public class Game {
 		
 		info.modif( GameInfo.Key.screenshots ).remove( "\\" + file.getName() );
 		info.commit();   
+	}
+	
+	public void setLastTimePlayed( Calendar calendar ) {
+		info.set( GameInfo.Key.lastTimePlayed , String.valueOf( calendar.getTimeInMillis() ));
+		info.commit();
+	}
+	
+	public void setLastTimePlayed( Long millis ) {
+		info.set( GameInfo.Key.lastTimePlayed , String.valueOf( millis ));
+		info.commit();
+	}
+	
+	public Calendar getLastTimePlayed() {
+		Calendar calendar = Calendar.getInstance();
+		long millis = System.currentTimeMillis();
+		try {
+			String[] data = info.get( GameInfo.Key.lastTimePlayed );
+			if ( data.length > 0 ) {
+				millis = Long.parseLong( data[0] );								
+			} else {
+				return null;
+			}
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		}
+		calendar.setTimeInMillis( millis );
+		return calendar;
 	}
 	
 	public void addScreenshot( File file ) {

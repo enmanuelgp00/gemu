@@ -46,7 +46,9 @@ class PopupMenu extends JPopupMenu {
 					gamePanel.getGame().play( new OnProcessAdapter() {
 						@Override
 						public void onProcessStarted( Process p ) {
-							Log.info( "Opening :" + gamePanel.getGame().getName() );
+							Game game = gamePanel.getGame();
+							Log.info( "Opening :" + game.getName() );
+							game.setLastTimePlayed( System.currentTimeMillis() );
 							searchGamePanel.setEnabledScreenshotButton( true );
 						}
 						@Override
