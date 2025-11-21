@@ -4,6 +4,7 @@ import gemu.system.Log;
 import gemu.io.*;
 import java.util.*;
 
+
 public final class Games {
 
 	public static Set<String> tagsCollection = new TreeSet<String>();
@@ -16,9 +17,13 @@ public final class Games {
 	
 	public static String FILE_NAME_IGNORE = ".gemuignore";  
 	public static String FILE_NAME_MORE = ".more";
+	//lastTimePlayed, favorite, state, 
+	public static void sortBy( List<Game> games, GameInfo.Key[] keys) {
+		
+	}
 	
 	public static void sort( List<Game> games ) {
-		
+				
 		
 		Set<Game> ready = new HashSet<Game>();
 		Set<Game> fav = new HashSet<Game>();

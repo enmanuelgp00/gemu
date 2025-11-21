@@ -77,7 +77,7 @@ $bitmap = New-Object System.Drawing.Bitmap $width, $height
 $graphics = [System.Drawing.Graphics]::fromImage($bitmap)
 $graphics.CopyFromScreen($clientPoint.X, $clientPoint.Y, 0, 0, $bitmap.size )
 
-[void]$bitmap.Save("main_screenshot.png", [System.Drawing.Imaging.ImageFormat]::png)
+[void]$bitmap.Save("main_screenshot.jpg", [System.Drawing.Imaging.ImageFormat]::jpeg)
 
 $bitmap.dispose()
 $graphics.dispose()

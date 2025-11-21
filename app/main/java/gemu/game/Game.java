@@ -7,6 +7,7 @@ import gemu.system.*;
 import gemu.system.event.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader; 
+import java.io.FileInputStream;
 import java.util.Arrays;             
 import java.util.ArrayList;
 import java.util.Set;
@@ -71,45 +72,73 @@ public class Game {
 		Thread checkProcessIdThread = new Thread( new Runnable() {
 			@Override
 			public void run() {
-				ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", 
-					"[string]$processName = '" + getLauncher().getBaseName() + "'; $process = get-process $processName; foreach ( $p in $process ){ if ( $p.MainWindowHandle -ne 0 ) { $p.Id  } }" });
-				try {
-					Thread.sleep(500);                                                                                                  
-					Process process = powershellGetsId.start();
-					try ( BufferedReader idReader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ){
-						String line;
-						int lineCount = 0;
-						Log.info( "Checking for id ");
-						while( ( line = idReader.readLine() ) != null ) {
-							//System.out.println( line );
-							if ( Character.isDigit( line.charAt(0) ) ) {
-								try {
-									int id = Integer.parseInt( line );
-									if ( !Games.runningGamesIds.keySet().contains(id)) {
-										Games.runningGamesIds.put(id, Game.this);
-										processId = id;
-									}  
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-								  	
-								lineCount++;					
-							}							
-						}
-						
-						if ( lineCount == 0 ) { 
-							checkProcessId();
-						} else {								
-							Log.info( getName() + " has started with id: " + processId );
-
-							Log.info("Current running games : [" + Games.runningGamesIds.size() + "]");
-							for ( int id : Games.runningGamesIds.keySet()) {
-								System.out.println( "[id] " + String.valueOf(id) + " = " + Games.runningGamesIds.get(id).getName() );
-							}
-						}
-					} catch( Exception e ) { 
-						e.printStackTrace();
+				String processName = getLauncher().getName();
+				System.out.println( processName );
+				StringBuilder scriptContent = new StringBuilder();
+				scriptContent.append( "$processName = '" + processName + "'\n");
+				try {   
+					String jarLocation = Shell.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+					String path = jarLocation.substring( 0, jarLocation.lastIndexOf('/'));
+					BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( path + "\\" + "id_check_script.ps1" )));
+					
+					Thread.sleep(500);	
+					int code;
+					char ch;
+					while( ( code = reader.read() ) != -1 ) {
+						ch = (char) code;
+						if (ch == '"') {    
+							scriptContent.append( '\\' );  							
+						}                                    
+						//System.out.print(ch);
+						scriptContent.append( ch );
 					}
+					
+					ProcessBuilder powershellGetsId = new ProcessBuilder( new String[] { "powershell", scriptContent.toString() });
+					Process process = powershellGetsId.start();
+					
+					Thread errorThread = new Thread(() -> {
+						try {
+							BufferedReader errorReader = new BufferedReader( new InputStreamReader( process.getErrorStream(), "Shift-JIS" ));
+							String l;
+							while (( l = errorReader.readLine()) != null ) {
+								Log.error(l);
+							}
+						} catch( Exception e ) { }
+					});	
+					errorThread.start();
+					
+					String line;
+					reader = new BufferedReader( new InputStreamReader( process.getInputStream() ) );
+					int lineCount = 0;
+					Log.info( "Checking for id : " + processName );
+					while( ( line = reader.readLine() ) != null ) {
+						System.out.println( line );
+						if ( Character.isDigit( line.charAt(0) ) ) {
+							try {
+								int id = Integer.parseInt( line );
+								if ( !Games.runningGamesIds.keySet().contains(id)) {
+									Games.runningGamesIds.put(id, Game.this);
+									processId = id;
+								}  
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+							  	
+							lineCount++;					
+						}							
+					}
+					
+					if ( lineCount == 0  && isRunning() ) { 
+						checkProcessId();
+					} else {								
+						Log.info( getName() + " has started with id: " + processId );
+					
+						Log.info("Current running games : [" + Games.runningGamesIds.size() + "]");
+						for ( int id : Games.runningGamesIds.keySet()) {
+							System.out.println( "[id] " + String.valueOf(id) + " = " + Games.runningGamesIds.get(id).getName() );
+						}
+					}
+					reader.close();
 				} catch( Exception e ) {
 					e.printStackTrace();
 				}
@@ -222,15 +251,17 @@ public class Game {
 		return screenshots;
 	}
 	
-	public void removeScreenshot( File file ) { 
+	public boolean removeScreenshot( File file ) { 
 		if ( file.exists() ) {
 			if ( !file.delete() ) {
 				Log.error( " Counld not delete screenshot file: " + file.getAbsolutePath() );
+				return false;
 			}
 		}
 		
 		info.modif( GameInfo.Key.screenshots ).remove( "\\" + file.getName() );
-		info.commit();   
+		info.commit();
+		return true;
 	}
 	
 	public void setLastTimePlayed( Calendar calendar ) {

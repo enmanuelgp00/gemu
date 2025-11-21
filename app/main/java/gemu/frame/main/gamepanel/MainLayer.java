@@ -42,15 +42,13 @@ class MainLayer extends JPanel {
 		@Override
 		public Dimension getPreferredSize() {
 			Dimension size = new Dimension( DEFAULT_WIDTH, DEFAULT_HEIGHT );
-			ArrayList<File> screenshots = new ArrayList<>( Arrays.<File>asList( game.getScreenshots() ) );
+			ArrayList<File> screenshots = new ArrayList<>( Arrays.<File>asList( game.getScreenshots() ) );  
+			setOpaque( true );
+			File source = null;
+			File[] initScreenshots = game.getScreenshots();
+			boolean mainScreenshotFound = false;
 			
-			if ( screenshots.size() > 0 ) {			
-				setOpaque( true );
-				File source = null;
-				File[] initScreenshots = game.getScreenshots();
-				
-				boolean mainScreenshotFound = false;
-				for ( File s : initScreenshots ) {
+			for ( File s : initScreenshots ) {
 					if (!s.exists()) {
 						screenshots.remove(s);
 						game.removeScreenshot(s);
@@ -63,18 +61,24 @@ class MainLayer extends JPanel {
 					}
 				}
 				
+			if ( screenshots.size() > 0 ) {
+				
 				if ( !mainScreenshotFound ) {
 					source = screenshots.get(0);
 				} else {
+				
 					for ( File f : screenshots ) {
 						if (f.getName().equals("screenshot.jpg") || f.getName().equals("screenshot.png") ) {
 							
-							if ( f.delete() ) {
+							if ( game.removeScreenshot(f) ) {
 								Log.info("Residual screeshot removed : " + f.getAbsolutePath() );
-							};
+							} else {
+								Log.error("Could not delete residual screenshot");
+							}
 						}
 					}
 				}
+				
 				
 				if ( !source.exists() ) {
 					game.removeScreenshot( source );
