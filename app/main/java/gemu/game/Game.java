@@ -49,7 +49,6 @@ public class Game {
 				public void run() {
 					try {
 						System.out.println( "Current game id :" + getProcessId() );
-						Games.printRunningGames();
 						setState( Games.STATE_RUNNING );
 						getLauncher().run( needsAdmin(), listener);
 						
@@ -219,7 +218,6 @@ public class Game {
 					}
 					
 					if ( !hasMainWindowHandle && isRunning() ) {
-						System.out.println("ProcessId used in checkProcessId :" + getProcessId() );
 						checkProcessId( getProcessId() );
 					} 
 					

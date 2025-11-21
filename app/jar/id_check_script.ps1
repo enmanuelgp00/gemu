@@ -42,7 +42,7 @@ function Find-MainWindowProcess {
 		write-host $id $($diacnosticProcess.MainWindowHandle -ne 0)
 		
 		if ( $diacnosticProcess.MainWindowHandle -eq 0 ) {
-			write-host "Not Window found for id :" $id
+			#write-host "Not Window found for id :" $id
 			$children = Get-WmiObject Win32_Process | Where-Object { $_.ParentProcessId -like $id }
 			if ( $children -ne $null ) {
 				return Find-MainWindowProcess -WmiProcess $children			

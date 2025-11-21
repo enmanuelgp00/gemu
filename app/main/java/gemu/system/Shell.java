@@ -2,6 +2,7 @@ package gemu.system;
 
 import gemu.system.event.*;
 import java.io.*;
+import java.util.regex.*;
 
 public final class Shell {
 	public static void exec( Command  command ) {
@@ -10,7 +11,7 @@ public final class Shell {
 			if ( command.directory != null ) {
 				pb.directory( command.directory );
 			}
-			
+			pb.redirectErrorStream();
 			Process process = pb.start();
 			command.listener.onProcessStarted( process );
 			
@@ -35,6 +36,29 @@ public final class Shell {
 			int exitCode = process.waitFor();
 			command.listener.onProcessFinished( process, exitCode );
 			
+			/*
+			Thread outputThread = new Thread(() -> {
+				try(BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream(), "Shift-JIS"))) {
+					String line; 
+					Pattern progressPattern = Pattern.compile("(\\d+)%");
+					
+					while ( ( line = reader.readLine() ) != null ) {   
+						Matcher matcher = progressPattern.matcher( line );
+						if ( matcher.find()){  
+							String percent = matcher.group(1);
+							System.out.println( line );
+							
+							command.listener.onStreamLineRead( line );									
+						}
+					}
+				} catch( Exception e ) {
+				
+				}
+			});
+			outputThread.start();
+			int exitCode = process.waitFor();
+			outputThread.join();
+			command.listener.onProcessFinished( process, exitCode );  */
 		} catch ( Exception e ) {
 			e.printStackTrace();
 			Log.error( e.getMessage() );

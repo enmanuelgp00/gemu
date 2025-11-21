@@ -49,7 +49,7 @@ public final class Compressions {
 		
 		@Override
 		public void run() {
-			List<String> command = new ArrayList<String>( Arrays.<String>asList("7z","a","-sdel", "-mmt8", "-mx9", "-t7z"));
+			List<String> command = new ArrayList<String>( Arrays.<String>asList("7z","a","-bsp1","-sdel", "-mmt8", "-mx9", "-t7z"));
 			for ( String exception : exceptions ) {
 				command.add("-x!" + exception );
 			}
@@ -73,7 +73,7 @@ public final class Compressions {
 		}
 				
 		public void run() {
-			String[] command = new String[]{ "7z", "x", "-y", "-o" + folder.getAbsolutePath() , compactFile.getAbsolutePath() };
+			String[] command = new String[]{ "7z","-bsp1", "x", "-y", "-o" + folder.getAbsolutePath() , compactFile.getAbsolutePath() };
 			Shell.exec( new Shell.Command( null, listener, command ));
 		}
 	}
