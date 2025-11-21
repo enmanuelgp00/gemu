@@ -25,7 +25,7 @@ function Find-MainWindowProcess {
 	}
 	
 	if ( $WmiProcess.Count -gt 1 ) {
-		#write-host "More than a single process :" + $WmiProcess.Count
+		#write-host "More than a single process :" $WmiProcess.Count
 		$wmip = $null
 		foreach($p in $WmiProcess) {
 			$wmip = Find-MainWindowProcess -WmiProcess $p
@@ -42,7 +42,7 @@ function Find-MainWindowProcess {
 		write-host $id $($diacnosticProcess.MainWindowHandle -ne 0)
 		
 		if ( $diacnosticProcess.MainWindowHandle -eq 0 ) {
-			write-host "Not Window found for id : " + $id
+			write-host "Not Window found for id :" $id
 			$children = Get-WmiObject Win32_Process | Where-Object { $_.ParentProcessId -like $id }
 			if ( $children -ne $null ) {
 				return Find-MainWindowProcess -WmiProcess $children			

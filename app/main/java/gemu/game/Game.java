@@ -53,8 +53,6 @@ public class Game {
 						
 						if ( hasChildrenProcessOpened() ) {
 							System.out.println("Children process found");
-							
-							checkProcessId( getProcessId() );
 							waitForChildrenProcessToFinish( listener );
 						} else {
 							System.out.println("no process children found");
@@ -169,7 +167,9 @@ public class Game {
 					
 					String line;
 					reader = new BufferedReader( new InputStreamReader( process.getInputStream() ) );
-					int lineCount = 0;
+					
+					boolean hasMainWindowHandle = false;;
+					
 					Log.info( "Checking for id : " + processName );
 					while( ( line = reader.readLine() ) != null ) {
 						System.out.println( line );
@@ -178,7 +178,7 @@ public class Game {
 								String[] values = line.split("\\s+");
 								
 								int id = Integer.parseInt( values[0] );
-								boolean hasMainWindowHandle = Boolean.parseBoolean(values[1]);
+								hasMainWindowHandle = Boolean.parseBoolean(values[1]);
 								
 								setProcessId( id );
 								
@@ -187,14 +187,12 @@ public class Game {
 								}  
 							} catch (Exception e) {
 								e.printStackTrace();
-							}
-							  	
-							lineCount++;					
+							}						
 						} 					
 					}
 					
-					if ( lineCount < 1 && isRunning() ) { 
-						checkProcessId( processId );
+					if ( !hasMainWindowHandle && isRunning() ) { 
+						checkProcessId( getProcessId() );
 					} else {								
 						Log.info( getName() + " has started with id: " + processId );
 					
