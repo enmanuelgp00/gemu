@@ -16,6 +16,7 @@ import gemu.frame.main.gamepanel.GamePanel;
 import java.util.Calendar;
 
 public class Game {
+	private boolean childrenProcessOpened = false;
 	private long length = 0;
 	private int processId = -1;
 	GameInfo info;
@@ -39,26 +40,84 @@ public class Game {
 		this.info = new GameInfo( compactLauncher );
 	}
 	
+	
 	public void play( OnProcessListener listener ) {
 		if ( getState() == Games.STATE_STANDBY ) {
-			Thread playGame = new Thread( new Runnable() {
+			Thread gamePlay = new Thread( new Runnable() {
 				@Override
 				public void run() {
 					try {
+						System.out.println( "Current game id :" + getProcessId() );
 						setState( Games.STATE_RUNNING );
-						getLauncher().run( needsAdmin(), listener);   						
-						setState( Games.STATE_STANDBY );
-						Games.runningGamesIds.remove( processId );
+						getLauncher().run( needsAdmin(), listener);
+						
+						if ( hasChildrenProcessOpened() ) {
+							System.out.println("Children process found");
+							
+							checkProcessId( getProcessId() );
+							waitForChildrenProcessToFinish( listener );
+						} else {
+							System.out.println("no process children found");
+							setClosedGameState();
+							
+						}
 					} catch ( Exception e ) {
 						Log.error( e.getMessage() );
 					}				
 				}
 			});
 						
-			playGame.start();
-			checkProcessId();
+			gamePlay.start();
+			checkProcessId( getProcessId() );
 		}
 	}	
+	
+	public void setClosedGameState() {
+		setState( Games.STATE_STANDBY );						
+		Games.runningGamesIds.remove( getProcessId() );
+		setProcessId( -1 );
+	}
+	
+	private void checkChildrenProcessOpenedState() {
+		Shell.exec( new Shell.Command( null, new OnProcessAdapter() {
+			@Override
+			public void onStreamLineRead( String info ) {
+				try {
+					String[] values = info.split("\\s+");
+					if ( values.length > 1 ) {
+						setProcessId( Integer.parseInt( values[1]) );
+					}                                                
+					System.out.println("processId : " + processId );
+					System.out.println("checkChildrenProcessOpenedState : " + values[0] );
+					setChildrenProcessOpenedState( Boolean.parseBoolean( values[0] ) );
+				} catch( Exception e ) { }
+			}
+		}, "powershell", "$p = Get-WmiObject Win32_Process | Where-Object { $_.ParentProcessId -like '" + processId + "'}; write-host $( $p -ne $null ) $p.ProcessId"));
+	}
+	
+	private void setChildrenProcessOpenedState( boolean state ) {
+		childrenProcessOpened = state;
+	}
+	
+	public boolean hasChildrenProcessOpened() {
+		checkChildrenProcessOpenedState();
+		return childrenProcessOpened;
+	}
+	
+	private void waitForChildrenProcessToFinish( OnProcessListener listener ) {
+		Shell.exec( new Shell.Command( null, new OnProcessAdapter(){
+			@Override
+			public void onProcessStarted( Process process ) {
+				System.out.println( "Waiting for process : " + processId + " to finish ");
+			}
+			@Override
+			public void onProcessFinished( Process p, int exitCode ) {
+				System.out.println("Process finshed");
+				setClosedGameState();
+				listener.onProcessFinished( p, exitCode );
+			}
+		}, "powershell", "Wait-Process -Id " + processId ) );
+	}
 	
 	public void setGamePanel( GamePanel gamePanel ) {
 		this.gamePanel = gamePanel;
@@ -68,15 +127,16 @@ public class Game {
 		return gamePanel;
 	}
 	
-	public void checkProcessId() {
+	public void checkProcessId( int parentId ) {
 		Thread checkProcessIdThread = new Thread( new Runnable() {
 			@Override
 			public void run() {
 				String processName = getLauncher().getName();
-				System.out.println( processName );
 				StringBuilder scriptContent = new StringBuilder();
-				scriptContent.append( "$processName = '" + processName + "'\n");
-				try {   
+				scriptContent.append( "$processName = '" + processName + "'\n"); 
+				scriptContent.append( "$parentId = '" + String.valueOf(parentId) + "'\n");
+				try {
+				
 					String jarLocation = Shell.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
 					String path = jarLocation.substring( 0, jarLocation.lastIndexOf('/'));
 					BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( path + "\\" + "id_check_script.ps1" )));
@@ -115,21 +175,26 @@ public class Game {
 						System.out.println( line );
 						if ( Character.isDigit( line.charAt(0) ) ) {
 							try {
-								int id = Integer.parseInt( line );
-								if ( !Games.runningGamesIds.keySet().contains(id)) {
-									Games.runningGamesIds.put(id, Game.this);
-									processId = id;
+								String[] values = line.split("\\s+");
+								
+								int id = Integer.parseInt( values[0] );
+								boolean hasMainWindowHandle = Boolean.parseBoolean(values[1]);
+								
+								setProcessId( id );
+								
+								if ( hasMainWindowHandle && !Games.runningGamesIds.keySet().contains(id)) {
+									Games.runningGamesIds.put( id , Game.this);
 								}  
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
 							  	
 							lineCount++;					
-						}							
+						} 					
 					}
 					
-					if ( lineCount == 0  && isRunning() ) { 
-						checkProcessId();
+					if ( lineCount < 1 && isRunning() ) { 
+						checkProcessId( processId );
 					} else {								
 						Log.info( getName() + " has started with id: " + processId );
 					
@@ -148,7 +213,15 @@ public class Game {
 		});
 		checkProcessIdThread.start();
 	}
-
+	
+	private void setProcessId( int id ) {
+		processId = id;
+	}
+	
+	private int getProcessId() {
+		return processId;
+	}
+	
 	public boolean needsAdmin() {
 		String[] names = info.get( GameInfo.Key.admin );
 		if ( names.length > 0 ) {

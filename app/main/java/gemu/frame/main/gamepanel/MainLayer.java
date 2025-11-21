@@ -68,7 +68,7 @@ class MainLayer extends JPanel {
 				} else {
 				
 					for ( File f : screenshots ) {
-						if (f.getName().equals("screenshot.jpg") || f.getName().equals("screenshot.png") ) {
+						if (f.getName().equals("screenshot.jpg") || f.getName().equals("screenshot.png") || f.getName().equals("main_screenshot.png") ) {
 							
 							if ( game.removeScreenshot(f) ) {
 								Log.info("Residual screeshot removed : " + f.getAbsolutePath() );
