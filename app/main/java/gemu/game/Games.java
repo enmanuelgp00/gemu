@@ -226,4 +226,11 @@ public final class Games {
 		public void onCompactLaunchersFound( CompactLauncher[] launcherls);
 		
 	}
+	
+	public static void printRunningGames() {
+		System.out.println("[ ID ]\t\t\t[ Name ]");
+		for ( int id : Games.runningGamesIds.keySet() ) {
+			System.out.println( id + "\t\t\t" + Games.runningGamesIds.get( id ).getName());
+		}	
+	}
 }

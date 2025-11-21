@@ -21,6 +21,7 @@ public class Game {
 	private int processId = -1;
 	GameInfo info;
 	GamePanel gamePanel;
+	ArrayList<Integer> subprocessIds = new ArrayList<>();
 	
 	public Game( GameInfo gameInfo ) {
 		this.info = gameInfo;
@@ -48,19 +49,18 @@ public class Game {
 				public void run() {
 					try {
 						System.out.println( "Current game id :" + getProcessId() );
+						Games.printRunningGames();
 						setState( Games.STATE_RUNNING );
 						getLauncher().run( needsAdmin(), listener);
 						
-						if ( hasChildrenProcessOpened() ) {
-							System.out.println("Children process found");
-							waitForChildrenProcessToFinish( listener );
+						if ( hasChildrenProcessOpenedWindow() ) {
+							waitForChildrenProcessWindowedToFinish( listener );
 						} else {
-							System.out.println("no process children found");
 							setClosedGameState();
 							
 						}
 					} catch ( Exception e ) {
-						Log.error( e.getMessage() );
+						e.printStackTrace();
 					}				
 				}
 			});
@@ -73,36 +73,63 @@ public class Game {
 	public void setClosedGameState() {
 		setState( Games.STATE_STANDBY );						
 		Games.runningGamesIds.remove( getProcessId() );
+		System.out.println("CurrentProcess id: " + getProcessId() );
+		Games.printRunningGames();
 		setProcessId( -1 );
 	}
 	
-	private void checkChildrenProcessOpenedState() {
-		Shell.exec( new Shell.Command( null, new OnProcessAdapter() {
-			@Override
-			public void onStreamLineRead( String info ) {
-				try {
-					String[] values = info.split("\\s+");
-					if ( values.length > 1 ) {
-						setProcessId( Integer.parseInt( values[1]) );
-					}                                                
-					System.out.println("processId : " + processId );
-					System.out.println("checkChildrenProcessOpenedState : " + values[0] );
-					setChildrenProcessOpenedState( Boolean.parseBoolean( values[0] ) );
-				} catch( Exception e ) { }
-			}
-		}, "powershell", "$p = Get-WmiObject Win32_Process | Where-Object { $_.ParentProcessId -like '" + processId + "'}; write-host $( $p -ne $null ) $p.ProcessId"));
+	private void checkChildrenProcessOpenedWindowState() {
+		System.out.println( "subprocessIds count : " + subprocessIds.size() );
+		checkChildrenProcessOpenedWindowStateHandler( subprocessIds.size() - 1 );
+	}
+	
+	private void checkChildrenProcessOpenedWindowStateHandler( int pos ) {
+		if ( pos > -1 ) {
+			Shell.exec( new Shell.Command( null, new OnProcessAdapter() {
+				@Override
+				public void onStreamLineRead( String info ) {
+					try {
+						String[] values = info.split("\\s+");
+						boolean isOpened = false;
+						if ( values.length == 3 ) {
+						boolean hasMainWindowHandle = Boolean.parseBoolean(values[2]);
+							if ( hasMainWindowHandle ) {
+								isOpened = true; 		
+								Games.runningGamesIds.remove( getProcessId() );
+								setProcessId( Integer.parseInt( values[1]) );
+							}
+							
+						}
+			
+						setChildrenProcessOpenedState( isOpened );						
+						
+						System.out.println("processId : " + getProcessId() );
+						System.out.println("checkChildrenProcessOpenedWindowState : " + isOpened );
+						
+					} catch( Exception e ) { }
+				}
+				@Override
+				public void onProcessFinished( Process p, int exitCode )  {
+					if ( exitCode == 1 ) {
+						checkChildrenProcessOpenedWindowStateHandler( pos - 1 );					
+					}
+				}
+			}, "powershell", "$wmiprocess = Get-WmiObject Win32_Process | Where-Object { $_.ParentProcessId -like '" + subprocessIds.get(pos) + "'}; if ( $wmiprocess -ne $null ) { $process = Get-Process -id $wmiprocess.ProcessId; write-host $true $process.Id $($process.MainWindowHandle -ne 0 ); exit 0 } else { exit 1 }"));
+		}
+		
+		
 	}
 	
 	private void setChildrenProcessOpenedState( boolean state ) {
 		childrenProcessOpened = state;
 	}
 	
-	public boolean hasChildrenProcessOpened() {
-		checkChildrenProcessOpenedState();
+	public boolean hasChildrenProcessOpenedWindow() {
+		checkChildrenProcessOpenedWindowState();
 		return childrenProcessOpened;
 	}
 	
-	private void waitForChildrenProcessToFinish( OnProcessListener listener ) {
+	private void waitForChildrenProcessWindowedToFinish( OnProcessListener listener ) {
 		Shell.exec( new Shell.Command( null, new OnProcessAdapter(){
 			@Override
 			public void onProcessStarted( Process process ) {
@@ -169,7 +196,6 @@ public class Game {
 					reader = new BufferedReader( new InputStreamReader( process.getInputStream() ) );
 					
 					boolean hasMainWindowHandle = false;;
-					
 					Log.info( "Checking for id : " + processName );
 					while( ( line = reader.readLine() ) != null ) {
 						System.out.println( line );
@@ -179,28 +205,24 @@ public class Game {
 								
 								int id = Integer.parseInt( values[0] );
 								hasMainWindowHandle = Boolean.parseBoolean(values[1]);
-								
-								setProcessId( id );
-								
-								if ( hasMainWindowHandle && !Games.runningGamesIds.keySet().contains(id)) {
-									Games.runningGamesIds.put( id , Game.this);
-								}  
+								subprocessIds.add( id );
+								if ( hasMainWindowHandle && isRunning() ) {
+									setProcessId( id );
+									if ( !Games.runningGamesIds.keySet().contains(id)) {
+										Games.runningGamesIds.put( id , Game.this);
+									}  
+								}
 							} catch (Exception e) {
 								e.printStackTrace();
 							}						
 						} 					
 					}
 					
-					if ( !hasMainWindowHandle && isRunning() ) { 
+					if ( !hasMainWindowHandle && isRunning() ) {
+						System.out.println("ProcessId used in checkProcessId :" + getProcessId() );
 						checkProcessId( getProcessId() );
-					} else {								
-						Log.info( getName() + " has started with id: " + processId );
+					} 
 					
-						Log.info("Current running games : [" + Games.runningGamesIds.size() + "]");
-						for ( int id : Games.runningGamesIds.keySet()) {
-							System.out.println( "[id] " + String.valueOf(id) + " = " + Games.runningGamesIds.get(id).getName() );
-						}
-					}
 					reader.close();
 				} catch( Exception e ) {
 					e.printStackTrace();

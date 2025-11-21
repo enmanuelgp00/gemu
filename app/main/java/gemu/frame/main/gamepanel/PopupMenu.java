@@ -52,9 +52,11 @@ class PopupMenu extends JPopupMenu {
 							searchGamePanel.setEnabledScreenshotButton( true );
 						}
 						@Override
-						public void onProcessFinished( Process process, int exitCode ) {
+						public void onProcessFinished( Process process, int exitCode ) {  
+							if ( Games.runningGamesIds.keySet().size() > 0 ) {
+								searchGamePanel.setEnabledScreenshotButton( false );							
+							}
 							if ( !game.isRunning() ) {
-								searchGamePanel.setEnabledScreenshotButton( false );
 								if ( exitCode == 0 ) {   
 									Log.info( "Closing :" + gamePanel.getGame().getName() );
 									//gamePanel.getGame().findNewScreenshots();
