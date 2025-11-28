@@ -13,7 +13,7 @@ public class HomeFrame extends JFrame {
 		super();
 		setUndecorated( true );
 		getContentPane().setBackground( Style.COLOR_BACKGROUND );
-		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(0, 3, 3, 3));
+		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(2, 2, 2, 2));
 		setSize( 800, 600 );      
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
 		add( new GemuSplitPane( JSplitPane.HORIZONTAL_SPLIT, new SearchPanel(), new LibraryPanel() ));
@@ -24,14 +24,20 @@ public class HomeFrame extends JFrame {
 	
 	MouseAdapter resizeAdapter = new MouseAdapter() {
 		Point initialLocation;
+		
+		boolean mousePressed = false;
 		int factor = 10;
 		int resizing = 0;
-		boolean mousePressed = false;
+		
+		final int top = 7;
+		final int topLeft = 8;
 		final int left = 1;
 		final int buttonLeft = 2;
 		final int button = 3;
 		final int buttonRight = 4;
 		final int right = 5;
+		final int topRight = 6;
+		
 		@Override
 		public void mouseExited( MouseEvent event ) { 
 			if ( !mousePressed ) {		     
@@ -74,19 +80,50 @@ public class HomeFrame extends JFrame {
 					setCursor( Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR ));
 					resizing = right;
 				
+				}  else if ( mousePos.x > factor && mousePos.x < currentSize.width - factor && mousePos.y < factor ) {
+					setCursor( Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR ));
+					resizing = top;
+				
 				}
 			}
 		}
 		@Override
 		public void mouseDragged( MouseEvent event ) {
 			Point mousePos = event.getPoint();
+			Point currentLocation = getLocation();
 			Dimension currentSize = getSize();
 			
+			Point newlocation = currentLocation;
+			Dimension newsize = currentSize;
+			
 			switch (resizing) {
-				case buttonRight:  
-					setSize(event.getX(), event.getY());
+				case top:
+					newlocation = new Point( currentLocation.x, currentLocation.y + mousePos.y );
+					newsize = new Dimension( currentSize.width, currentSize.height - mousePos.y );
+					
+				break;             
+				case topLeft:
+				break;                
+				case left:
+				break;                    
+				case buttonLeft:
+				break;
+				case button:
+					newsize = new Dimension( currentSize.width, mousePos.y );
+				break;
+				case buttonRight:
+					newsize = new Dimension( mousePos.x, mousePos.y );
+				break;
+				case right:
+					newsize = new Dimension( mousePos.x, currentSize.height );
+				break;
+				case topRight:
 				break;
 			}
+			
+			
+			setLocation( newlocation );
+			setSize( newsize );
 			
 			//setLocation( locationX, locationY );
 			
