@@ -1,6 +1,7 @@
 package gemu.frame.home.shelf;
 
-import java.awt.*;
+import java.awt.*;   
+import java.awt.image.*;
 import java.io.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -12,12 +13,12 @@ class Book extends JPanel {
 	final Dimension standardSize = new Dimension( 110, 140 );
 	int detailWidth = 200;
 	boolean isMouseInside = false;
-	Image img = null;
+	BufferedImage bufferedImage = null;
 	Book() {
 		super();
 		try {
 			
-			img = ImageIO.read( new File("build/main_screenshot.jpg"));
+			bufferedImage = ImageIO.read( new File("build/main_screenshot.jpg"));
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
@@ -123,7 +124,7 @@ class Book extends JPanel {
 	@Override
 	public void paintComponent( Graphics g ) {
 		Graphics2D g2 = (Graphics2D)g;
-			double scale = (double)img.getWidth( null ) / (double)img.getHeight( null ); 
+			double scale = (double)bufferedImage.getWidth( null ) / (double)bufferedImage.getHeight( null ); 
 			double height = getHeight();
 			double width = scale * height;
 			detailWidth = (int)width;
@@ -133,7 +134,7 @@ class Book extends JPanel {
 			} else {
 				x =  getWidth() / 2  - detailWidth / 2;
 			}
-			g2.drawImage( img, x, 0, (int)width, (int)height, this );
+			g2.drawImage( bufferedImage, x, 0, (int)width, (int)height, this );
 		
 		
 	}

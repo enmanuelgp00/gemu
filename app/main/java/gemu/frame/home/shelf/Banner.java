@@ -5,28 +5,48 @@ import java.io.*;
 import javax.swing.*;
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.*;
 import java.awt.event.*;
 
 public class Banner extends JPanel {
-	Image img = null;
+	BufferedImage bufferedImage = null;
+	private double imageScaledHeight;
 	Banner() {
 		super();
 		setLayout( new BorderLayout());
-		setMinimumSize( new Dimension( 0, 200 ));
+		setMinimumSize( new Dimension( 0, 100 ));
 		try {
-			img = ImageIO.read( new File("build/main_screenshot.jpg") );			
+			bufferedImage = ImageIO.read( new File("build/main_screenshot.jpg") );
 		} catch ( Exception e ) {}
 		
 		
 		
 	}
+	
+	public int getImageScaledHeight() {
+		return (int)imageScaledHeight;
+	}
+	
 	@Override
 	public void paintComponent( Graphics g ) {
-		Graphics2D g2 = (Graphics2D) g;
-		double scale = (double)img.getHeight( null ) / (double)img.getWidth( null );
+		//Graphics2D g2 = bufferedImage.createGraphics();		
+		Graphics2D g2d = ( Graphics2D)g;		
+		g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+		
+		double scale = (double)bufferedImage.getHeight( null ) / (double)bufferedImage.getWidth( null );
 		double with = getWidth();
-		double height = with * scale;
-		g2.drawImage( img, 0, 0, (int)with, (int)height, this );
+		imageScaledHeight = with * scale;
+		
+		setMaximumSize( new Dimension( 0, (int)imageScaledHeight ));
+		BufferedImage intGray = new BufferedImage( bufferedImage.getWidth(),bufferedImage.getHeight() , BufferedImage.TYPE_BYTE_GRAY );
+		Graphics2D g2dGray = intGray.createGraphics();
+		g2dGray.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+		g2dGray.drawImage( bufferedImage, 0, 0, null );
+		g2dGray.dispose();
+		
+		g2d.drawImage( intGray, 0, 0, (int)with, (int)imageScaledHeight, this );
+		g2d.dispose();
+		
 	}
 	
 }

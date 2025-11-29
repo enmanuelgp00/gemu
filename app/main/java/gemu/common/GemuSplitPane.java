@@ -8,6 +8,15 @@ import java.awt.*;
 public class GemuSplitPane extends JSplitPane {
 	public GemuSplitPane( int orientation, Component component0, Component component1 ) {
 		super( orientation, component0, component1 );
+		a();
+	}
+	
+	public GemuSplitPane( int orientation ) {
+		super( orientation );
+		a();
+	}
+	
+	private void a() {
 		setUI( new BasicSplitPaneUI() {
 			@Override
 			public BasicSplitPaneDivider createDefaultDivider() {

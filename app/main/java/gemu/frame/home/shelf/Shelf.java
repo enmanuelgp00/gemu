@@ -6,13 +6,19 @@ import javax.swing.plaf.basic.*;
 import javax.swing.*;
 
 public class Shelf extends Box {
+	
 	Shelf() {
 		super( BoxLayout.Y_AXIS );
 		
-		Box about = new Box( BoxLayout.X_AXIS );
-		about.add( new GemuButton("PLAY"));
-		about.add( Box.createHorizontalGlue());
-		about.add( new GemuButton("DELETE"));
+		Box about = new Box( BoxLayout.X_AXIS ) {
+			{
+				add( new GemuButton("PLAY"));
+				add( Box.createHorizontalGlue());
+				add( new GemuButton("DELETE"));
+			}
+			
+			
+		};
 		add( about );
 		
 		Content content = new Content();
@@ -49,6 +55,7 @@ public class Shelf extends Box {
 			Insets insets = getInsets();
 			return new Dimension( width + insets.left + insets.right, height + insets.top + insets.bottom );
 		}
+		
 	}
 	
 	

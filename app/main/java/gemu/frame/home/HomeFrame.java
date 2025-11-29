@@ -14,7 +14,7 @@ public class HomeFrame extends JFrame {
 		setUndecorated( true );
 		getContentPane().setBackground( Style.COLOR_BACKGROUND );
 		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(2, 2, 2, 2));
-		setSize( 800, 600 );      
+		setMinimumSize( new Dimension(800, 600 ));
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
 		add( new GemuSplitPane( JSplitPane.HORIZONTAL_SPLIT, new SearchPanel(), new LibraryPanel() ));
 		addMouseListener( resizeAdapter );
