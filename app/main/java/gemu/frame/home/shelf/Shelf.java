@@ -5,21 +5,30 @@ import java.awt.*;
 import javax.swing.plaf.basic.*;
 import javax.swing.*;
 
-public class Shelf extends GemuScrollPane {
+public class Shelf extends Box {
 	Shelf() {
-		super();
+		super( BoxLayout.Y_AXIS );
+		
+		Box about = new Box( BoxLayout.X_AXIS );
+		about.add( new GemuButton("PLAY"));
+		about.add( Box.createHorizontalGlue());
+		about.add( new GemuButton("DELETE"));
+		add( about );
+		
 		Content content = new Content();
-		setViewportView( content );
+		GemuScrollPane scroll = new GemuScrollPane();
+		scroll.setViewportView( content );
 		
 		for ( int i = 0; i < 20; i ++ ) {
 			content.add( new Book());
 		}
+		add( scroll );
 		
 	}
 	
 	class Content extends JPanel {
 		Content() {
-			super();
+			super( );
 			setBackground( Style.COLOR_SECONDARY );
 		}
 		@Override

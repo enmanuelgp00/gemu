@@ -6,8 +6,11 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class LibraryPanel extends GemuSplitPane {
-	public LibraryPanel() {
+	public LibraryPanel() {                  
 		super( JSplitPane.VERTICAL_SPLIT, new Banner(), new Shelf() );
+		
+		
+		
 		setDividerSize(5);
 	}
 }
