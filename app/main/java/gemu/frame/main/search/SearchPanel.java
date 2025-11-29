@@ -1,4 +1,4 @@
-package gemu.frame.home.search;
+package gemu.frame.main.search;
 
 import javax.swing.*;
 import java.awt.*;        

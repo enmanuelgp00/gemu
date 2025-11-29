@@ -1,9 +1,9 @@
 package gemu;
 
-import gemu.frame.home.HomeFrame;
+import gemu.frame.main.MainFrame;
 
 public class Gemu {
 	public static void main( String[] args ) {
-		new HomeFrame();
+		new MainFrame();
 	}
 }

@@ -1,4 +1,4 @@
-package gemu.frame.home.shelf;
+package gemu.frame.main.shelf;
 
 import java.awt.*;   
 import java.awt.image.*;
@@ -47,9 +47,17 @@ class Book extends JPanel {
 						} else {
 							g2d.setColor( Style.COLOR_SECONDARY );
 						}
+						
+						
+
+						g2d.drawImage( Drawing.drawHeart( Color.PINK ), 0, 0, this );
+						g2d.dispose();
+						
+						/*
 						g2d.fillOval( 6, 10, 9, 9);
 						g2d.fillOval( 14, 10, 9, 9);
 						g2d.fillPolygon(new int[]{ 6, 15, 23 } , new int[]{ 16, 24, 16 } ,3);
+						*/
 						
 						//g2d.setColor( Style.COLOR_SECONDARY.brighter() );
 						//g2d.fillOval( 7, 11, 8, 8);

@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class TitleBar extends Panel {
+public class TitleBar extends JPanel {
 	JLabel labelTitle;
 	JFrame frame;
 	final char minimize = '―';
@@ -17,13 +17,14 @@ public class TitleBar extends Panel {
 	};
 	
 	public TitleBar( JFrame frame, String title ) {
-		super(  );
+		super();
 		setLayout( new BoxLayout( this, BoxLayout.X_AXIS ));
+		this.frame = frame;
 		labelTitle = new JLabel( title );
+		
 		labelTitle.setForeground( Style.COLOR_FOREGROUND );
 		labelTitle.setFont( Style.FONT_TITLE_BAR );
 		labelTitle.setBorder( BorderFactory.createEmptyBorder( 3, 7, 3, 3 ) );
-		this.frame = frame;
 		setBackground( Style.COLOR_BACKGROUND );
 		
 		add( labelTitle );
@@ -34,6 +35,7 @@ public class TitleBar extends Panel {
 		
 		ActionListener actionListener = null;
 		GemuButton button;
+		
 		for( char tl : buttonTitles ) {
 			button = new GemuButton( String.valueOf(tl));
 			switch(tl) {
@@ -53,7 +55,9 @@ public class TitleBar extends Panel {
 			button.addActionListener( actionListener );
 			add( button );
 		}
+		
 	}
+	
 	
 	ActionListener actionMinimize = new ActionListener() {
 		@Override
@@ -91,4 +95,5 @@ public class TitleBar extends Panel {
 			frame.setLocation(x , y );
 		}
 	};
+
 }

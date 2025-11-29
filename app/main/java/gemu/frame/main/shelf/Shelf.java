@@ -1,4 +1,4 @@
-package gemu.frame.home.shelf;
+package gemu.frame.main.shelf;
 
 import gemu.common.*;
 import java.awt.*;
@@ -6,25 +6,33 @@ import javax.swing.plaf.basic.*;
 import javax.swing.*;
 
 public class Shelf extends Box {
+	Box toolsBar;
+	GemuButton playButton = new GemuButton("PLAY");
+	
+	GemuButton[] buttons = new GemuButton[] {
+		new GemuButton("MANAGE"),
+		new GemuButton("HEART")
+	};
 	
 	Shelf() {
 		super( BoxLayout.Y_AXIS );
 		
-		Box about = new Box( BoxLayout.X_AXIS ) {
-			{
-				add( new GemuButton("PLAY"));
+		toolsBar = new Box( BoxLayout.X_AXIS ) {
+			{    
+				add( playButton );   
 				add( Box.createHorizontalGlue());
-				add( new GemuButton("DELETE"));
+				for ( GemuButton button : buttons ) {
+					add(button);
+				}
 			}
 			
 			
 		};
-		add( about );
+		add( toolsBar );
 		
 		Content content = new Content();
 		GemuScrollPane scroll = new GemuScrollPane();
-		scroll.setBorder( BorderFactory.createEmptyBorder( 7, 0, 0, 0 ) );
-		scroll.setBackground( null );
+		scroll.setBorder( BorderFactory.createEmptyBorder( 7, 0, 0, 0 ) ); 
 		scroll.setViewportView( content );
 		
 		for ( int i = 0; i < 20; i ++ ) {
@@ -32,6 +40,10 @@ public class Shelf extends Box {
 		}
 		add( scroll );
 		
+	}
+	
+	public Box getToolsBar() {
+		return toolsBar;
 	}
 	
 	class Content extends JPanel {

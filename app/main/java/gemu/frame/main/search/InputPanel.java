@@ -1,4 +1,4 @@
-package gemu.frame.home.search;
+package gemu.frame.main.search;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -24,7 +24,7 @@ public class InputPanel extends Box {
 		Color placeholderColor;
 		TextReference() {
 			super();
-			setFont( Style.FONT_GLOBAL );
+			setFont( Style.FONT_LABEL );
 			setForeground( Style.COLOR_FOREGROUND );
 			setBackground( Style.COLOR_BACKGROUND );
 			setCaretColor( Style.COLOR_FOREGROUND );

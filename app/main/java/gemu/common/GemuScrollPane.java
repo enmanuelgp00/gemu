@@ -9,12 +9,11 @@ public class GemuScrollPane extends JScrollPane {
 		super();
 		setBackground( Style.COLOR_SECONDARY );
 		setBorder( BorderFactory.createEmptyBorder(5, 5, 5, 5) );
+		
 		final JScrollBar horizontalScroll = getHorizontalScrollBar();     
 		final JScrollBar verticalScroll = getVerticalScrollBar();
 		horizontalScroll.setUI( createBasicScrollBarUI() );  
-		horizontalScroll.setUnitIncrement( 20 );
-		verticalScroll.setUI( createBasicScrollBarUI() );     
-		verticalScroll.setUnitIncrement( 20);
+		verticalScroll.setUI( createBasicScrollBarUI() );  
 		
 	}
 	
@@ -34,7 +33,8 @@ public class GemuScrollPane extends JScrollPane {
 						}
 						scrollbar.setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1 ) );
 						scrollbar.setBackground( null );
-						scrollbar.setOpaque( false );
+						scrollbar.setOpaque( false ); 
+						scrollbar.setUnitIncrement( 20);
 						
 					}
 				}

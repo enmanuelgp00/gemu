@@ -1,4 +1,4 @@
-package gemu.frame.home.shelf;
+package gemu.frame.main.shelf;
 
 import gemu.common.*;
 import java.io.*;
@@ -38,6 +38,7 @@ public class Banner extends JPanel {
 		imageScaledHeight = with * scale;
 		
 		setMaximumSize( new Dimension( 0, (int)imageScaledHeight ));
+		
 		BufferedImage intGray = new BufferedImage( bufferedImage.getWidth(),bufferedImage.getHeight() , BufferedImage.TYPE_BYTE_GRAY );
 		Graphics2D g2dGray = intGray.createGraphics();
 		g2dGray.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );

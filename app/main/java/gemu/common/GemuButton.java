@@ -18,6 +18,7 @@ public class GemuButton extends JButton {
 	public GemuButton( String title ) {
 		super( title );
 		setForeground( foreground );
+		setFont( Style.FONT_BUTTON );
 		setContentAreaFilled( false );
 		setBorderPainted( false );
 		setFocusPainted( false );

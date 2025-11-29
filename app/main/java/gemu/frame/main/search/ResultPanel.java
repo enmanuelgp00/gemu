@@ -1,4 +1,4 @@
-package gemu.frame.home.search;
+package gemu.frame.main.search;
 
 
 import gemu.common.*;
@@ -11,9 +11,6 @@ public class ResultPanel extends GemuScrollPane {
 		super();
 		JPanel panel = new JPanel();  
 		panel.setLayout( new BoxLayout( panel, BoxLayout.Y_AXIS ));
-		for ( int i = 0; i < 100; i++ ) {
-			panel.add( new GemuButton( "title " + String.valueOf(i)));
-		}
 		panel.setBackground( Style.COLOR_SECONDARY );
 		setViewportView( panel );
 		
