@@ -20,6 +20,26 @@ public class GemuScrollPane extends JScrollPane {
 	
 	public BasicScrollBarUI createBasicScrollBarUI() {
 		return new BasicScrollBarUI() {
+			{
+				setOpaque( false );
+				setBackground( null );
+				JScrollBar scrollbar;
+				for ( Component c : getComponents() ) {
+					if ( c instanceof JScrollBar ) {
+						scrollbar = (JScrollBar)c; 
+						if ( scrollbar.getOrientation() == JScrollBar.VERTICAL ) {
+							scrollbar.setPreferredSize(new Dimension( 9, scrollbar.getPreferredSize().height ));						
+						} else {
+							scrollbar.setPreferredSize(new Dimension( scrollbar.getPreferredSize().width , 9 ));
+						}
+						scrollbar.setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1 ) );
+						scrollbar.setBackground( null );
+						scrollbar.setOpaque( false );
+						
+					}
+				}
+				
+			}
 			JButton zeroButton = new JButton() {
 				{
 					setPreferredSize( new Dimension( 0, 0 ));
@@ -44,6 +64,7 @@ public class GemuScrollPane extends JScrollPane {
 			}
 			@Override
 			public void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds ) {
+				//c.setPreferredSize( );
 				if (thumbBounds.isEmpty() || !scrollbar.isEnabled()) {
 					return ;
 				}
@@ -51,16 +72,11 @@ public class GemuScrollPane extends JScrollPane {
 				Graphics2D g2d = (Graphics2D) g.create();
 				g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				g2d.setColor( Style.COLOR_SECONDARY.brighter());
-				g2d.fillRoundRect( thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 20, 20 );
+				g2d.fillRoundRect( thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 6, 6 );
 				g2d.dispose();
 			}
 			@Override
 			public void paintTrack( Graphics g, JComponent c, Rectangle trackBounds) {
-				Graphics2D g2d = (Graphics2D) g.create();
-				g2d.setColor( Style.COLOR_SECONDARY);
-				g2d.fillRect( trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height );
-				g2d.dispose();
-				
 				
 			}
 		};

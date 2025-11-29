@@ -23,6 +23,8 @@ public class Shelf extends Box {
 		
 		Content content = new Content();
 		GemuScrollPane scroll = new GemuScrollPane();
+		scroll.setBorder( BorderFactory.createEmptyBorder( 7, 0, 0, 0 ) );
+		scroll.setBackground( null );
 		scroll.setViewportView( content );
 		
 		for ( int i = 0; i < 20; i ++ ) {
@@ -36,6 +38,15 @@ public class Shelf extends Box {
 		Content() {
 			super( );
 			setBackground( Style.COLOR_SECONDARY );
+		}
+		@Override
+		public void paintComponent( Graphics g ) {  
+			super.paintComponent(g);
+			Graphics2D g2d = (Graphics2D)g;
+			GradientPaint gradient = new GradientPaint( 0, 0, Style.COLOR_BACKGROUND, 0, 50, getBackground() );
+			g2d.setPaint(gradient);
+			g2d.fillRect( 0, 0, getWidth(), 50 );
+			
 		}
 		@Override
 		public Dimension getPreferredSize() {
