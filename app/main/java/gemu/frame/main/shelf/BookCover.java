@@ -7,21 +7,22 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.imageio.*;
 import gemu.common.*;
+import gemu.game.*;
 
-class Book extends JPanel {
+class BookCover extends JPanel {
 	Box boxOnTop;
 	final Dimension standardSize = new Dimension( 110, 140 );
-	int detailWidth = 200;
+	int detailWidth = 0;
 	boolean isMouseInside = false;
 	BufferedImage bufferedImage = null;
-	Book() {
+	Game game;
+	BookCover( Game game ) {
 		super();
+		this.game = game; 
 		try {
 			
-			bufferedImage = ImageIO.read( new File("build/main_screenshot.jpg"));
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
+			bufferedImage = ImageIO.read( game.getCover());
+		} catch( Exception e ) { }
 		setLayout( new OverlayLayout( this ) );
 		setPreferredSize( standardSize );
 		setBackground( Style.COLOR_SECONDARY.brighter() );
@@ -34,35 +35,14 @@ class Book extends JPanel {
 					{
 						setPreferredSize( new Dimension( 30, 30));
 						setMaximumSize( new Dimension( 30, 30 ));
+						setBackground( Style.COLOR_BACKGROUND );
 					}
 					@Override
 					public void paintComponent( Graphics g ) {
-						Graphics2D g2d = (Graphics2D)g;
+						Graphics2D g2d = (Graphics2D)g.create();
 						g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-						
-						if ( getModel().isPressed() ) {
-							g2d.setColor( Color.PINK );
-						} else if ( getModel().isRollover() ) {
-							g2d.setColor( Style.COLOR_SECONDARY.brighter());
-						} else {
-							g2d.setColor( Style.COLOR_SECONDARY );
-						}
-						
-						
-
-						g2d.drawImage( Drawing.drawHeart( Color.PINK ), 0, 0, this );
+						g2d.drawImage( Drawing.drawHeart( getBackground() ), 0, 0, getWidth(), getHeight(), this );
 						g2d.dispose();
-						
-						/*
-						g2d.fillOval( 6, 10, 9, 9);
-						g2d.fillOval( 14, 10, 9, 9);
-						g2d.fillPolygon(new int[]{ 6, 15, 23 } , new int[]{ 16, 24, 16 } ,3);
-						*/
-						
-						//g2d.setColor( Style.COLOR_SECONDARY.brighter() );
-						//g2d.fillOval( 7, 11, 8, 8);
-						//g2d.fillOval( 14, 11, 8, 8);
-						//g2d.fillPolygon(new int[]{ 7, 15, 22 } , new int[]{ 16, 23, 16 } ,3);
 					}
 				});
 			}
@@ -74,8 +54,13 @@ class Book extends JPanel {
 		addMouseMotionListener( expandOnRollover );  
 		addMouseListener( expandOnRollover );
 		
+		
 	}
-
+	
+	public Game getGame() {
+		return game;
+	}
+	
 	public void setIsMouseInside( Boolean beans ) {
 		isMouseInside = beans;
 	}
@@ -131,7 +116,8 @@ class Book extends JPanel {
 	
 	@Override
 	public void paintComponent( Graphics g ) {
-		Graphics2D g2 = (Graphics2D)g;
+		if ( bufferedImage != null ) {     
+			Graphics2D g2 = (Graphics2D)g.create();
 			double scale = (double)bufferedImage.getWidth( null ) / (double)bufferedImage.getHeight( null ); 
 			double height = getHeight();
 			double width = scale * height;
@@ -142,8 +128,10 @@ class Book extends JPanel {
 			} else {
 				x =  getWidth() / 2  - detailWidth / 2;
 			}
-			g2.drawImage( bufferedImage, x, 0, (int)width, (int)height, this );
-		
-		
+			g2.drawImage( bufferedImage, x, 0, (int)width, (int)height, this ); 
+			g2.dispose();	
+		} else {
+			super.paintComponent(g);			
+		}
 	}
 }

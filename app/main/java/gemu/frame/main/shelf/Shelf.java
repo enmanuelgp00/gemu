@@ -1,63 +1,67 @@
 package gemu.frame.main.shelf;
 
 import gemu.common.*;
-import java.awt.*;
+import java.util.*;
+import java.awt.*;           
+import java.awt.event.*;
 import javax.swing.plaf.basic.*;
-import javax.swing.*;
+import javax.swing.*;    
+import gemu.game.*;
 
-public class Shelf extends Box {
-	Box toolsBar;
-	GemuButton playButton = new GemuButton("PLAY");
+public class Shelf extends GemuScrollPane {
+
+	ArrayList<OnBookCoverMouseAdapter> onBookCoverMouseListeners = new ArrayList<>(); 
 	
-	GemuButton[] buttons = new GemuButton[] {
-		new GemuButton("MANAGE"),
-		new GemuButton("HEART")
-	};
-	
-	Shelf() {
-		super( BoxLayout.Y_AXIS );
-		
-		toolsBar = new Box( BoxLayout.X_AXIS ) {
-			{    
-				add( playButton );   
-				add( Box.createHorizontalGlue());
-				for ( GemuButton button : buttons ) {
-					add(button);
-				}
-			}
-			
-			
-		};
-		add( toolsBar );
-		
+	Shelf( Game[] games ) {
+		super();
+		setFocusable( true );
 		Content content = new Content();
-		GemuScrollPane scroll = new GemuScrollPane();
-		scroll.setBorder( BorderFactory.createEmptyBorder( 7, 0, 0, 0 ) ); 
-		scroll.setViewportView( content );
+		setBorder( BorderFactory.createEmptyBorder( 7, 0, 0, 0 ) ); 
+		setViewportView( content );
 		
-		for ( int i = 0; i < 20; i ++ ) {
-			content.add( new Book());
+		for ( Game game : games ) {
+			BookCover bookCover = new BookCover( game );
+			bookCover.addMouseListener( new MouseAdapter(){
+				@Override
+				public void mousePressed( MouseEvent event ) {
+					for ( OnBookCoverMouseAdapter listener : onBookCoverMouseListeners ) {
+						listener.mousePressed( event, bookCover );
+					}
+				}
+			});
+					
+			content.add( bookCover);
 		}
-		add( scroll );
-		
+		 
+		addMouseListener( new MouseAdapter(){
+			@Override
+			public void mousePressed( MouseEvent e ) {
+				requestFocusInWindow();
+			}
+		});
 	}
 	
-	public Box getToolsBar() {
-		return toolsBar;
+	public void addOnBookCoverMouseAdapter( OnBookCoverMouseAdapter listener ) {
+		onBookCoverMouseListeners.add( listener );
 	}
+	
+	static abstract class OnBookCoverMouseAdapter {
+		void mousePressed( MouseEvent event, BookCover cover ) { }
+	}
+	
 	
 	class Content extends JPanel {
 		Content() {
-			super( );
+			super( new FlowLayout( FlowLayout.LEFT ));
 			setBackground( Style.COLOR_SECONDARY );
 		}
 		@Override
 		public void paintComponent( Graphics g ) {  
 			super.paintComponent(g);
 			Graphics2D g2d = (Graphics2D)g;
-			GradientPaint gradient = new GradientPaint( 0, 0, Style.COLOR_BACKGROUND, 0, 50, getBackground() );
+			GradientPaint gradient = new GradientPaint( 0, 0, Style.COLOR_BACKGROUND, 0, 30, getBackground() );
 			g2d.setPaint(gradient);
-			g2d.fillRect( 0, 0, getWidth(), 50 );
+			g2d.fillRect( 0, 0, getWidth(), getHeight() );
 			
 		}
 		@Override
@@ -76,7 +80,8 @@ public class Shelf extends Box {
 				height = last.y + last.height;
 			}
 			Insets insets = getInsets();
-			return new Dimension( width + insets.left + insets.right, height + insets.top + insets.bottom );
+			int gap = ((FlowLayout)getLayout()).getVgap();
+			return new Dimension( width + insets.left + insets.right, height + insets.top + insets.bottom  + gap);  
 		}
 		
 	}

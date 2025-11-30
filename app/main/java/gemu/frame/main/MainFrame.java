@@ -5,21 +5,32 @@ import java.awt.*;
 import java.awt.event.*;
 import gemu.common.*;
 import gemu.frame.main.search.*;  
-import gemu.frame.main.shelf.*;  
+import gemu.frame.main.shelf.*;       
+import gemu.game.*;
 
 
 public class MainFrame extends JFrame {
-	public MainFrame() {
+	public MainFrame( Game[] games ) {
 		super();
 		setUndecorated( true );
+		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		getContentPane().setBackground( Style.COLOR_BACKGROUND );
 		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(2, 2, 2, 2));
 		setMinimumSize( new Dimension(800, 600 )); 
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
-		add( new GemuSplitPane( JSplitPane.HORIZONTAL_SPLIT, new SearchPanel(), new LibraryPanel() ));
+		
+		add( new GemuSplitPane( JSplitPane.HORIZONTAL_SPLIT, new SearchPanel(), new LibraryPanel( games ) ));
+		
 		addMouseListener( resizeAdapter );
 		addMouseMotionListener( resizeAdapter );
 		setVisible(true);
+		addWindowListener( new WindowAdapter(){
+			@Override
+			public void windowClosed( WindowEvent e ) {
+				System.exit(0);
+			}
+		});
+		
 	}
 	
 	MouseAdapter resizeAdapter = new MouseAdapter() {

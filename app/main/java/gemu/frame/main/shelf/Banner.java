@@ -7,46 +7,128 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.*;
 import java.awt.event.*;
+import gemu.game.*;
 
 public class Banner extends JPanel {
 	BufferedImage bufferedImage = null;
 	private double imageScaledHeight;
+	Game game;
+	JTextField titleLabel;
 	Banner() {
-		super();
-		setLayout( new BorderLayout());
+		super();  
+		setFocusable( true );
+		setBackground( Style.COLOR_SECONDARY );
+		setLayout( new OverlayLayout( this ));
 		setMinimumSize( new Dimension( 0, 100 ));
-		try {
-			bufferedImage = ImageIO.read( new File("build/main_screenshot.jpg") );
-		} catch ( Exception e ) {}
+		titleLabel = new JTextField() {
+			{
+				setBackground( null );
+				setBorder( null );
+				setOpaque( false );
+				setFont( new Font( "MS Gothic", Font.PLAIN, 30 ) );
+				setForeground( Style.COLOR_FOREGROUND );                      
+				setCaretColor( Style.COLOR_FOREGROUND );
+				setHorizontalAlignment( SwingConstants.RIGHT );
+				setEditable( true );
+				addKeyListener( new KeyAdapter() {
+					@Override
+					public void keyTyped( KeyEvent event ) {
+						getParent().revalidate();    
+						getParent().repaint();
+					}
+				});
+				addFocusListener( new FocusAdapter() {
+					@Override
+					public void focusLost( FocusEvent event ) {
+						setText( game.getTitle() );
+						getParent().revalidate();    
+						getParent().repaint();
+						
+					}
+				});
+			}
+			@Override
+			public Dimension getMaximumSize() {			
+				FontMetrics metrics = getFontMetrics( getFont() );
+				int width = metrics.stringWidth( getText() );         
+				int height = metrics.getHeight() + metrics.getAscent();
+				return new Dimension( width, height );
+			}
+			@Override
+			public void paintComponent( Graphics g ) {
+				Graphics2D g2 = (Graphics2D)g.create();
+				GradientPaint paint = new GradientPaint( 0, 0, new Color(0,0,0,0), 0, getHeight(), Style.COLOR_BACKGROUND );
+				g2.setPaint(paint);
+				g2.fillRect( 0, 0, getWidth(), getHeight() );  
+				super.paintComponent(g);
+				g2.dispose();
+			}
+		};
+		//titleLabel.setAlignmentX( Component.RIGHT_ALIGNMENT );
+		titleLabel.setAlignmentY( Component.BOTTOM_ALIGNMENT );
+		Box box = new Box( BoxLayout.X_AXIS );
+		box.add( Box.createHorizontalGlue());
+		box.add( titleLabel );
+		add( box  );
 		
-		
-		
+		addMouseListener( new MouseAdapter(){
+			@Override
+			public void mousePressed( MouseEvent e ) {
+				requestFocusInWindow();
+			}
+		});
 	}
 	
 	public int getImageScaledHeight() {
 		return (int)imageScaledHeight;
 	}
+	public Game getGame() {
+		return game;
+	}
+	public void setGame( Game game ) {
+		this.game = game;
+		titleLabel.setText(  game.getTitle() );
+		requestFocusInWindow();
+		try {
+			File cover = game.getCover();
+			if ( cover != null ) {
+				bufferedImage = ImageIO.read( cover ); 			
+			} else {
+				bufferedImage = null;
+			}
+		} catch( Exception e ) {
+			e.printStackTrace();
+		}
+			revalidate();
+			repaint();
+	}
 	
 	@Override
 	public void paintComponent( Graphics g ) {
-		//Graphics2D g2 = bufferedImage.createGraphics();		
-		Graphics2D g2d = ( Graphics2D)g;		
-		g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+		super.paintComponent(g);
+		if ( bufferedImage != null ) {       
+			Graphics2D g2d = ( Graphics2D)g.create();
+			
+			g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+			
+			double scale = (double)bufferedImage.getHeight( null ) / (double)bufferedImage.getWidth( null );
+			double with = getWidth();
+			imageScaledHeight = with * scale;
+			
+			setMaximumSize( new Dimension( 0, (int)imageScaledHeight ));
+			
+			/*
+			BufferedImage intGray = new BufferedImage( bufferedImage.getWidth(),bufferedImage.getHeight() , BufferedImage.TYPE_BYTE_GRAY );
+			Graphics2D g2dGray = intGray.createGraphics();
+			g2dGray.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+			g2dGray.drawImage( bufferedImage, 0, 0, null );
+			g2dGray.dispose();
+			*/
+			
+			g2d.drawImage( bufferedImage, 0, 0, (int)with, (int)imageScaledHeight, this );
+			g2d.dispose();
 		
-		double scale = (double)bufferedImage.getHeight( null ) / (double)bufferedImage.getWidth( null );
-		double with = getWidth();
-		imageScaledHeight = with * scale;
-		
-		setMaximumSize( new Dimension( 0, (int)imageScaledHeight ));
-		
-		BufferedImage intGray = new BufferedImage( bufferedImage.getWidth(),bufferedImage.getHeight() , BufferedImage.TYPE_BYTE_GRAY );
-		Graphics2D g2dGray = intGray.createGraphics();
-		g2dGray.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-		g2dGray.drawImage( bufferedImage, 0, 0, null );
-		g2dGray.dispose();
-		
-		g2d.drawImage( intGray, 0, 0, (int)with, (int)imageScaledHeight, this );
-		g2d.dispose();
+		}
 		
 	}
 	

@@ -14,9 +14,23 @@ public class GemuButton extends JButton {
 	private Color rolloverBackground = background.brighter();
 	private Color rolloverForeground = Style.COLOR_FOREGROUND;
 	
+	int v = 0;
+	int p = 0;
 	
 	public GemuButton( String title ) {
 		super( title );
+		a();
+	}       
+	
+	public GemuButton( String title, int v, int p ) {
+		super( title );
+		a();
+		this.v = v;
+		this.p = p;
+	}
+	
+	
+	private void a() {
 		setForeground( foreground );
 		setFont( Style.FONT_BUTTON );
 		setContentAreaFilled( false );
@@ -29,11 +43,13 @@ public class GemuButton extends JButton {
 				setForeground( foreground );
 			}
 		});
+	
 	}
 	
 	@Override
 	public void paintComponent( Graphics g ) {
 		Graphics2D g2d = ( Graphics2D ) g.create();
+		g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING , RenderingHints.VALUE_ANTIALIAS_ON );
 		if ( getModel().isPressed() ) {
 			g2d.setColor( pressedBackground );
 			setForeground( pressedForeground );
@@ -44,7 +60,7 @@ public class GemuButton extends JButton {
 			g2d.setColor( background );
 			setForeground( getForeground() );
 		}
-		g2d.fillRect( 0, 0, getWidth(), getHeight() );
+		g2d.fillRoundRect( 0, 0, getWidth(), getHeight(), v, p );
 		super.paintComponent( g2d );
 	}
 	
