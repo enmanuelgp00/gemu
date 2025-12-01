@@ -23,7 +23,7 @@ public class Banner extends JPanel {
 		titleLabel = new JTextField() {
 			{
 				setBackground( null );
-				setBorder( null );
+				setBorder( BorderFactory.createEmptyBorder( 1, 3, 0, 2 ) );
 				setOpaque( false );
 				setFont( new Font( "MS Gothic", Font.PLAIN, 30 ) );
 				setForeground( Style.COLOR_FOREGROUND );                      
@@ -50,14 +50,14 @@ public class Banner extends JPanel {
 			@Override
 			public Dimension getMaximumSize() {			
 				FontMetrics metrics = getFontMetrics( getFont() );
-				int width = metrics.stringWidth( getText() );         
+				int width = metrics.stringWidth( getText() );  
 				int height = metrics.getHeight() + metrics.getAscent();
 				return new Dimension( width, height );
 			}
 			@Override
 			public void paintComponent( Graphics g ) {
 				Graphics2D g2 = (Graphics2D)g.create();
-				GradientPaint paint = new GradientPaint( 0, 0, new Color(0,0,0,0), 0, getHeight(), Style.COLOR_BACKGROUND );
+				GradientPaint paint = new GradientPaint( -2, getHeight() / 3, new Color(0,0,0,0),  0 + 2, getHeight() + 15,  Style.COLOR_BACKGROUND );
 				g2.setPaint(paint);
 				g2.fillRect( 0, 0, getWidth(), getHeight() );  
 				super.paintComponent(g);
@@ -105,7 +105,6 @@ public class Banner extends JPanel {
 	
 	@Override
 	public void paintComponent( Graphics g ) {
-		super.paintComponent(g);
 		if ( bufferedImage != null ) {       
 			Graphics2D g2d = ( Graphics2D)g.create();
 			
@@ -128,6 +127,9 @@ public class Banner extends JPanel {
 			g2d.drawImage( bufferedImage, 0, 0, (int)with, (int)imageScaledHeight, this );
 			g2d.dispose();
 		
+		} else {
+			super.paintComponent(g);
+			
 		}
 		
 	}

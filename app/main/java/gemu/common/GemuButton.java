@@ -37,6 +37,7 @@ public class GemuButton extends JButton {
 		setBorderPainted( false );
 		setFocusPainted( false );
 		setBackground(null);
+		setBorder( BorderFactory.createEmptyBorder( 8, 10, 5, 10 ));
 		addMouseListener( new MouseAdapter() {
 			@Override
 			public void mouseReleased( MouseEvent event ) {

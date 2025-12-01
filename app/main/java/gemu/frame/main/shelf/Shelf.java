@@ -16,7 +16,7 @@ public class Shelf extends GemuScrollPane {
 		super();
 		setFocusable( true );
 		Content content = new Content();
-		setBorder( BorderFactory.createEmptyBorder( 7, 0, 0, 0 ) ); 
+		setBorder( BorderFactory.createEmptyBorder( 0, 0, 0, 0 ) ); 
 		setViewportView( content );
 		
 		for ( Game game : games ) {
@@ -59,9 +59,10 @@ public class Shelf extends GemuScrollPane {
 		public void paintComponent( Graphics g ) {  
 			super.paintComponent(g);
 			Graphics2D g2d = (Graphics2D)g;
-			GradientPaint gradient = new GradientPaint( 0, 0, Style.COLOR_BACKGROUND, 0, 30, getBackground() );
+			//GradientPaint gradient = new GradientPaint( 0, 0, Style.COLOR_BACKGROUND, 0, getHeight(), getBackground() );
+			GradientPaint gradient = new GradientPaint( -getWidth(), -getWidth(), Style.COLOR_BACKGROUND, getWidth(), getWidth(), getBackground() );
 			g2d.setPaint(gradient);
-			g2d.fillRect( 0, 0, getWidth(), getHeight() );
+			g2d.fillRect( -getWidth(), -getWidth(), getWidth(), getWidth() );
 			
 		}
 		@Override
