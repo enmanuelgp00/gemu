@@ -13,7 +13,7 @@ public final class FileNames {
 		if ( dotIndex == -1 ) {
 			return "";
 		}
-		return extension = extension.substring( dotIndex );
+		return extension = extension.substring( dotIndex ).toLowerCase();
 	}
 	
 	public static String getBaseName( File f ) {

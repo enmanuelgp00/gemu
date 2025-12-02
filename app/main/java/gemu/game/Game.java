@@ -1,7 +1,8 @@
 package gemu.game;
 
 import java.io.*;
-import java.nio.*;
+import java.nio.*;    
+import java.util.*;
 import gemu.shell.*;
 
 
@@ -14,19 +15,31 @@ public class Game {
 		
 	}
 	
-	public Game( Launcher launcher ) throws Exception {
-		info = Info.createInfo( launcher );
-		findCover();
+	public Game( Executable... executables) throws Exception {
+		info = Info.createInfo( executables );
 	}
-	
-	public Game( ZipLauncher f ) {
-	
-	}
+													  
+		/*
+	public static Game inZip( File f ) throws Exception {
+		Game game = new Game();
+		try {
+			game.info = Info.createInfo(f);
+			ArrayLis<Executables> executables = new ArrayList<>();
+			
+			game.setExecutables( executables.toArray( new Executable[0] ); );
+		} catch( Exception e ) {}
+		
+	}                    
+		*/
 	
 	public static Game from( Info info ) {
 		Game game = new Game();
 		game.info = info;
 		return game;
+	}
+	
+	public File getInfoFile() {
+		return info.getFile();
 	}
 	
 	private void defaultConstructor() {
@@ -89,17 +102,36 @@ public class Game {
 		if ( title != null ) {
 			return title;
 		}
-		return getLauncher().getName();
+		return getDirectory().getName();
 	}
 	
 	//launcher
-	public void setLauncher( Launcher launcher) {
-		info.set( Info.COVER_IMAGE, launcher.getName() );
-		
+	public void setLauncher( Executable executable ) throws Exception {
+		HashSet<Executable> executables = new HashSet<>( Arrays.<Executable>asList( getExecutables() ));
+		if ( !executables.contains(executable) ) {
+			throw new Exception() {
+				@Override
+				public void printStackTrace() {
+					System.out.println( "Game : \"" + getTitle() + "\" does not contains executable : \"" + executable + "\"");
+				}
+			};		
+		}                                                 
+		info.set( Info.LAUNCHER, executable.getName() );
 	}
 	
 	public File getLauncher() {
 		return getKeyAsFile( Info.LAUNCHER );
+	}
+	
+	public Executable[] getExecutables() {
+		String[] names = info.list( Info.EXECUTABLES );
+		Executable[] executables = new Executable[ names.length ];
+		try {
+			for ( int i = 0; i < names.length; i++ ) {
+				executables[i] = new Executable( nameAsFile(names[i]) );
+			}
+		} catch ( Exception e ) {}
+		return executables;
 	}
 	
 	//directory	
@@ -155,13 +187,17 @@ public class Game {
 	private File getKeyAsFile( Info.Key key ) {
 		String name = info.get( key );
 		if ( name != null ) {
-			File f = new File( getDirectory() + "/" + name );
+			File f = nameAsFile(name);
 			if ( f.exists() ) {
 				return f;
 			}
 		}
 		return null;
 		
+	}
+	
+	private File nameAsFile( String name ) {
+		return new File( getDirectory() + "/" + name ); 
 	}
 	
 }

@@ -10,12 +10,14 @@ public class Info {
 	final static Key LAUNCHER = new Key("launcher");
 	final static Key TITLE = new Key("title");
 	final static Key COVER_XVIEWPORT = new Key("cover_xviewport");
+	final static Key EXECUTABLES = new Key("executables");
 	
 	final static HashSet<Key> KEYS = new HashSet<>( Arrays.<Key>asList(
 		COVER_IMAGE,
 		LAUNCHER,
 		TITLE,
-		COVER_XVIEWPORT
+		COVER_XVIEWPORT,
+		EXECUTABLES
 	));
 	
 	File file;
@@ -24,9 +26,19 @@ public class Info {
 		defaultConstructor();
 	}
 	
-	public static Info createInfo( Launcher launcher ) throws Exception {
+	public static Info createInfo( Executable... executables ) throws Exception {
+		if ( executables.length == 0 ) {
+			throw new Exception() {
+				@Override
+				public void printStackTrace() {
+					System.out.println("No executables found");
+					super.printStackTrace();
+				}
+			};
+		}
 		Info info = new Info();
-		File parent = new File( launcher.getParentFile().getCanonicalPath());
+		Executable ref = executables[0];
+		File parent = new File( ref.getParentFile().getCanonicalPath());
 		
 		info.file = new File( parent + "/" + parent.getName() + FILE_EXTENSION );
 		if ( info.file.exists() ) {
@@ -38,7 +50,14 @@ public class Info {
 				}
 			};
 		}
-		info.set( LAUNCHER, launcher.getName() );
+		
+		for ( Executable executable : executables ) {
+			info.add( EXECUTABLES, executable.getName() );
+		}
+		
+		if ( executables.length == 1 ) {
+			info.set( LAUNCHER, executables[0].getName() );		
+		}
 		
 		return info;
 	}
@@ -77,7 +96,9 @@ public class Info {
 							throw new Exception() {
 								@Override
 								public void printStackTrace() {
-									System.out.println("Parse exception, key name was not found");
+									try {                    
+										System.out.println("Parse exception, key name : \""+ keyname +"\" was not found in : " + f.getCanonicalPath());									
+									} catch( Exception e ) {}
 									super.printStackTrace();
 								}
 							};
@@ -90,7 +111,9 @@ public class Info {
 							throw new Exception() {
 								@Override
 								public void printStackTrace() {
-									System.out.println("Parse exception, no quotes clapsule");
+									try {                    
+										System.out.println("Parse exception, no quotes clapsule in : " + f.getCanonicalPath());										
+									} catch( Exception e ) {}
 									super.printStackTrace();
 								}
 							};
