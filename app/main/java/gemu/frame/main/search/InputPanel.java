@@ -2,12 +2,18 @@ package gemu.frame.main.search;
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.awt.*;        
+import java.awt.*;      
+import java.util.*;  
 import gemu.common.*;
+import gemu.game.*;
 
 public class InputPanel extends Box {
-	InputPanel() {
+	ResultPanel resultPanel;
+	Game[] games;
+	InputPanel( Game[] games, ResultPanel resultPanel ) {
 		super( BoxLayout.X_AXIS );
+		this.games = games;
+		this.resultPanel = resultPanel;
 		setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ));
 		TextReference textReference = new TextReference();
 		GemuButton tagsHint = new GemuButton("?");
@@ -30,6 +36,23 @@ public class InputPanel extends Box {
 			setCaretColor( Style.COLOR_FOREGROUND );
 			setBorder( BorderFactory.createEmptyBorder( 0, 7, 0, 7 ));
 			placeholderColor = getBackground();
+			addKeyListener( new KeyAdapter() {
+				@Override
+				public void keyReleased( KeyEvent event ) {
+					if ( getText().isEmpty() ) {
+						resultPanel.clear();
+						return;
+					}
+					ArrayList<Game> search = new ArrayList<>();
+					
+					for( Game g : games ) {
+						if (g.getTitle().toLowerCase().contains(getText().toLowerCase())) {
+							search.add(g);
+						}
+					}
+					resultPanel.show(search.toArray( new Game[search.size()]));
+				}
+			} );
 			addFocusListener( new FocusAdapter() {
 				@Override
 				public void focusGained( FocusEvent e ) {

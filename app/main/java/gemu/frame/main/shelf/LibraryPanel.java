@@ -9,10 +9,11 @@ import gemu.shell.*;
 
 public class LibraryPanel extends GemuSplitPane {
 	Banner banner;
+	ActionBar actionsBar;
 	public LibraryPanel( Game[] games ) {                
 		super( JSplitPane.VERTICAL_SPLIT );
 		Shelf shelf = new Shelf( games );
-		ActionsBar actionsBar = new ActionsBar();
+		actionsBar = new ActionBar();
 		banner = new Banner() {
 			@Override
 			public void paintComponent( Graphics g ) {
@@ -30,15 +31,13 @@ public class LibraryPanel extends GemuSplitPane {
 		};
 		
 		if( games.length > 0 ) {
-			banner.setGame( games[0] );
-			actionsBar.setGame( games[0] );
+			setFocusedGame( games[0]);   
 		}
 		
 		shelf.addOnBookCoverMouseAdapter( new Shelf.OnBookCoverMouseAdapter() {
 			@Override
 			public void mousePressed( MouseEvent event, BookCover cover ) {
-				banner.setGame( cover.getGame() );
-				actionsBar.setGame( cover.getGame() );
+				setFocusedGame(cover.getGame()); 
 			}
 		});
 		
@@ -54,7 +53,12 @@ public class LibraryPanel extends GemuSplitPane {
 		setDividerSize(0);
 	}
 	
-	private class ActionsBar extends Box {
+	public void setFocusedGame( Game game ) {
+		banner.setGame(game);
+		actionsBar.setGame(game);		
+	}
+	
+	private class ActionBar extends Box {
 	
 		Game game;
 		GemuButton buttonPlay = new GemuButton("Play", 5, 5 ) {
@@ -77,7 +81,7 @@ public class LibraryPanel extends GemuSplitPane {
 			delete
 		};
 		
-		protected ActionsBar() {
+		protected ActionBar() {
 			super(BoxLayout.X_AXIS );			
 			setGame( game );  
 			setBorder( BorderFactory.createEmptyBorder( 3, 3, 3, 3 ));

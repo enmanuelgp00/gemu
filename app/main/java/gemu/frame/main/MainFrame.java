@@ -18,8 +18,15 @@ public class MainFrame extends JFrame {
 		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(4, 4, 4, 4));
 		setMinimumSize( new Dimension(800, 600 )); 
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
-		
-		add( new GemuSplitPane( JSplitPane.HORIZONTAL_SPLIT, new SearchPanel(), new LibraryPanel( games ) ));
+		LibraryPanel libraryPanel = new LibraryPanel( games );
+		SearchPanel searchPanel = new SearchPanel( games );
+		searchPanel.addResultElementMouseListener( new OnResultElementMouseAdapter() {
+			@Override
+			public void mousePressed( ResultElement element, MouseEvent event ) {
+				libraryPanel.setFocusedGame( element.getGame() );
+			}
+		});
+		add( new GemuSplitPane( JSplitPane.HORIZONTAL_SPLIT, searchPanel, libraryPanel ));
 		
 		addMouseListener( resizeAdapter );
 		addMouseMotionListener( resizeAdapter );

@@ -40,7 +40,8 @@ public class Gemu {
 			
 			if ( infos.size() > 0 ) {			
 				for ( Info info : infos ) {
-					games.add( Game.from(info));
+					Game game = Game.from( info );
+					handleMultipleExecutables( game );
 				}
 			} else {
 				try {
@@ -88,6 +89,7 @@ public class Gemu {
 	
 	public void handleMultipleExecutables( Game game ) {
 		if ( game.getLauncher() != null ) {
+			games.add( game );			
 			return;
 		}
 		Executable[] executables = game.getExecutables();
@@ -110,7 +112,7 @@ public class Gemu {
 		if ( user != -2 ) {
 			try {
 				game.setLauncher( executables[user] );
-				games.add( game );			
+				games.add( game );
 			} catch ( Exception e ) {}
 		}
 		
