@@ -3,33 +3,123 @@ package gemu.game;
 import java.util.*;
 import java.io.*;
 
-class Info {
+public class Info {
 	HashMap<Key, Set<String>> hashMap = new HashMap<>();
-	private final String INFO_FILE_NAME = "gemuinfo";
-	final static Key COVER = new Key("cover");    
+	public final static String FILE_EXTENSION = ".gemuinfo";
+	final static Key COVER_IMAGE = new Key("cover_image");    
 	final static Key LAUNCHER = new Key("launcher");
 	final static Key TITLE = new Key("title");
+	final static Key COVER_XVIEWPORT = new Key("cover_xviewport");
 	
-	final static Key[] KEYS = new Key[] {                                    
-		COVER,
+	final static HashSet<Key> KEYS = new HashSet<>( Arrays.<Key>asList(
+		COVER_IMAGE,
 		LAUNCHER,
-		TITLE
-	};
+		TITLE,
+		COVER_XVIEWPORT
+	));
 	
 	File file;
 	
-	Info() {
+	private Info() {
 		defaultConstructor();
 	}
 	
-	Info( Launcher launcher ) {
-		defaultConstructor();
-		file = new File( launcher.getParentFile() + "/" + INFO_FILE_NAME );
-		set( LAUNCHER, launcher.getName() );
-	}
-	
-	Info parseFile( File f ) {
+	public static Info createInfo( Launcher launcher ) throws Exception {
 		Info info = new Info();
+		File parent = new File( launcher.getParentFile().getCanonicalPath());
+		
+		info.file = new File( parent + "/" + parent.getName() + FILE_EXTENSION );
+		if ( info.file.exists() ) {
+			throw new Exception() {
+				@Override
+				public void printStackTrace() {
+					System.out.println("File already exist : " + info.file  + "");
+					super.printStackTrace();
+				}
+			};
+		}
+		info.set( LAUNCHER, launcher.getName() );
+		
+		return info;
+	}
+	
+	public static Info parseInfo( File f ) throws Exception {
+		Info info = new Info();
+		info.file = f;
+		try {
+			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream(f), "UTF-8"));
+			StringBuilder sb = new StringBuilder();
+			int code;
+			char ch;
+			boolean insideQuotes = false;
+			Key key = null;
+			
+			while( (code = reader.read()) != -1 ) {
+				ch = (char)code;
+				switch(ch) {
+					case '"':
+						insideQuotes = !insideQuotes;
+					break;
+					
+					case '{':
+						String keyname = sb.toString();   
+						sb.setLength(0);
+						
+						boolean found = false;
+						for ( Key k : info.hashMap.keySet() ) {
+							if (k.name.equals(keyname) ) {
+								key = k;
+								found = true;
+								break;
+							}
+						}
+						if ( !found ) {
+							throw new Exception() {
+								@Override
+								public void printStackTrace() {
+									System.out.println("Parse exception, key name was not found");
+									super.printStackTrace();
+								}
+							};
+						}  
+					break;
+					
+						
+					case '\n':
+						if ( insideQuotes ) {
+							throw new Exception() {
+								@Override
+								public void printStackTrace() {
+									System.out.println("Parse exception, no quotes clapsule");
+									super.printStackTrace();
+								}
+							};
+						}
+						if ( key != null && sb.length() > 0 ) {
+							info.hashMap.get(key).add(sb.toString());
+							sb.setLength(0);
+						}
+					break;
+					
+					case '}':     
+						key = null; 
+					break;
+					case ' ':
+					case '\t':
+						if ( insideQuotes ) {
+							sb.append(ch);
+						}
+					break;
+					default:
+						sb.append(ch);
+				}
+			}
+			
+			reader.close();
+		} catch( Exception e ) {
+			e.printStackTrace();
+		}
+		
 		return info;
 	}
 	
@@ -38,7 +128,7 @@ class Info {
 			hashMap.put( key, new TreeSet<String>() );
 		}
 	}
-	
+	//end constructor
 	public String get( Key key ) {
 		TreeSet<String> set = (TreeSet<String>)hashMap.get( key );
 		if ( set.size() > 0 ) {
@@ -55,15 +145,33 @@ class Info {
 		Set<String> set = hashMap.get(key);
 		set.clear();
 		set.add( value );
-		
+		commit();
 	}
 	
 	public void add( Key key, String value) {
-		
+		hashMap.get(key).add( value );
+		commit();
 	}
 	
 	public File getFile() {
 		return file;
+	}
+	
+	public void commit() {
+		StringBuilder sb = new StringBuilder();
+		for ( Key key : hashMap.keySet() ) {
+			sb.append( key.name + " {\n" );
+			for ( String s : hashMap.get( key ) ) {
+				sb.append("\t\"" + s + "\"\n");
+			}
+			sb.append("}\n\n");
+		}
+		
+		try {
+			BufferedWriter writer = new BufferedWriter( new OutputStreamWriter( new FileOutputStream( getFile()) , "UTF-8"));
+			writer.write( sb.toString( ));
+			writer.close();
+		} catch( Exception e ) {}
 	}
 	
 	static class Key {

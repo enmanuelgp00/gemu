@@ -19,20 +19,25 @@ public class Shelf extends GemuScrollPane {
 		setBorder( BorderFactory.createEmptyBorder( 0, 0, 0, 0 ) ); 
 		setViewportView( content );
 		
-		for ( Game game : games ) {
-			BookCover bookCover = new BookCover( game );
-			bookCover.addMouseListener( new MouseAdapter(){
-				@Override
-				public void mousePressed( MouseEvent event ) {
-					for ( OnBookCoverMouseAdapter listener : onBookCoverMouseListeners ) {
-						listener.mousePressed( event, bookCover );
+		Thread th = new Thread(()->{			
+			for ( Game game : games ) {
+				BookCover bookCover = new BookCover( game );
+				bookCover.addMouseListener( new MouseAdapter(){
+					@Override
+					public void mousePressed( MouseEvent event ) {
+						for ( OnBookCoverMouseAdapter listener : onBookCoverMouseListeners ) {
+							listener.mousePressed( event, bookCover );
+						}
 					}
-				}
-			});
-					
-			content.add( bookCover);
-		}
-		 
+				});
+						
+				content.add( bookCover);
+				revalidate();
+				repaint();
+			}
+		});
+		th.start();
+		
 		addMouseListener( new MouseAdapter(){
 			@Override
 			public void mousePressed( MouseEvent e ) {

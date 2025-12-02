@@ -15,7 +15,7 @@ public class MainFrame extends JFrame {
 		setUndecorated( true );
 		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		getContentPane().setBackground( Style.COLOR_BACKGROUND );
-		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(2, 2, 2, 2));
+		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(4, 4, 4, 4));
 		setMinimumSize( new Dimension(800, 600 )); 
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
 		

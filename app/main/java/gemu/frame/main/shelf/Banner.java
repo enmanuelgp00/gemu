@@ -32,6 +32,13 @@ public class Banner extends JPanel {
 				setEditable( true );
 				addKeyListener( new KeyAdapter() {
 					@Override
+					public void keyReleased( KeyEvent event ) {
+						if ( event.getKeyCode() == (int)'\n' ) {
+							getGame().setTitle( getText() );
+							Banner.this.requestFocusInWindow();
+						}
+					}
+					@Override
 					public void keyTyped( KeyEvent event ) {
 						getParent().revalidate();    
 						getParent().repaint();
@@ -90,7 +97,7 @@ public class Banner extends JPanel {
 		titleLabel.setText(  game.getTitle() );
 		requestFocusInWindow();
 		try {
-			File cover = game.getCover();
+			File cover = game.getCoverImage();
 			if ( cover != null ) {
 				bufferedImage = ImageIO.read( cover ); 			
 			} else {

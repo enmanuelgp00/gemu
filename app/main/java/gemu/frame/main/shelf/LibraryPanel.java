@@ -12,7 +12,7 @@ public class LibraryPanel extends GemuSplitPane {
 	public LibraryPanel( Game[] games ) {                
 		super( JSplitPane.VERTICAL_SPLIT );
 		Shelf shelf = new Shelf( games );
-		ActionsBar actionsBar = new ActionsBar( null );
+		ActionsBar actionsBar = new ActionsBar();
 		banner = new Banner() {
 			@Override
 			public void paintComponent( Graphics g ) {
@@ -57,7 +57,12 @@ public class LibraryPanel extends GemuSplitPane {
 	private class ActionsBar extends Box {
 	
 		Game game;
-		GemuButton buttonPlay = new GemuButton("Play", 5, 5 );
+		GemuButton buttonPlay = new GemuButton("Play", 5, 5 ) {
+			{
+				Insets insets = getInsets();
+				setBorder( BorderFactory.createEmptyBorder( insets.top, 30, insets.bottom, 30 ));
+			}
+		};
 		
 		
 		GemuButton screenshot = new GemuButton("Screenshot");    
@@ -72,7 +77,7 @@ public class LibraryPanel extends GemuSplitPane {
 			delete
 		};
 		
-		protected ActionsBar( Game game ) {
+		protected ActionsBar() {
 			super(BoxLayout.X_AXIS );			
 			setGame( game );  
 			setBorder( BorderFactory.createEmptyBorder( 3, 3, 3, 3 ));
@@ -189,7 +194,7 @@ public class LibraryPanel extends GemuSplitPane {
 				int  dividerLocation =  getDividerLocation();
 				int location = dividerLocation + movement;
 				
-				if (  banner.getMaximumSize().height > location && location > banner.getMinimumSize().height ) {
+				if (  banner.getMaximumSize().height > location && location > banner.getMinimumSize().height && location < getParent().getParent().getHeight() - getHeight() ) {
 					setDividerLocation( location );
 				}  
 				

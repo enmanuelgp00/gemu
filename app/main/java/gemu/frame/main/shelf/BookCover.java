@@ -13,15 +13,17 @@ class BookCover extends JPanel {
 	Box boxOnTop;
 	final Dimension standardSize = new Dimension( 110, 140 );
 	int detailWidth = 0;
+	int coverXViewport = 0;
 	boolean isMouseInside = false;
 	BufferedImage bufferedImage = null;
 	Game game;
 	BookCover( Game game ) {
 		super();
-		this.game = game; 
+		this.game = game;
+		coverXViewport = game.getCoverXViewport();
 		try {
 			
-			bufferedImage = ImageIO.read( game.getCover());
+			bufferedImage = ImageIO.read( game.getCoverImage());
 		} catch( Exception e ) { }
 		setLayout( new OverlayLayout( this ) );
 		setPreferredSize( standardSize );
@@ -41,7 +43,8 @@ class BookCover extends JPanel {
 					public void paintComponent( Graphics g ) {
 						Graphics2D g2d = (Graphics2D)g.create();
 						g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-						g2d.drawImage( Drawing.drawHeart( getBackground() ), 0, 0, getWidth(), getHeight(), this );
+						Color alphacolor = new Color( 100, 100,100,100);
+						g2d.drawImage( Drawing.drawHeart( alphacolor ), 0, 0, getWidth(), getHeight(), this );
 						g2d.dispose();
 					}
 				});
@@ -53,7 +56,6 @@ class BookCover extends JPanel {
 		setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1));
 		addMouseMotionListener( expandOnRollover );  
 		addMouseListener( expandOnRollover );
-		
 		
 	}
 	
@@ -70,19 +72,30 @@ class BookCover extends JPanel {
 	int initialX = -1;
 	int initialY = -1;
 	MouseAdapter expandOnRollover = new MouseAdapter() {
+		int initialMouseX = 0;
 		@Override
 		public void mousePressed( MouseEvent event ) {
-			setBounds( initialX + 1, initialY + 1, standardSize.width -2, standardSize.height - 2  );
+		
+			if ( event.getButton() == MouseEvent.BUTTON2 ) {                                           
+				initialMouseX = event.getX() + coverXViewport;	
+			}
+			//setBounds( initialX + 1, initialY + 1, standardSize.width -2, standardSize.height - 2  );
 			
 		}
 		@Override
 		public void mouseReleased( MouseEvent event ) {
+			if ( event.getButton() == MouseEvent.BUTTON2){ 
+				getGame().setCoverXViewport(coverXViewport);
+			}
+			/*
 			if ( isMouseInside ) {
 				setBounds( initialX - 2, initialY - 2, standardSize.width + 4, standardSize.height + 4 );			
 			}
+			*/
 		}
 		@Override
 		public void mouseMoved( MouseEvent event ) {
+			/*
 			if ( initialX == -1 ) {
 				initialX = getX();
 			}                       
@@ -92,25 +105,39 @@ class BookCover extends JPanel {
 			if ( contains(event.getPoint())) {
 				setBounds( initialX - 2, initialY - 2, standardSize.width + 4, standardSize.height + 4 );
 			}
-			setIsMouseInside( true );
+			*/
+			//setIsMouseInside( true );
 		}
 		@Override
 		public void mouseEntered( MouseEvent event ) {
 			//setComponentZOrder( component, 0 )
+			setCursor( Cursor.getPredefinedCursor( Cursor.HAND_CURSOR ));
 		}   
 		
 		@Override
 		public void mouseExited( MouseEvent event ) {
+			setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ));
+			/*
 			if ( !contains(event.getPoint())) {
 				setPreferredSize( standardSize );
 				revalidate();
 				repaint();   
-				setIsMouseInside( false );
+				//setIsMouseInside( false );
 				initialX = -1;
 				initialY = -1;
 				
 			}
+			*/
 			
+		}
+		@Override
+		public void mouseDragged( MouseEvent event ) {     
+			
+			if ( (event.getModifiersEx() & InputEvent.BUTTON2_DOWN_MASK) != 0 ) {
+				coverXViewport = initialMouseX - event.getX();
+				revalidate();
+				repaint();			
+			}
 		}
 	};
 	
@@ -126,9 +153,12 @@ class BookCover extends JPanel {
 			if ( getWidth() == detailWidth ) {
 				x = 0;			
 			} else {
-				x =  getWidth() / 2  - detailWidth / 2;
+				x = (getWidth() - detailWidth) / 2;
 			}
-			g2.drawImage( bufferedImage, x, 0, (int)width, (int)height, this ); 
+			int pos = x - coverXViewport;
+			if ( pos > - (detailWidth - getWidth()) && pos < 0 ) {
+				g2.drawImage( bufferedImage, pos, 0, (int)width, (int)height, this ); 			
+			}
 			g2.dispose();	
 		} else {
 			super.paintComponent(g);			
