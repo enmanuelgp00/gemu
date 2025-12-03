@@ -55,7 +55,7 @@ public class Info {
 		if ( !ZipFiles.isCompact( ref ) ) { 
 			parent = new File( ref.getParentFile().getCanonicalPath());			
 		} else {
-			parent = ZipFiles.get( ref ).getRootParent().getParentFile();			
+			parent = ZipFiles.get( ref ).getRootParentFile().getParentFile();			
 		}
 		
 		info.file = new File( parent + "/" + parent.getName() + FILE_EXTENSION );

@@ -12,29 +12,33 @@ public final class Shell {
 		
 		try {
 			ProcessBuilder pb = new ProcessBuilder( cmd );
-			pb.inheritIO();
+			//pb.inheritIO();
+			/*
+			pb.redirectInput( ProcessBuilder.Redirect.INHERIT);
+			pb.redirectOutput( ProcessBuilder.Redirect.INHERIT );      
+			pb.redirectError( ProcessBuilder.Redirect.INHERIT );
+			*/
 			if ( dir != null ) {
 				pb.directory( dir );			
 			}
-			pb.redirectErrorStream();
 			
 			Process process = pb.start();
 			adapter.processStarted( process );
 			
-			/*
+			
 			Thread th = new Thread(()->{
 				try {                    
 					BufferedReader reader = new BufferedReader( new InputStreamReader( process.getErrorStream(), "UTF-8" ));
 					String line;
 					while( (line = reader.readLine()) != null ) {
-						System.out.println(line);
+						//System.out.println(line);
 					}
 					reader.close();
 				
 				} catch( Exception e ) {}
 			});
 			th.start();
-			*/
+			
 			BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream(), "UTF-8" ));
 			String line;
 			while( (line = reader.readLine()) != null ) {

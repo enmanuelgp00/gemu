@@ -36,6 +36,11 @@ public class Gemu {
 					
 				} else if ( ZipFiles.isCompact(f) ) {
 					compactFiles.add(f);
+					try {
+						System.out.println( ZipFiles.get( f ).listFiles()[0].getAbsolutePath() );					
+					} catch( Exception e ) {
+					
+					}
 				}
 			}
 			
@@ -123,7 +128,8 @@ public class Gemu {
 	}
 	
 	public static void main( String[] args ) {
-		Gemu g = new Gemu( new File( args[0]) );
+		
+		Gemu g = new Gemu( new File( ( args.length > 0 ) ? args[0] : "."  ) );
 		new MainFrame( g.games.toArray( new Game[0] ) );
 	}
 }
