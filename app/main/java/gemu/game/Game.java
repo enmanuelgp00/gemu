@@ -3,6 +3,7 @@ package gemu.game;
 import java.io.*;
 import java.nio.*;    
 import java.util.*;
+import gemu.io.*;
 import gemu.shell.*;
 
 
@@ -19,18 +20,13 @@ public class Game {
 		info = Info.createInfo( executables );
 	}
 													  
-		/*
-	public static Game inZip( File f ) throws Exception {
-		Game game = new Game();
-		try {
-			game.info = Info.createInfo(f);
-			ArrayLis<Executables> executables = new ArrayList<>();
-			
-			game.setExecutables( executables.toArray( new Executable[0] ); );
-		} catch( Exception e ) {}
 		
-	}                    
-		*/
+	public static Game inZip( ZipFile f ) throws Exception {
+		Game game = new Game();
+		game.info = Info.createInfo(f);
+		return game;
+		
+	}               
 	
 	public static Game from( Info info ) {
 		Game game = new Game();
@@ -175,7 +171,7 @@ public class Game {
 		return getKeyAsFile( Info.COVER_IMAGE);
 	}
 	
-	public void findCover() {
+	public void findCoverImage() {
 		for ( File f : getDirectory().listFiles() ) {
 			if ( f.getName().equals(COVER_NAME)) {
 				setCoverImage( f );

@@ -4,7 +4,8 @@ import gemu.frame.main.MainFrame;
 import java.io.*;       
 import java.util.*;
 import gemu.game.*;  
-import gemu.util.*;
+import gemu.util.*;   
+import gemu.io.*;       
 
 public class Gemu {
 	ArrayList<Game> games = new ArrayList<>();
@@ -33,7 +34,7 @@ public class Gemu {
 						executables.add( new Executable(f));					
 					} catch ( Exception e ) {}
 					
-				} else if ( Zipper.isCompact(f) ) {
+				} else if ( ZipFiles.isCompact(f) ) {
 					compactFiles.add(f);
 				}
 			}
@@ -54,7 +55,7 @@ public class Gemu {
 					e.printStackTrace();
 				}
 			}
-			
+			/*
 			for ( File f : compactFiles ) {
 				boolean gamefound = false ;
 				String infoName;
@@ -69,15 +70,14 @@ public class Gemu {
 				}
 				
 				if ( !gamefound) {
-					/*
 					try {
-						Game game = Game.inZip( f );
+						Game game = Game.inZip( ZipFiles.get( f ) );
 						games.add( game );
 					} catch( Exception e ) {}
-					*/
+					
 				}
 			}
-			
+			*/
 			if ( executables.size() == 0 ) {
 				for ( File f : file.listFiles() ) {
 					findGames(f);
@@ -89,6 +89,9 @@ public class Gemu {
 	
 	public void handleMultipleExecutables( Game game ) {
 		if ( game.getLauncher() != null ) {
+			if ( game.getCoverImage() == null ) {
+				game.findCoverImage();
+			}
 			games.add( game );			
 			return;
 		}

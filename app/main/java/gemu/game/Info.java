@@ -2,6 +2,7 @@ package gemu.game;
 
 import java.util.*;
 import java.io.*;
+import gemu.io.*;
 
 public class Info {
 	HashMap<Key, Set<String>> hashMap = new HashMap<>();
@@ -26,6 +27,16 @@ public class Info {
 		defaultConstructor();
 	}
 	
+	public static Info createInfo( ZipFile file ) throws Exception {
+		ArrayList<Executable> executables = new ArrayList<Executable>();
+		for ( ZipFile f : file.listFiles() ) {
+			if ( Games.isLauncher(f) ) {
+				executables.add( new Executable(f) );
+			}
+		}
+		return createInfo( executables.toArray( new Executable[ executables.size() ] ) );
+	}
+	
 	public static Info createInfo( Executable... executables ) throws Exception {
 		if ( executables.length == 0 ) {
 			throw new Exception() {
@@ -38,7 +49,14 @@ public class Info {
 		}
 		Info info = new Info();
 		Executable ref = executables[0];
-		File parent = new File( ref.getParentFile().getCanonicalPath());
+		
+		File parent;
+		
+		if ( !ZipFiles.isCompact( ref ) ) { 
+			parent = new File( ref.getParentFile().getCanonicalPath());			
+		} else {
+			parent = ZipFiles.get( ref ).getRootParent().getParentFile();			
+		}
 		
 		info.file = new File( parent + "/" + parent.getName() + FILE_EXTENSION );
 		if ( info.file.exists() ) {

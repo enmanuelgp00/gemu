@@ -30,7 +30,7 @@ public class InputPanel extends Box {
 		Color placeholderColor;
 		TextReference() {
 			super();
-			setFont( Style.FONT_LABEL );
+			setFont( new Font( "MS Gothic", Font.PLAIN, 14 ) );
 			setForeground( Style.COLOR_FOREGROUND );
 			setBackground( Style.COLOR_BACKGROUND );
 			setCaretColor( Style.COLOR_FOREGROUND );
