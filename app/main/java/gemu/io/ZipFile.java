@@ -3,31 +3,43 @@ package gemu.io;
 import java.io.*;
 import java.util.*;
 import gemu.shell.*;
+import gemu.util.*;
 
 public class ZipFile extends File {
 	protected ZipFile( String name ) {
 		super( name );
 	}
 	
-	public ZipFile getRootParentFile() {
+	protected ZipFile( File file ) {
+		super( file.getAbsolutePath() );
+	}
+	
+	
+	public ZipFile getRootZipFile() {
 		File parent = getParentFile();
+		System.out.println( parent );
 		while( parent != null ) {
-			if( parent.exists() && ZipFiles.isCompact( parent ) ) {
-				return new ZipFile( parent.getAbsolutePath() );
-			}
+			if( parent.exists() ) { 
+				if ( ZipFiles.EXTENSIONS.contains( FileNames.getExtension(parent) ) ) {
+					return new ZipFile( parent.getAbsolutePath() );
+				
+				} else {
+					return null;
+				}
+			} 
 			parent = getParentFile();
 		}
 		return null;
 	}
 	
-	public boolean isRootParentFile() {
+	public boolean isRootZipFile() {
 		File parent = getParentFile();
 		return parent.isDirectory() && parent.exists();
 	}
 	
 	@Override
 	public ZipFile[] listFiles() {
-		if ( !isRootParentFile() ) {
+		if ( !isRootZipFile() ) {
 			return null;
 		}
 		ArrayList<ZipFile> list = new ArrayList<>();

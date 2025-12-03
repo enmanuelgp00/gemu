@@ -36,11 +36,6 @@ public class Gemu {
 					
 				} else if ( ZipFiles.isCompact(f) ) {
 					compactFiles.add(f);
-					try {
-						System.out.println( ZipFiles.get( f ).listFiles()[0].getAbsolutePath() );					
-					} catch( Exception e ) {
-					
-					}
 				}
 			}
 			
@@ -60,7 +55,7 @@ public class Gemu {
 					e.printStackTrace();
 				}
 			}
-			/*
+			
 			for ( File f : compactFiles ) {
 				boolean gamefound = false ;
 				String infoName;
@@ -78,11 +73,13 @@ public class Gemu {
 					try {
 						Game game = Game.inZip( ZipFiles.get( f ) );
 						games.add( game );
-					} catch( Exception e ) {}
+					} catch( Exception e ) {
+						e.printStackTrace();
+					}
 					
 				}
 			}
-			*/
+			
 			if ( executables.size() == 0 ) {
 				for ( File f : file.listFiles() ) {
 					findGames(f);

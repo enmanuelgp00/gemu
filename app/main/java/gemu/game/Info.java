@@ -52,13 +52,14 @@ public class Info {
 		
 		File parent;
 		
-		if ( !ZipFiles.isCompact( ref ) ) { 
+		if ( !ZipFiles.isCompact( ref ) ) {
 			parent = new File( ref.getParentFile().getCanonicalPath());			
 		} else {
-			parent = ZipFiles.get( ref ).getRootParentFile().getParentFile();			
+			parent = ZipFiles.get( ref ).getRootZipFile().getParentFile();			
 		}
 		
-		info.file = new File( parent + "/" + parent.getName() + FILE_EXTENSION );
+		info.file = new File( parent + "\\" + parent.getName() + FILE_EXTENSION );
+		System.out.println( info.file );
 		if ( info.file.exists() ) {
 			throw new Exception() {
 				@Override
