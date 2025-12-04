@@ -9,19 +9,19 @@ import gemu.shell.*;
 
 public class LibraryPanel extends GemuSplitPane {
 	Banner banner;
-	ActionBar actionsBar;
+	ActionBar actionBar;
 	public LibraryPanel( Game[] games ) {                
 		super( JSplitPane.VERTICAL_SPLIT );
 		Shelf shelf = new Shelf( games );
-		actionsBar = new ActionBar();
+		actionBar = new ActionBar();
 		banner = new Banner() {
 			@Override
 			public void paintComponent( Graphics g ) {
 				super.paintComponent(g);
 				int bannerMaximumHeight = getMaximumSize().height;
 				int shelfMinimumHeight = LibraryPanel.this.getHeight() - bannerMaximumHeight; 
-				if ( shelfMinimumHeight < actionsBar.getHeight() ) {
-					shelfMinimumHeight = actionsBar.getHeight();
+				if ( shelfMinimumHeight < actionBar.getHeight() ) {
+					shelfMinimumHeight = actionBar.getHeight();
 				}
 				shelf.setMinimumSize( new Dimension( 0, shelfMinimumHeight));
 				if ( bannerMaximumHeight < LibraryPanel.this.getDividerLocation() ) {
@@ -44,7 +44,7 @@ public class LibraryPanel extends GemuSplitPane {
 	
 		
 		Box box = new Box( BoxLayout.Y_AXIS );
-		box.add( actionsBar );
+		box.add( actionBar );
 		box.add( shelf );
 		
 		setLeftComponent( banner );
@@ -55,7 +55,7 @@ public class LibraryPanel extends GemuSplitPane {
 	
 	public void setFocusedGame( Game game ) {
 		banner.setGame(game);
-		actionsBar.setGame(game);		
+		actionBar.setGame(game);		
 	}
 	
 	private class ActionBar extends Box {
@@ -110,7 +110,27 @@ public class LibraryPanel extends GemuSplitPane {
 					}	
 				}
 			} );
-			
+			buttonZip.addActionListener( new ActionListener() {
+				@Override
+				public void actionPerformed( ActionEvent event ) {
+					Game game = getGame();
+					if ( game.isInZip() ) {
+						game.unzip( new OnProcessAdapter() {
+							@Override
+							public void processFinished( Process p, int exitCode ) {
+								if ( exitCode == 0 ) {
+									if ( !game.isInZip() ) {
+										setStandbyStyle();
+									}
+								}
+							}
+						});
+					} else {
+					
+					}
+					
+				}
+			});
 			buttonFiles.addActionListener( new ActionListener() {
 				@Override
 				public void actionPerformed( ActionEvent event )  {

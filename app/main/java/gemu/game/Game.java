@@ -66,6 +66,16 @@ public class Game {
 		
 		th.start();
 	}
+	
+	public void stop() {
+		if ( isRunning() ) {
+			Thread th = new Thread(()->{
+				Shell.run( null, null, "taskkill", "/pid", String.valueOf(getProcess().pid()));
+			});
+			th.start();
+		}
+	}
+	
 	//states
 	public boolean isRunning() {
 		return process != null;
@@ -91,20 +101,11 @@ public class Game {
 		return process;
 	}
 	
-	public void stop() {
-		if ( isRunning() ) {
-			Thread th = new Thread(()->{
-				Shell.run( null, null, "taskkill", "/pid", String.valueOf(getProcess().pid()));
-			});
-			th.start();
-		}
-	}
-	
-	// end play
 	
 	//title
 	public void setTitle( String title ) {
-		info.set( Info.TITLE, title );
+		info.set( Info.TITLE, title ); 
+		info.commit();
 	}
 	public String getTitle() {
 		String title = info.get( Info.TITLE );
@@ -130,7 +131,8 @@ public class Game {
 				}
 			};		
 		}                                                 
-		info.set( Info.LAUNCHER, FileNames.relativePath( getDirectory(), executable ) );
+		info.set( Info.LAUNCHER, FileNames.relativePath( getDirectory(), executable ) ); 
+		info.commit();
 	}
 	
 	public File getLauncher() {
@@ -163,6 +165,51 @@ public class Game {
 		}
 	}
 	
+	//zip
+	public void unzip( OnProcessAdapter listener ) {
+		if ( isInZip() ) {
+			try {
+				File launcher = getLauncher();               
+				ZipFile zipLauncher = ZipFiles.get( launcher );
+				ZipFile rootZipFile = zipLauncher.getRootZipFile();
+				
+				rootZipFile.unzip( new OnProcessAdapter() {
+					@Override
+					public void processStarted( Process p ) {
+						listener.processStarted( p);
+					}
+					@Override
+					public void streamLineRead( Process p, String line ) {
+						System.out.println( line );
+						listener.streamLineRead( p, line );
+					
+					}
+					@Override
+					public void processFinished( Process p, int exitCode ) {
+						String path;
+						
+						Executable[] executables = getExecutables();
+						info.clear( Info.EXECUTABLES );
+						for ( Executable executable : executables ) {
+							path = FileNames.relativePath( rootZipFile, executable );
+							info.add( Info.EXECUTABLES, path );
+							if ( executable.getAbsolutePath().equals(launcher.getAbsolutePath()) ) {
+								info.set( Info.LAUNCHER, path );							
+							} else {
+								System.out.println(executable);
+								System.out.println(launcher);
+							}
+						}
+						info.commit();
+						listener.processFinished( p, exitCode);
+					
+					}
+				} ) ;
+			} catch( Exception e ) {
+				e.printStackTrace();
+			}
+		}
+	}
 	
 	// cover
 	public int getCoverXViewport() {
@@ -180,10 +227,12 @@ public class Game {
 	
 	public void setCoverXViewport( int i ) {
 		info.set( Info.COVER_XVIEWPORT, String.valueOf(i) );
+		info.commit();
 	}
 	
 	public void setCoverImage( File cover ) {
-		info.set( Info.COVER_IMAGE, cover.getName() );
+		info.set( Info.COVER_IMAGE, cover.getName() ); 
+		info.commit();
 	}
 	
 	public File getCoverImage() {

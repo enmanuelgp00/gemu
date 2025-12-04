@@ -12,7 +12,13 @@ public class Gemu {
 	
 	Gemu( File f ) {
 		findGames(f);
+	
 	}
+	
+	public boolean isIgnoreFile( File file ) {
+		return file.getName().equals(".gemuignore");
+	}
+	
 	public void findGames( File file ) {
 		if ( file.isDirectory() ) {
 			ArrayList<Executable> executables = new ArrayList<>();  
@@ -20,7 +26,9 @@ public class Gemu {
 			ArrayList<File> compactFiles = new ArrayList<>();
 			
 			for ( File f : file.listFiles() ) {
-				
+				if ( isIgnoreFile(f) ) {
+					return;
+				}
 				if ( Games.isInfoFile(f) ) {
 					try {
 						Info inf = Info.parseInfo(f);

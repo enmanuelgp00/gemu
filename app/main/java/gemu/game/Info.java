@@ -95,6 +95,7 @@ public class Info {
 			info.set( LAUNCHER, FileNames.relativePath( parent, ref ));
 		}
 		
+		info.commit();
 		return info;
 	}
 	
@@ -178,7 +179,6 @@ public class Info {
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
-		
 		return info;
 	}
 	
@@ -204,12 +204,14 @@ public class Info {
 		Set<String> set = hashMap.get(key);
 		set.clear();
 		set.add( value );
-		commit();
 	}
+	
+	public void clear( Key key ) {
+		hashMap.get(key).clear();
+	}; 
 	
 	public void add( Key key, String value) {
 		hashMap.get(key).add( value );
-		commit();
 	}
 	
 	public File getFile() {

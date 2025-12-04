@@ -16,6 +16,9 @@ public class ZipFile extends File {
 	
 	
 	public ZipFile getRootZipFile() {
+		if ( isRootZipFile() ) {
+			return this;
+		}
 		File parent = getParentFile();
 		while( parent != null ) {
 			if( parent.exists() ) { 
@@ -36,6 +39,44 @@ public class ZipFile extends File {
 		return ZipFiles.EXTENSIONS.contains( FileNames.getExtension( this ) ) &&
 		exists() &&
 		!isDirectory();
+	}
+	
+	public void unzip( OnProcessAdapter listener ) {
+		unzip( listener, Arrays.<String>asList( ZipFiles.PASSWORDS ).iterator() );	
+	}
+	
+	private void unzip( OnProcessAdapter listener, Iterator<String> passwordIterator )  {
+		Shell.run( new OnProcessAdapter() {
+			@Override
+			public void processStarted( Process p ) {
+				listener.processStarted( p );
+			}
+			@Override
+			public void streamLineRead( Process p, String line ) {
+				listener.streamLineRead( p, line );
+			}
+			@Override
+			public void processFinished( Process p, int exitCode ) {
+				if ( exitCode == 0 ) {
+					listener.processFinished( p, exitCode );
+					return;
+				}
+				
+				if ( !passwordIterator.hasNext() ) {
+					listener.processFinished( p, exitCode );
+					throw new RuntimeException () {
+						@Override
+						public void printStackTrace() {
+							System.out.println( "Password not found : " + ZipFile.this );
+							super.printStackTrace();
+						}
+					};
+				}
+				
+				unzip( listener, passwordIterator );
+				
+			}
+		}, getRootZipFile().getParentFile(), "7z", "-p" + passwordIterator.next() , "x", getRootZipFile().getAbsolutePath() );
 	}
 	
 	@Override
