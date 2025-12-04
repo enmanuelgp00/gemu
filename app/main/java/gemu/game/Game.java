@@ -4,7 +4,8 @@ import java.io.*;
 import java.nio.*;    
 import java.util.*;
 import gemu.io.*;
-import gemu.shell.*;
+import gemu.shell.*;                  
+import gemu.util.*;
 
 
 public class Game {
@@ -65,9 +66,21 @@ public class Game {
 		
 		th.start();
 	}
-	
+	//states
 	public boolean isRunning() {
 		return process != null;
+	}
+	
+	public boolean isStandby() {
+		return !isRunning() && !isInZip() && !isDeleted();
+	}
+	
+	public boolean isInZip() {
+		return ZipFiles.isZipFile( getLauncher() );
+	}
+	
+	public boolean isDeleted() {
+		return getLauncher() == null;
 	}
 	
 	private void setProcess( Process process ) {
@@ -112,7 +125,7 @@ public class Game {
 				}
 			};		
 		}                                                 
-		info.set( Info.LAUNCHER, executable.getName() );
+		info.set( Info.LAUNCHER, FileNames.relativePath( getDirectory(), executable ) );
 	}
 	
 	public File getLauncher() {
@@ -120,11 +133,11 @@ public class Game {
 	}
 	
 	public Executable[] getExecutables() {
-		String[] names = info.list( Info.EXECUTABLES );
-		Executable[] executables = new Executable[ names.length ];
+		String[] relative = info.list( Info.EXECUTABLES );
+		Executable[] executables = new Executable[ relative.length ];
 		try {
-			for ( int i = 0; i < names.length; i++ ) {
-				executables[i] = new Executable( nameAsFile(names[i]) );
+			for ( int i = 0; i < relative.length; i++ ) {
+				executables[i] = new Executable( likeAbsolutePath(relative[i]) );
 			}
 		} catch ( Exception e ) {}
 		return executables;
@@ -181,10 +194,10 @@ public class Game {
 	} 
 	//extra
 	private File getKeyAsFile( Info.Key key ) {
-		String name = info.get( key );
-		if ( name != null ) {
-			File f = nameAsFile(name);
-			if ( f.exists() ) {
+		String relative = info.get( key );
+		if ( relative != null ) {
+			File f = new File( likeAbsolutePath( relative ) );
+			if ( f.exists() || ZipFiles.isZipFile(f) ) {
 				return f;
 			}
 		}
@@ -192,8 +205,10 @@ public class Game {
 		
 	}
 	
-	private File nameAsFile( String name ) {
-		return new File( getDirectory() + "/" + name ); 
+	public String likeAbsolutePath( String r ) {
+		try {
+			return getDirectory().getCanonicalPath() + "\\" + r ;		
+		} catch( Exception e ) {}
+		return null;
 	}
-	
 }

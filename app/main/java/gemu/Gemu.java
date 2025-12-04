@@ -34,7 +34,7 @@ public class Gemu {
 						executables.add( new Executable(f));					
 					} catch ( Exception e ) {}
 					
-				} else if ( ZipFiles.isCompact(f) ) {
+				} else if ( ZipFiles.isZipFile(f) ) {
 					compactFiles.add(f);
 				}
 			}
@@ -56,29 +56,34 @@ public class Gemu {
 				}
 			}
 			
-			for ( File f : compactFiles ) {
-				boolean gamefound = false ;
-				String infoName;
-				String fileName;
-				for ( Game game : games ) {
-					infoName = FileNames.getBaseName( game.getInfoFile() );
-					fileName = FileNames.getBaseName(f);
-					if ( infoName.equals(fileName)) {
-						gamefound = true;
-						break;
-					}
-				}
-				
-				if ( !gamefound) {
-					try {
-						Game game = Game.inZip( ZipFiles.get( f ) );
-						games.add( game );
-					} catch( Exception e ) {
-						e.printStackTrace();
+			if ( compactFiles.size() > 0 ) {
+				for ( File f : compactFiles ) {
+					boolean gamefound = false ;
+					String infoName;
+					String fileName;
+					for ( Game game : games ) {
+						infoName = FileNames.getBaseName( game.getInfoFile() );
+						fileName = FileNames.getBaseName(f);
+						if ( infoName.equals(fileName)) {
+							gamefound = true;
+							break;
+						}
 					}
 					
+					if ( !gamefound) {
+						try {  
+							System.out.println("Looking for executables in : " + f );
+							Game game = Game.inZip( ZipFiles.get( f ) ); 
+							handleMultipleExecutables( game );
+						} catch( Exception e ) {
+							e.printStackTrace();
+						}
+						
+					}
 				}
 			}
+			
+			
 			
 			if ( executables.size() == 0 ) {
 				for ( File f : file.listFiles() ) {
@@ -93,13 +98,13 @@ public class Gemu {
 		if ( game.getLauncher() != null ) {
 			if ( game.getCoverImage() == null ) {
 				game.findCoverImage();
-			}
+			}               
 			games.add( game );			
 			return;
-		}
-		Executable[] executables = game.getExecutables();
+		}                         
+		Executable[] executables = game.getExecutables();  
 		Scanner scanner = new Scanner( System.in );
-		System.out.println("More than one executable found for in folder :" + game.getDirectory() );
+		System.out.println( executables.length + " executables found for in folder :" + game.getDirectory() );
 		System.out.println("Please define one: ");
 		int user = -2;
 		int count = 0;

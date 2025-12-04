@@ -11,15 +11,18 @@ public final class ZipFiles {
 		".7z"
 	) );
 	
-	public static boolean isCompact( File f ) {
+	public static boolean isZipFile( File f ) {
 		ZipFile z = new ZipFile(f);
-		return z.isRootZipFile() || z.getRootZipFile() != null ;
+		if ( z.isRootZipFile() ) {
+			return true;
+		}                         
+		return z.getRootZipFile() != null ;
 	}
 	
 	public static ZipFile get( File f ) throws Exception {
 		ZipFile z = new ZipFile(f);
 		
-		if ( !isCompact( f ) ) {
+		if ( !isZipFile( f ) ) {
 			throw new Exception() {
 				@Override
 				public void printStackTrace() {

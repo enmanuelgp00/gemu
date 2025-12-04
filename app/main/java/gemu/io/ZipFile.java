@@ -17,7 +17,6 @@ public class ZipFile extends File {
 	
 	public ZipFile getRootZipFile() {
 		File parent = getParentFile();
-		System.out.println( parent );
 		while( parent != null ) {
 			if( parent.exists() ) { 
 				if ( ZipFiles.EXTENSIONS.contains( FileNames.getExtension(parent) ) ) {
@@ -27,14 +26,16 @@ public class ZipFile extends File {
 					return null;
 				}
 			} 
-			parent = getParentFile();
+			parent = parent.getParentFile();
 		}
 		return null;
 	}
 	
 	public boolean isRootZipFile() {
 		File parent = getParentFile();
-		return parent.isDirectory() && parent.exists();
+		return ZipFiles.EXTENSIONS.contains( FileNames.getExtension( this ) ) &&
+		exists() &&
+		!isDirectory();
 	}
 	
 	@Override
@@ -52,13 +53,16 @@ public class ZipFile extends File {
 				} else if ( line.contains("Attributes =")) {
 					if ( !line.contains("D") ) {
 						try {
-							list.add( new ZipFile( getCanonicalPath() + "\\" + path ));
-						} catch( Exception e ) {}
+							ZipFile z = new ZipFile( getAbsolutePath() + "\\" + path );
+							list.add( z );
+						} catch( Exception e ) {
+							e.printStackTrace();
+							}
 					}
 				}
 				
 			}
-		}, null , "7z", "-pkimochi.info", "l", "-slt", "-ba", getAbsolutePath() );
+		}, null , "7z", "l", "-slt", "-ba", getAbsolutePath() );
 		return list.toArray( new ZipFile[ list.size() ] );
 	}
 }

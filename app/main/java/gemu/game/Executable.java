@@ -10,4 +10,11 @@ public class Executable extends File{
 			throw new Exception();
 		}
 	}
+	
+	public Executable ( String path ) throws Exception {
+		super( path );
+		if ( !FileNames.getExtension(this).equals(".exe") ) {
+			throw new Exception();
+		}
+	}
 }

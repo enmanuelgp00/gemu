@@ -2,7 +2,8 @@ package gemu.game;
 
 import java.util.*;
 import java.io.*;
-import gemu.io.*;
+import gemu.io.*;      
+import gemu.util.*;
 
 public class Info {
 	HashMap<Key, Set<String>> hashMap = new HashMap<>();
@@ -51,15 +52,14 @@ public class Info {
 		Executable ref = executables[0];
 		
 		File parent;
-		
-		if ( !ZipFiles.isCompact( ref ) ) {
+		if ( !ZipFiles.isZipFile( ref ) ) {
 			parent = new File( ref.getParentFile().getCanonicalPath());			
-		} else {
-			parent = ZipFiles.get( ref ).getRootZipFile().getParentFile();			
+		} else {                                  
+			parent = new File( ZipFiles.get( ref ).getRootZipFile().getParentFile().getCanonicalPath() );			
 		}
 		
 		info.file = new File( parent + "\\" + parent.getName() + FILE_EXTENSION );
-		System.out.println( info.file );
+												
 		if ( info.file.exists() ) {
 			throw new Exception() {
 				@Override
@@ -69,13 +69,15 @@ public class Info {
 				}
 			};
 		}
-		
 		for ( Executable executable : executables ) {
-			info.add( EXECUTABLES, executable.getName() );
+			String path = executable.getAbsolutePath();
+			//info.add( EXECUTABLES, path.substring( parent.getAbsolutePath().length() , path.length() ) );	 
+			info.add( EXECUTABLES, FileNames.relativePath( parent, executable ));
 		}
 		
 		if ( executables.length == 1 ) {
-			info.set( LAUNCHER, executables[0].getName() );		
+			String path = ref.getAbsolutePath();
+			info.set( LAUNCHER, path.substring( parent.getAbsolutePath().length() , path.length() ) );		
 		}
 		
 		return info;

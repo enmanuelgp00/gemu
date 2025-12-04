@@ -24,4 +24,17 @@ public final class FileNames {
 		name = name.substring( 0, name.lastIndexOf(".")  ); 
 		return name;
 	}
+	
+	public static String relativePath( File origin, File file ) {
+		try {
+			String path = file.getCanonicalPath();
+			path = path.substring( origin.getCanonicalPath().length(), path.length() );
+			
+			return path;
+		
+		} catch( Exception e ) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

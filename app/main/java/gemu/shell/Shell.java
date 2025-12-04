@@ -43,10 +43,10 @@ public final class Shell {
 			String line;
 			while( (line = reader.readLine()) != null ) {
 				adapter.streamLineRead( process, line );
-			}
+			}                                            
+			reader.close();
 			int exitCode = process.waitFor();
 			adapter.processFinished( process, exitCode );
-			reader.close();
 			
 		} catch( Exception e ) {
 			e.printStackTrace();
