@@ -28,7 +28,7 @@ public final class Shell {
 			
 			Thread th = new Thread(()->{
 				try {                    
-					BufferedReader reader = new BufferedReader( new InputStreamReader( process.getErrorStream(), "UTF-8" ));
+					BufferedReader reader = new BufferedReader( new InputStreamReader( process.getErrorStream(), "SHIFT-JIS" ));
 					String line;
 					while( (line = reader.readLine()) != null ) {
 						//System.out.println(line);
@@ -39,7 +39,7 @@ public final class Shell {
 			});
 			th.start();
 			
-			BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream(), "UTF-8" ));
+			BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream(), "SHIFT-JIS" ));
 			String line;
 			while( (line = reader.readLine()) != null ) {
 				adapter.streamLineRead( process, line );

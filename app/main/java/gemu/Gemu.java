@@ -72,7 +72,6 @@ public class Gemu {
 					
 					if ( !gamefound) {
 						try {  
-							System.out.println("Looking for executables in : " + f );
 							Game game = Game.inZip( ZipFiles.get( f ) ); 
 							handleMultipleExecutables( game );
 						} catch( Exception e ) {

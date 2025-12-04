@@ -6,14 +6,20 @@ import gemu.util.*;
 public class Executable extends File{
 	public Executable ( File f ) throws Exception {
 		super(f.getAbsolutePath());
-		if ( !FileNames.getExtension(f).equals(".exe") ) {
-			throw new Exception();
+		if ( !FileNames.hasExtension( f, ".exe") ) {
+			throw new Exception() {
+				@Override
+				public void printStackTrace() {
+					System.out.println("Wrong name : " + f );
+					super.printStackTrace();
+				}
+			};
 		}
 	}
 	
 	public Executable ( String path ) throws Exception {
 		super( path );
-		if ( !FileNames.getExtension(this).equals(".exe") ) {
+		if ( !FileNames.hasExtension( this, ".exe") ) {
 			throw new Exception();
 		}
 	}

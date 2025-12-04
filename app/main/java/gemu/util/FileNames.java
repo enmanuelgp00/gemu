@@ -4,6 +4,10 @@ import java.io.*;
 
 public final class FileNames {
 
+	public static boolean hasExtension( File f, String extension ) {
+		return getExtension(f).equals(extension);
+	}
+
 	public static String getExtension( File f ) {
 		if ( f.isDirectory() ) {
 			return "";

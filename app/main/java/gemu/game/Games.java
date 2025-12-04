@@ -10,7 +10,7 @@ public final class Games {
 		}
 		String name = f.getName();
 		
-		if ( name.contains(".exe") )  {
+		if ( FileNames.hasExtension( f, ".exe") )  {
 			String[] exceptions = new String[]{
 				"crash", "unins", "setting", "config", "helper", "setup"
 			};

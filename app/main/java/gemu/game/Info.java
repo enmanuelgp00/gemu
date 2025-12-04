@@ -35,6 +35,18 @@ public class Info {
 				executables.add( new Executable(f) );
 			}
 		}
+		if (executables.size() == 0 ) {
+			throw new Exception() {
+				@Override
+				public void printStackTrace() {
+					try {                    
+						System.out.println("No launcher found in : " + file.getCanonicalPath() );
+						
+					} catch( Exception e ) {}
+					super.printStackTrace();
+				}
+			};
+		}
 		return createInfo( executables.toArray( new Executable[ executables.size() ] ) );
 	}
 	
@@ -52,13 +64,17 @@ public class Info {
 		Executable ref = executables[0];
 		
 		File parent;
+		String name;
 		if ( !ZipFiles.isZipFile( ref ) ) {
-			parent = new File( ref.getParentFile().getCanonicalPath());			
-		} else {                                  
-			parent = new File( ZipFiles.get( ref ).getRootZipFile().getParentFile().getCanonicalPath() );			
+			parent = new File( ref.getParentFile().getCanonicalPath());
+			name =  parent.getName();
+		} else {                     
+			ZipFile root = ZipFiles.get( ref ).getRootZipFile();
+			parent = new File( root.getParentFile().getCanonicalPath() );			
+			name = FileNames.getBaseName( root );
 		}
 		
-		info.file = new File( parent + "\\" + parent.getName() + FILE_EXTENSION );
+		info.file = new File( parent + "\\" + name  + FILE_EXTENSION );
 												
 		if ( info.file.exists() ) {
 			throw new Exception() {
@@ -76,8 +92,7 @@ public class Info {
 		}
 		
 		if ( executables.length == 1 ) {
-			String path = ref.getAbsolutePath();
-			info.set( LAUNCHER, path.substring( parent.getAbsolutePath().length() , path.length() ) );		
+			info.set( LAUNCHER, FileNames.relativePath( parent, ref ));
 		}
 		
 		return info;

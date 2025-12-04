@@ -111,6 +111,11 @@ public class Game {
 		if ( title != null ) {
 			return title;
 		}
+		if ( isInZip() ) {
+			try {
+				return ZipFiles.get(getExecutables()[0]).getRootZipFile().getName();			
+			} catch ( Exception e ) {}
+		}
 		return getDirectory().getName();
 	}
 	
@@ -138,6 +143,7 @@ public class Game {
 		try {
 			for ( int i = 0; i < relative.length; i++ ) {
 				executables[i] = new Executable( likeAbsolutePath(relative[i]) );
+				
 			}
 		} catch ( Exception e ) {}
 		return executables;
