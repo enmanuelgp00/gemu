@@ -122,16 +122,7 @@ public class Banner extends JPanel {
 			imageScaledHeight = with * scale;
 			
 			setMaximumSize( new Dimension( 0, (int)imageScaledHeight ));
-			
-			/*
-			BufferedImage intGray = new BufferedImage( bufferedImage.getWidth(),bufferedImage.getHeight() , BufferedImage.TYPE_BYTE_GRAY );
-			Graphics2D g2dGray = intGray.createGraphics();
-			g2dGray.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-			g2dGray.drawImage( bufferedImage, 0, 0, null );
-			g2dGray.dispose();
-			*/
-			
-			g2d.drawImage( bufferedImage, 0, 0, (int)with, (int)imageScaledHeight, this );
+			g2d.drawImage( bufferedImage, 0, 0, (int)with, (int)imageScaledHeight, this );	
 			g2d.dispose();
 		
 		} else {

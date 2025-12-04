@@ -2,8 +2,26 @@ package gemu.io;
 
 import java.io.*;
 import java.util.*;
+import gemu.shell.*;
 
 public final class ZipFiles {
+	public static final String[] PASSWORDS = findPasswords();
+	private static String[] findPasswords() {
+		ArrayList<String> passwordList = new ArrayList<>();
+		passwordList.add("");
+		try {
+		
+			File passwordFile = new File("./passwords.txt");
+			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( passwordFile ), "UTF-8" ));
+			String line;
+			while( ( line = reader.readLine() ) != null ) {
+			
+				passwordList.add( line );
+			}
+			reader.close();
+		} catch( Exception e ) {}
+		return passwordList.toArray( new String[ passwordList.size() ] );
+	}
 	public static final HashSet<String> EXTENSIONS = new HashSet<>( Arrays.<String>asList(
 		".rar",
 		".zip",

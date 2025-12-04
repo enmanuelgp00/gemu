@@ -131,6 +131,7 @@ public class Gemu {
 	public static void main( String[] args ) {
 		
 		Gemu g = new Gemu( new File( ( args.length > 0 ) ? args[0] : "."  ) );
+		System.out.println("Games found : " + g.games.size() );
 		new MainFrame( g.games.toArray( new Game[0] ) );
 	}
 }

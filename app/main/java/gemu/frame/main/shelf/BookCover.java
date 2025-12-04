@@ -157,7 +157,17 @@ class BookCover extends JPanel {
 			}
 			int pos = x - coverXViewport;
 			if ( pos > - (detailWidth - getWidth()) && pos < 0 ) {
-				g2.drawImage( bufferedImage, pos, 0, (int)width, (int)height, this ); 			
+				if ( getGame().isInZip() ) {
+					BufferedImage intGray = new BufferedImage( bufferedImage.getWidth(),bufferedImage.getHeight() , BufferedImage.TYPE_BYTE_GRAY );
+					Graphics2D g2dGray = intGray.createGraphics();
+					g2dGray.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+					g2dGray.drawImage( bufferedImage, 0, 0, null );
+					g2dGray.dispose();                                                            
+					g2.drawImage( intGray, pos, 0, (int)width, (int)height, this );
+			
+				} else {
+					g2.drawImage( bufferedImage, pos, 0, (int)width, (int)height, this ); 			
+				}
 			}
 			g2.dispose();	
 		} else {

@@ -63,6 +63,7 @@ public class LibraryPanel extends GemuSplitPane {
 		Game game;
 		GemuButton buttonPlay = new GemuButton("Play", 5, 5 ) {
 			{
+				setVisible( false );
 				Insets insets = getInsets();
 				setBorder( BorderFactory.createEmptyBorder( insets.top, 30, insets.bottom, 30 ));
 			}
@@ -83,9 +84,9 @@ public class LibraryPanel extends GemuSplitPane {
 		
 		protected ActionBar() {
 			super(BoxLayout.X_AXIS );			
-			setGame( game );  
+			 
 			setBorder( BorderFactory.createEmptyBorder( 3, 3, 3, 3 ));
-			setButtonPlayStopStyle();
+			setDeletedStyle();
 			buttonPlay.addActionListener( new ActionListener() {
 				@Override
 				public void actionPerformed( ActionEvent event ) {
@@ -94,13 +95,13 @@ public class LibraryPanel extends GemuSplitPane {
 							@Override
 							public void processStarted( Process process ) {
 								if ( process == getGame().getProcess() ) {
-									setButtonPlayStopStyle();
+									setRunningStyle();
 								}
 							}
 							@Override
 							public void processFinished( Process process, int exitCode ) {
 								if ( process == getGame().getProcess() ) {
-									setButtonPlayReadyStyle();
+									setStandbyStyle();
 								}
 							}
 						});
@@ -129,10 +130,11 @@ public class LibraryPanel extends GemuSplitPane {
 		}
 		
 		protected void setButtonZipUnzipStyle() {
-		
+			buttonZip.setText("Unzip");
 		}
 		
 		protected void setButtonZipStandbyStyle() {
+			buttonZip.setText("7zip");
 		
 		}
 		
@@ -177,11 +179,15 @@ public class LibraryPanel extends GemuSplitPane {
 		}
 		
 		protected void setStandbyStyle() {
-			setButtonPlayReadyStyle();
+			buttonScreenshot.setVisible( false );
+			setButtonPlayReadyStyle(); 
+			setButtonZipStandbyStyle();
 		}
 		
-		protected void setRunningStyle() {
+		protected void setRunningStyle() {  
+			buttonScreenshot.setVisible( true );
 			setButtonPlayStopStyle();
+			setButtonZipStandbyStyle();
 		}
 		
 		protected void setInZipStyle() {

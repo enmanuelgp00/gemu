@@ -44,10 +44,15 @@ public class ZipFile extends File {
 			return null;
 		}
 		ArrayList<ZipFile> list = new ArrayList<>();
+		putListedFilesInList( list, Arrays.<String>asList( ZipFiles.PASSWORDS ).iterator() );
+		return list.toArray( new ZipFile[ list.size() ] );
+	}
+	
+	private void putListedFilesInList( ArrayList<ZipFile> list, Iterator<String> passwordIterator ) {
 		Shell.run( new OnProcessAdapter() {
 			String path;
 			@Override
-			public void streamLineRead( Process p, String line ) {
+			public void streamLineRead( Process p, String line ){
 				if ( line.contains("Path = ")) {
 					path = line.substring( "Path = ".length(), line.length() );
 				} else if ( line.contains("Attributes =")) {
@@ -62,7 +67,22 @@ public class ZipFile extends File {
 				}
 				
 			}
-		}, null , "7z", "l", "-slt", "-ba", getAbsolutePath() );
-		return list.toArray( new ZipFile[ list.size() ] );
+			
+			public void processFinished( Process p, int exitCode ) {
+				if ( exitCode != 0 ) {
+					if ( !passwordIterator.hasNext() ) {
+						throw new RuntimeException () {
+							@Override
+							public void printStackTrace() {
+								System.out.println( "Password not found : " + ZipFile.this );
+								super.printStackTrace();
+							}
+						};
+					}
+					putListedFilesInList( list, passwordIterator );
+				}
+			}
+			
+		}, null , "7z","-p" + passwordIterator.next(), "l", "-slt", "-ba", getAbsolutePath() );
 	}
 }
