@@ -65,7 +65,7 @@ public class Gemu {
 			}
 			
 			if ( compactFiles.size() > 0 ) {
-				for ( File f : compactFiles ) {
+				for ( File f : compactFiles ) {					
 					boolean gamefound = false ;
 					String infoName;
 					String fileName;
@@ -74,6 +74,10 @@ public class Gemu {
 						fileName = FileNames.getBaseName(f);
 						if ( infoName.equals(fileName)) {
 							gamefound = true;
+							if ( game.isDeleted() ) {
+								System.out.println("Zip file found : " + fileName + " but game state is \"DELETED\" : " + infoName );							
+								System.out.println("In folder : " + game.getDirectory() );
+							}
 							break;
 						}
 					}
@@ -108,7 +112,10 @@ public class Gemu {
 			}               
 			games.add( game );			
 			return;
-		}                         
+		}
+		if ( game.isDeleted() ) {
+			return;
+		}
 		Executable[] executables = game.getExecutables();  
 		Scanner scanner = new Scanner( System.in );
 		System.out.println( executables.length + " executables found for in folder :" + game.getDirectory() );

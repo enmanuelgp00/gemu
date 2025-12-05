@@ -31,7 +31,7 @@ public final class Shell {
 					BufferedReader reader = new BufferedReader( new InputStreamReader( process.getErrorStream(), "SHIFT-JIS" ));
 					String line;
 					while( (line = reader.readLine()) != null ) {
-						//System.out.println(line);
+						System.out.println(line);
 					}
 					reader.close();
 				

@@ -114,20 +114,41 @@ public class LibraryPanel extends GemuSplitPane {
 				@Override
 				public void actionPerformed( ActionEvent event ) {
 					Game game = getGame();
-					if ( game.isInZip() ) {
-						game.unzip( new OnProcessListener() {
-							@Override
-							public void processFinished( Process p, int exitCode ) {
-								if ( exitCode == 0 ) {
-									if ( !game.isInZip() ) {
-										setStandbyStyle();
+					Thread th = new Thread(()->{
+						if ( game.isInZip() ) {
+							game.unzip( new OnProcessListener() { @Override
+								public void processStarted( Process p ) {
+									setInZipProcessStyle();
+								}
+								@Override
+								public void processFinished( Process p, int exitCode ) {
+									if ( exitCode == 0 ) {
+										if ( !game.isInZip() ) {
+											setStandbyStyle();
+										}
 									}
 								}
-							}
-						});
-					} else {
-					
-					}
+							});
+						} else if ( !game.isDeleted() ) {
+							System.out.println("Tring to pack");
+							game.pack( new OnProcessListener() {
+								@Override
+								public void processStarted( Process p ) {
+									setInZipProcessStyle();
+								}
+								@Override
+								public void processFinished( Process p, int exitCode ) {
+									if ( exitCode == 0 ) {
+										if ( game.isInZip() ) {
+											setInZipStyle();
+										}
+									}
+								}
+							} );
+						}
+						
+					});
+					th.start();
 					
 				}
 			});
@@ -182,8 +203,9 @@ public class LibraryPanel extends GemuSplitPane {
 				for ( GemuButton button : buttons ) {
 					button.setVisible( true );
 				}
-				
-				if ( game.isStandby() ) { 
+				if ( game.isInZipProcess() ) {
+					setInZipProcessStyle();
+				} else if ( game.isStandby() ) { 
 					setStandbyStyle();
 				} else if( game.isRunning() ) { 
 					setRunningStyle(); 
@@ -222,6 +244,15 @@ public class LibraryPanel extends GemuSplitPane {
 				button.setVisible( false );
 			}
 		};
+		
+		protected void setInZipProcessStyle() {
+			buttonPlay.setVisible( false );
+			for ( GemuButton button : buttons ) {
+				button.setVisible( false );
+			}
+		};
+		
+		
 		
 		protected Game getGame() {
 			return this.game;

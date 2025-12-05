@@ -29,6 +29,46 @@ public final class ZipFiles {
 		".7z"
 	) );
 	
+	public static void pack( OnZipProcessListener listener, File dir, File file, File... ignoredFiles )  {
+		File archive = new File( dir + "\\" + file.getName() + ".7z");
+		
+		ArrayList<String> cmd = new ArrayList<>();
+		cmd.add("7z");
+		for ( File f : ignoredFiles ) {  
+			if ( f != null ) {
+				cmd.add("-x!" + f.getName());		
+			}
+		}
+		cmd.add("-sdel");
+		cmd.add("-t7z");
+		cmd.add("-bsp1");
+		cmd.add("a");
+		cmd.add(archive.getName());
+		cmd.add(file.getAbsolutePath() + "\\.");
+		
+		Shell.run( new OnProcessListener() {
+		
+			@Override
+			public void processStarted( Process p) {
+				listener.processStarted( p );
+			}    
+			@Override
+			public void streamLineRead( Process p, String line ) {
+				System.out.println( line );
+				listener.streamLineRead( p, line );
+			}   
+			@Override
+			public void processFinished( Process p, int exitCode ) {
+				if ( exitCode != 0 ) {
+					listener.processFinished( p, exitCode, null );
+					return;
+				}                     
+				listener.processFinished( p, exitCode, archive );
+			}
+			
+		}, dir, cmd.toArray( new String[ cmd.size() ]) );
+	}
+	
 	public static boolean hasZipFiles( File file ) {
 		for ( File f : file.listFiles() ) {
 			if ( isZipFile(f) ) {

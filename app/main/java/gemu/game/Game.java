@@ -12,7 +12,7 @@ public class Game {
 	String COVER_NAME = "main_screenshot.jpg";
 	Info info;
 	Process process = null;
-	
+	Process zipProcess = null;
 	private Game() {
 		
 	}
@@ -83,20 +83,37 @@ public class Game {
 	}
 	
 	//states
+	
+	public void setZipProcess( Process p ) {
+		zipProcess = p;
+	}
+	
+	public boolean isInZipProcess() {
+		return zipProcess != null;
+	}
+	
 	public boolean isRunning() {
 		return process != null;
 	}
 	
 	public boolean isStandby() {
-		return !isRunning() && !isInZip() && !isDeleted();
+		return !isRunning() && !isInZip() && !isDeleted() && !isInZipProcess();
 	}
 	
 	public boolean isInZip() {
-		return ZipFiles.isZipFile( getLauncher() );
+		return ZipFiles.isZipFile( getLauncher() ) && !isInZipProcess() ;
 	}
 	
 	public boolean isDeleted() {
-		return getLauncher() == null;
+		File sample = getExecutables()[0];
+		if ( ZipFiles.isZipFile( sample ) ) {
+			try {
+				return !ZipFiles.get( sample ).getRootZipFile().exists();  
+			} catch ( Exception e ) {
+				e.printStackTrace();
+			}
+		}
+		return !sample.exists();
 	}
 	
 	private void setProcess( Process process ) {
@@ -182,6 +199,7 @@ public class Game {
 				rootZipFile.unzip( new OnZipProcessListener() {
 					@Override
 					public void processStarted( Process p ) {
+						setZipProcess(p);
 						listener.processStarted( p);
 					}
 					@Override
@@ -223,7 +241,7 @@ public class Game {
 						if ( getCoverImage() == null ) {
 							findCoverImage();		
 						}
-						/*
+						
 						if ( !rootZipFile.delete() ) {
 							throw new RuntimeException() {
 								@Override
@@ -233,7 +251,8 @@ public class Game {
 								}
 							};
 						};
-						*/
+						
+						setZipProcess( null );
 						listener.processFinished( p, exitCode);
 					
 					}
@@ -241,6 +260,39 @@ public class Game {
 			} catch( Exception e ) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	public void pack( OnProcessListener listener ) {
+		if ( !isInZip() ) {
+			File dir = getDirectory();
+			Executable[] executables = getExecutables();
+			File launcher = getLauncher();
+			ZipFiles.pack( new OnZipProcessListener() {
+
+				public void processStarted( Process p) {
+					setZipProcess(p);
+					listener.processStarted( p );
+				}
+				public void streamLineRead( Process p, String line ) {
+					listener.streamLineRead( p, line );
+				}
+				public void processFinished( Process p, int exitCode, File outf ) {
+					info.clear( Info.EXECUTABLES );   
+					String path;
+					for ( Executable executable : executables ) {
+						path =  "\\" + outf.getName() + "\\" + executable.getName() ;
+						info.add( Info.EXECUTABLES, path );
+						if ( launcher.getName().equals( executable.getName() ) ) {
+							info.set( Info.LAUNCHER, path );
+						}
+					}
+					info.commit(); 
+					setZipProcess( null );
+					listener.processFinished( p, exitCode );
+				}
+			
+			}, dir, dir, getInfoFile(), getCoverImage() );
 		}
 	}
 	
