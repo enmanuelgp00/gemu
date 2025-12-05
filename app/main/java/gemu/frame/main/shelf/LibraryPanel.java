@@ -91,7 +91,7 @@ public class LibraryPanel extends GemuSplitPane {
 				@Override
 				public void actionPerformed( ActionEvent event ) {
 					if ( !getGame().isRunning() ) {				
-						getGame().play( new OnProcessAdapter() {
+						getGame().play( new OnProcessListener() {
 							@Override
 							public void processStarted( Process process ) {
 								if ( process == getGame().getProcess() ) {
@@ -115,7 +115,7 @@ public class LibraryPanel extends GemuSplitPane {
 				public void actionPerformed( ActionEvent event ) {
 					Game game = getGame();
 					if ( game.isInZip() ) {
-						game.unzip( new OnProcessAdapter() {
+						game.unzip( new OnProcessListener() {
 							@Override
 							public void processFinished( Process p, int exitCode ) {
 								if ( exitCode == 0 ) {

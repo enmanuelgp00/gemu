@@ -3,8 +3,8 @@ package gemu.shell;
 import java.io.*;
 
 public final class Shell {
-	public static void run( OnProcessAdapter listener, File dir, String... cmd) {
-		OnProcessAdapter adapter = new OnProcessAdapter() { };
+	public static void run( OnProcessListener listener, File dir, String... cmd) {
+		OnProcessListener adapter = new OnProcessListener() { };
 		
 		if ( listener != null ) {
 			adapter = listener;

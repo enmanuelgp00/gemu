@@ -29,6 +29,15 @@ public final class ZipFiles {
 		".7z"
 	) );
 	
+	public static boolean hasZipFiles( File file ) {
+		for ( File f : file.listFiles() ) {
+			if ( isZipFile(f) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static boolean isZipFile( File f ) {
 		ZipFile z = new ZipFile(f);
 		if ( z.isRootZipFile() ) {

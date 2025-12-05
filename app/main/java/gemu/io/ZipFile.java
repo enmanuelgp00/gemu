@@ -41,12 +41,28 @@ public class ZipFile extends File {
 		!isDirectory();
 	}
 	
-	public void unzip( OnProcessAdapter listener ) {
-		unzip( listener, Arrays.<String>asList( ZipFiles.PASSWORDS ).iterator() );	
+	public void unzip( OnZipProcessListener listener ) {
+		File root = getRootZipFile();
+		File dir = root.getParentFile();
+		int zipFileCount = 0;
+		int foldersCount = 0;
+		
+		for ( File f : dir.listFiles() ) {
+			if ( f.isDirectory() ) {
+				foldersCount++;
+			} else if ( ZipFiles.isZipFile(f)) {
+				zipFileCount++;
+			}
+		}
+		
+		if ( zipFileCount > 1 || foldersCount != 0 ) {
+			dir = new File( dir.getAbsolutePath() + "\\" + FileNames.getBaseName( root ));
+		}
+		unzip( listener, dir, Arrays.<String>asList( ZipFiles.PASSWORDS ).iterator() );	
 	}
 	
-	private void unzip( OnProcessAdapter listener, Iterator<String> passwordIterator )  {
-		Shell.run( new OnProcessAdapter() {
+	private void unzip( OnZipProcessListener listener, File dir, Iterator<String> passwordIterator )  {
+		Shell.run( new OnProcessListener() {
 			@Override
 			public void processStarted( Process p ) {
 				listener.processStarted( p );
@@ -58,12 +74,12 @@ public class ZipFile extends File {
 			@Override
 			public void processFinished( Process p, int exitCode ) {
 				if ( exitCode == 0 ) {
-					listener.processFinished( p, exitCode );
+					listener.processFinished( p, exitCode, dir );
 					return;
 				}
 				
 				if ( !passwordIterator.hasNext() ) {
-					listener.processFinished( p, exitCode );
+					listener.processFinished( p, exitCode, null );
 					throw new RuntimeException () {
 						@Override
 						public void printStackTrace() {
@@ -73,10 +89,10 @@ public class ZipFile extends File {
 					};
 				}
 				
-				unzip( listener, passwordIterator );
+				unzip( listener, dir, passwordIterator );
 				
 			}
-		}, getRootZipFile().getParentFile(), "7z", "-p" + passwordIterator.next() , "x", getRootZipFile().getAbsolutePath() );
+		}, null, "7z",  "-o" + dir.getAbsolutePath() ,"-bsp1", "-p" + passwordIterator.next() , "x", getRootZipFile().getAbsolutePath() );
 	}
 	
 	@Override
@@ -90,7 +106,7 @@ public class ZipFile extends File {
 	}
 	
 	private void putListedFilesInList( ArrayList<ZipFile> list, Iterator<String> passwordIterator ) {
-		Shell.run( new OnProcessAdapter() {
+		Shell.run( new OnProcessListener() {
 			String path;
 			@Override
 			public void streamLineRead( Process p, String line ){

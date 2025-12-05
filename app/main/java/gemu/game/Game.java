@@ -24,7 +24,7 @@ public class Game {
 		
 	public static Game inZip( ZipFile f ) throws Exception {
 		Game game = new Game();
-		game.info = Info.createInfo(f);
+		game.info = Info.createInfo(f); 
 		return game;
 		
 	}               
@@ -32,6 +32,9 @@ public class Game {
 	public static Game from( Info info ) {
 		Game game = new Game();
 		game.info = info;
+		if ( game.getCoverImage() == null ) {
+			game.findCoverImage();		
+		}
 		return game;
 	}
 	
@@ -44,9 +47,9 @@ public class Game {
 	}
 	
 	//play
-	public void play( OnProcessAdapter adapter ) {
+	public void play( OnProcessListener adapter ) {
 		Thread th = new Thread(() -> { 
-			Shell.run( new OnProcessAdapter() {
+			Shell.run( new OnProcessListener() {
 				@Override
 				public void processStarted( Process process ){
 					setProcess( process );
@@ -59,7 +62,10 @@ public class Game {
 				@Override
 				public void processFinished( Process process, int exitCode ) {                  
 					adapter.processFinished( process, exitCode );
-					setProcess( null );                        
+					setProcess( null );     
+					if ( getCoverImage() == null ) {
+						findCoverImage();		
+					}                   
 				}
 			}, getDirectory(), getLauncher().getAbsolutePath() );		
 		});
@@ -166,14 +172,14 @@ public class Game {
 	}
 	
 	//zip
-	public void unzip( OnProcessAdapter listener ) {
+	public void unzip( OnProcessListener listener ) {
 		if ( isInZip() ) {
 			try {
-				File launcher = getLauncher();               
-				ZipFile zipLauncher = ZipFiles.get( launcher );
+			
+				ZipFile zipLauncher = ZipFiles.get( getLauncher() );
 				ZipFile rootZipFile = zipLauncher.getRootZipFile();
 				
-				rootZipFile.unzip( new OnProcessAdapter() {
+				rootZipFile.unzip( new OnZipProcessListener() {
 					@Override
 					public void processStarted( Process p ) {
 						listener.processStarted( p);
@@ -185,22 +191,49 @@ public class Game {
 					
 					}
 					@Override
-					public void processFinished( Process p, int exitCode ) {
-						String path;
+					public void processFinished( Process p, int exitCode, File dir ) {
+						//info most be next to launcher
+						if ( !getDirectory().getAbsolutePath().equals( dir.getAbsolutePath() ) ) {
+							info.setFile( new File( dir + "\\" + info.file.getName() ));						
+							File oldGameRootDir = new File( likeAbsolutePath( FileNames.relativePath( rootZipFile, zipLauncher ) ) ).getParentFile();
+							
+							for ( File f : oldGameRootDir.listFiles() ) {
+								f.renameTo( new File( dir + "\\" + f.getName() ) );
+							}
+							
+							if ( oldGameRootDir.listFiles().length == 0 ) {
+								if ( oldGameRootDir.delete() ) {
+									System.out.println("Could not delete old root game : " + oldGameRootDir );
+								}
+							}
+												
+						}
 						
 						Executable[] executables = getExecutables();
 						info.clear( Info.EXECUTABLES );
 						for ( Executable executable : executables ) {
-							path = FileNames.relativePath( rootZipFile, executable );
-							info.add( Info.EXECUTABLES, path );
-							if ( executable.getAbsolutePath().equals(launcher.getAbsolutePath()) ) {
-								info.set( Info.LAUNCHER, path );							
-							} else {
-								System.out.println(executable);
-								System.out.println(launcher);
-							}
+							info.add( Info.EXECUTABLES, executable.getName() );
+							if ( executable.getName().equals( zipLauncher.getName()) ) {
+								info.set( Info.LAUNCHER, executable.getName() );							
+							} 
 						}
+						
 						info.commit();
+												
+						if ( getCoverImage() == null ) {
+							findCoverImage();		
+						}
+						/*
+						if ( !rootZipFile.delete() ) {
+							throw new RuntimeException() {
+								@Override
+								public void printStackTrace() {
+									System.out.println("Could not delete " + rootZipFile + " after extraction ");
+									super.printStackTrace();
+								}
+							};
+						};
+						*/
 						listener.processFinished( p, exitCode);
 					
 					}

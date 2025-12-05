@@ -85,10 +85,20 @@ public class Info {
 				}
 			};
 		}
+		String gameRootPath = ref.getParentFile().getAbsolutePath();  
+		String testPath;
 		for ( Executable executable : executables ) {
-			String path = executable.getAbsolutePath();
-			//info.add( EXECUTABLES, path.substring( parent.getAbsolutePath().length() , path.length() ) );	 
-			info.add( EXECUTABLES, FileNames.relativePath( parent, executable ));
+			testPath =  executable.getParentFile().getAbsolutePath();
+			if ( gameRootPath.length() > testPath.length() ) {
+				gameRootPath = testPath;
+			}
+		}
+		
+		for ( Executable executable : executables ) {
+			if ( executable.getParentFile().getAbsolutePath().equals( gameRootPath ) ) {
+				String path = executable.getAbsolutePath();			
+				info.add( EXECUTABLES, FileNames.relativePath( parent, executable ));			
+			}
 		}
 		
 		if ( executables.length == 1 ) {
@@ -216,6 +226,11 @@ public class Info {
 	
 	public File getFile() {
 		return file;
+	}
+	
+	public void setFile( File f ) {
+		this.file.renameTo(f);
+		this.file = f;
 	}
 	
 	public void commit() {

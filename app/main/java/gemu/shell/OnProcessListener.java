@@ -1,6 +1,6 @@
 package gemu.shell;
 
-public abstract class OnProcessAdapter {                     
+public abstract class OnProcessListener {                     
 
 	public void processStarted( Process p) { }
 	public void streamLineRead( Process p, String line ) { }
