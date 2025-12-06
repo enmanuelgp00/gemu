@@ -6,13 +6,14 @@ import java.awt.*;
 import java.util.*;  
 import gemu.common.*;
 import gemu.game.*;
+import gemu.frame.main.shelf.*;
 
 public class InputPanel extends Box {
 	ResultPanel resultPanel;
-	Game[] games;
-	InputPanel( Game[] games, ResultPanel resultPanel ) {
+	BookCover[] bookCovers;
+	InputPanel( Shelf shelf, ResultPanel resultPanel ) {
 		super( BoxLayout.X_AXIS );
-		this.games = games;
+		this.bookCovers = shelf.listBookCovers();
 		this.resultPanel = resultPanel;
 		setBorder( BorderFactory.createEmptyBorder( 5, 5, 5, 5 ));
 		TextReference textReference = new TextReference();
@@ -43,14 +44,15 @@ public class InputPanel extends Box {
 						resultPanel.clear();
 						return;
 					}
-					ArrayList<Game> search = new ArrayList<>();
-					
-					for( Game g : games ) {
+					ArrayList<BookCover> search = new ArrayList<>();
+					Game g;
+					for( BookCover bookCover : bookCovers ) {
+						g = bookCover.getGame();
 						if (g.getTitle().toLowerCase().contains(getText().toLowerCase())) {
-							search.add(g);
+							search.add(bookCover);
 						}
 					}
-					resultPanel.show(search.toArray( new Game[search.size()]));
+					resultPanel.show(search.toArray( new BookCover[search.size()]));
 				}
 			} );
 			addFocusListener( new FocusAdapter() {

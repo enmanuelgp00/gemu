@@ -13,6 +13,7 @@ public class Game {
 	Info info;
 	Process process = null;
 	Process zipProcess = null;
+	
 	private Game() {
 		
 	}
@@ -45,6 +46,7 @@ public class Game {
 	private void defaultConstructor() {
 	
 	}
+	
 	
 	//play
 	public void play( OnProcessListener adapter ) {

@@ -35,7 +35,7 @@ public class Info {
 				executables.add( new Executable(f) );
 			}
 		}
-		if (executables.size() == 0 ) {
+		if ( executables.size() == 0 ) {
 			throw new Exception() {
 				@Override
 				public void printStackTrace() {
@@ -93,15 +93,16 @@ public class Info {
 				gameRootPath = testPath;
 			}
 		}
-		
+		int executablesCount = 0;
 		for ( Executable executable : executables ) {
 			if ( executable.getParentFile().getAbsolutePath().equals( gameRootPath ) ) {
 				String path = executable.getAbsolutePath();			
-				info.add( EXECUTABLES, FileNames.relativePath( parent, executable ));			
+				info.add( EXECUTABLES, FileNames.relativePath( parent, executable ));
+				executablesCount++;
 			}
 		}
 		
-		if ( executables.length == 1 ) {
+		if ( executablesCount == 1 ) {
 			info.set( LAUNCHER, FileNames.relativePath( parent, ref ));
 		}
 		

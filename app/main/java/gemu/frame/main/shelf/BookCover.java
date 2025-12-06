@@ -9,7 +9,7 @@ import javax.imageio.*;
 import gemu.common.*;
 import gemu.game.*;
 
-class BookCover extends JPanel {
+public class BookCover extends JPanel {
 	Box boxOnTop;
 	final Dimension standardSize = new Dimension( 110, 140 );
 	int detailWidth = 0;
@@ -17,14 +17,11 @@ class BookCover extends JPanel {
 	boolean isMouseInside = false;
 	BufferedImage bufferedImage = null;
 	Game game;
-	BookCover( Game game ) {
+	public BookCover( Game game ) {
 		super();
 		this.game = game;
+		updateBufferedImage();
 		coverXViewport = game.getCoverXViewport();
-		try {
-			
-			bufferedImage = ImageIO.read( game.getCoverImage());
-		} catch( Exception e ) { }
 		setLayout( new OverlayLayout( this ) );
 		setPreferredSize( standardSize );
 		setBackground( Style.COLOR_SECONDARY.brighter() );
@@ -57,6 +54,18 @@ class BookCover extends JPanel {
 		addMouseMotionListener( expandOnRollover );  
 		addMouseListener( expandOnRollover );
 		
+	}
+	
+	public void updateBufferedImage() { 
+		try {
+			File f = game.getCoverImage();
+			if ( f != null ) {
+				bufferedImage = ImageIO.read( f );
+			}
+		} catch( Exception e ) {
+			e.printStackTrace();
+		}
+	
 	}
 	
 	public Game getGame() {

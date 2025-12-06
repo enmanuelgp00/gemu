@@ -6,11 +6,12 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*; 
 import java.util.*;
-import gemu.game.*;
+import gemu.game.*; 
+import gemu.frame.main.shelf.*;
 
 
 public class ResultPanel extends GemuScrollPane {
-	ArrayList<OnResultElementMouseAdapter> listeners = new ArrayList<>();
+	ArrayList<OnResultComponentMouseAdapter> listeners = new ArrayList<>();
 	JPanel panel;
 	public ResultPanel() {
 		super();
@@ -21,23 +22,23 @@ public class ResultPanel extends GemuScrollPane {
 		
 	}
 	
-	public void addResultElementMouseListener( OnResultElementMouseAdapter listener ) {
+	public void addResultElementMouseListener( OnResultComponentMouseAdapter listener ) {
 		listeners.add( listener );
 	}
 	
-	public void show( Game[] games ) {
+	public void show( BookCover[] bookCovers ) {
 		panel.removeAll();
-		for ( Game g : games) {
-			ResultElement element = new ResultElement(g);
-			element.addMouseListener( new MouseAdapter() {
+		for ( BookCover bookCover : bookCovers ) {
+			ResultComponent rcomponent = new ResultComponent( bookCover );
+			rcomponent.addMouseListener( new MouseAdapter() {
 				@Override
 				public void mousePressed( MouseEvent event ) {
-					for ( OnResultElementMouseAdapter listener : listeners ) {
-						listener.mousePressed( element, event );
+					for ( OnResultComponentMouseAdapter listener : listeners ) {
+						listener.mousePressed( rcomponent, event );
 					}
 				}
 			});
-			panel.add( element );
+			panel.add( rcomponent );
 		}
 		panel.revalidate();
 		panel.repaint();

@@ -8,10 +8,14 @@ public final class ZipFiles {
 	public static final String[] PASSWORDS = findPasswords();
 	private static String[] findPasswords() {
 		ArrayList<String> passwordList = new ArrayList<>();
-		passwordList.add("");
 		try {
 		
 			File passwordFile = new File("./passwords.txt");
+			if ( !passwordFile.exists() ) {
+				System.out.println("passwords.txt not found");
+				passwordList.add("");
+				return passwordList.toArray( new String[ passwordList.size() ] );
+			}
 			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream( passwordFile ), "UTF-8" ));
 			String line;
 			while( ( line = reader.readLine() ) != null ) {
@@ -19,7 +23,10 @@ public final class ZipFiles {
 				passwordList.add( line );
 			}
 			reader.close();
-		} catch( Exception e ) {}
+		} catch( Exception e ) {} 
+		if ( passwordList.size() == 0 ) {
+			passwordList.add("");		
+		}
 		return passwordList.toArray( new String[ passwordList.size() ] );
 	}
 	public static final HashSet<String> EXTENSIONS = new HashSet<>( Arrays.<String>asList(

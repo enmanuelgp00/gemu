@@ -9,7 +9,7 @@ import javax.swing.*;
 import gemu.game.*;
 
 public class Shelf extends GemuScrollPane {
-
+	BookCover[] bookCovers;
 	ArrayList<OnBookCoverMouseAdapter> onBookCoverMouseListeners = new ArrayList<>(); 
 	
 	Shelf( Game[] games ) {
@@ -19,9 +19,12 @@ public class Shelf extends GemuScrollPane {
 		setBorder( BorderFactory.createEmptyBorder( 0, 0, 0, 0 ) ); 
 		setViewportView( content );
 		
-		Thread th = new Thread(()->{			
-			for ( Game game : games ) {
-				BookCover bookCover = new BookCover( game );
+		Thread th = new Thread(()->{
+			bookCovers = new BookCover[ games.length ];
+			for ( int i = 0; i < games.length; i++ ) {
+			
+				bookCovers[i] = new BookCover( games[i] );
+				BookCover bookCover = bookCovers[i];
 				bookCover.addMouseListener( new MouseAdapter(){
 					@Override
 					public void mousePressed( MouseEvent event ) {
@@ -31,7 +34,7 @@ public class Shelf extends GemuScrollPane {
 					}
 				});
 						
-				content.add( bookCover);
+				content.add( bookCover );
 				revalidate();
 				repaint();
 			}
@@ -54,6 +57,10 @@ public class Shelf extends GemuScrollPane {
 		void mousePressed( MouseEvent event, BookCover cover ) { }
 	}
 	
+	
+	public BookCover[] listBookCovers() {
+		return bookCovers;
+	}
 	
 	class Content extends JPanel {
 		Content() {

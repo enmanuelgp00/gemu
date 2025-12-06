@@ -2,7 +2,8 @@ package gemu.frame.main.shelf;
 
 import gemu.common.*;
 import javax.swing.*;
-import java.awt.*;
+import java.awt.*;        
+import java.io.*;
 import java.awt.event.*;  
 import gemu.game.*;
 import gemu.shell.*;
@@ -10,9 +11,10 @@ import gemu.shell.*;
 public class LibraryPanel extends GemuSplitPane {
 	Banner banner;
 	ActionBar actionBar;
+	Shelf shelf;
 	public LibraryPanel( Game[] games ) {                
 		super( JSplitPane.VERTICAL_SPLIT );
-		Shelf shelf = new Shelf( games );
+		shelf = new Shelf( games );
 		actionBar = new ActionBar();
 		banner = new Banner() {
 			@Override
@@ -29,15 +31,17 @@ public class LibraryPanel extends GemuSplitPane {
 				}
 			}
 		};
-		
+		/*
 		if( games.length > 0 ) {
-			setFocusedGame( games[0]);   
+			System.out.println( shelf.listBookCovers().length );
+			setFocusedBookCover( shelf.listBookCovers()[0] );   
 		}
+		*/
 		
 		shelf.addOnBookCoverMouseAdapter( new Shelf.OnBookCoverMouseAdapter() {
 			@Override
 			public void mousePressed( MouseEvent event, BookCover cover ) {
-				setFocusedGame(cover.getGame()); 
+				setFocusedBookCover( cover ); 
 			}
 		});
 		
@@ -53,14 +57,19 @@ public class LibraryPanel extends GemuSplitPane {
 		setDividerSize(0);
 	}
 	
-	public void setFocusedGame( Game game ) {
-		banner.setGame(game);
-		actionBar.setGame(game);		
+	public Shelf getShelf() {
+		return shelf;
+	}
+	
+	public void setFocusedBookCover( BookCover bookCover ) {
+		actionBar.setBookCover( bookCover );	
+		banner.setGame( bookCover.getGame() );	
 	}
 	
 	private class ActionBar extends Box {
 	
-		Game game;
+		BookCover bookCover;
+		
 		GemuButton buttonPlay = new GemuButton("Play", 5, 5 ) {
 			{
 				setVisible( false );
@@ -152,6 +161,42 @@ public class LibraryPanel extends GemuSplitPane {
 					
 				}
 			});
+			buttonScreenshot.addActionListener( new ActionListener() {
+				@Override
+				public void actionPerformed( ActionEvent event ) {
+					Game game = getGame();
+					if ( !game.isRunning() ) {
+						return;
+					}                        
+					try {
+											 
+						long id = game.getProcess().pid();
+						File scriptFile = new File( new File( LibraryPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath() ).getParentFile() + "\\screenshot_script.txt" ); 
+						BufferedReader reader = new BufferedReader( new InputStreamReader ( new FileInputStream( scriptFile ) ));
+						char ch;
+						int code;
+						StringBuilder script = new StringBuilder();
+						script.append("$id = " + id + "\n" );
+						while( ( code = reader.read() ) != -1 ) {
+							ch = (char)code;
+							if ( ch == '"' ) {  
+								script.append( "\\" );							
+							}
+							script.append( ch );
+						}
+						reader.close();
+						Shell.run( new OnProcessListener() {} , game.getDirectory(), "powershell", script.toString() );
+						banner.revalidate();
+						banner.repaint();
+						
+						bookCover.updateBufferedImage();
+						bookCover.revalidate();
+						bookCover.repaint();
+					} catch ( Exception e ) {
+						e.printStackTrace();
+					}
+				}
+			});
 			buttonFiles.addActionListener( new ActionListener() {
 				@Override
 				public void actionPerformed( ActionEvent event )  {
@@ -195,8 +240,9 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonPlay.setRolloverBackground( new Color( 237, 2, 36 ) );
 		}
 		
-		protected void setGame( Game game ) {
-			this.game = game;
+		protected void setBookCover( BookCover bookCover ) {
+			this.bookCover = bookCover;
+			Game game = bookCover.getGame();
 			if ( game != null ) {
 			
 				buttonPlay.setVisible( true );
@@ -255,7 +301,7 @@ public class LibraryPanel extends GemuSplitPane {
 		
 		
 		protected Game getGame() {
-			return this.game;
+			return bookCover.getGame();
 		}
 		
 		MouseAdapter draggDivider = new MouseAdapter() {

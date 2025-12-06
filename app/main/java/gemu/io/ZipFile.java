@@ -92,7 +92,7 @@ public class ZipFile extends File {
 				unzip( listener, dir, passwordIterator );
 				
 			}
-		}, null, "7z",  "-o" + dir.getAbsolutePath() ,"-bsp1", "-p" + passwordIterator.next() , "x", getRootZipFile().getAbsolutePath() );
+		}, null, "7z",  "-o" + dir.getAbsolutePath() ,"-bsp1", "-y", "-p" + passwordIterator.next() , "x", getRootZipFile().getAbsolutePath() );
 	}
 	
 	@Override
