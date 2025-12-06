@@ -175,8 +175,10 @@ public class LibraryPanel extends GemuSplitPane {
 						BufferedReader reader = new BufferedReader( new InputStreamReader ( new FileInputStream( scriptFile ) ));
 						char ch;
 						int code;
+						String screenshotFileName = "main_screeshot.jpg";
 						StringBuilder script = new StringBuilder();
-						script.append("$id = " + id + "\n" );
+						script.append("$id = " + id + "\n" );            
+						script.append("$screenshotFileName = '" + screenshotFileName + "'\n" );
 						while( ( code = reader.read() ) != -1 ) {
 							ch = (char)code;
 							if ( ch == '"' ) {  
@@ -185,13 +187,23 @@ public class LibraryPanel extends GemuSplitPane {
 							script.append( ch );
 						}
 						reader.close();
-						Shell.run( new OnProcessListener() {} , game.getDirectory(), "powershell", script.toString() );
-						banner.revalidate();
-						banner.repaint();
-						
-						bookCover.updateBufferedImage();
-						bookCover.revalidate();
-						bookCover.repaint();
+						Shell.run( new OnProcessListener() {
+							@Override
+							public void processFinished( Process p, int exitCode ) {
+								if ( exitCode == 0 ) {                             
+									game.setCoverImage( new File( game.likeAbsolutePath( screenshotFileName ) ) );
+									System.out.println("A");
+									banner.updateBufferedImage();
+									banner.revalidate();
+									banner.repaint();
+									
+									bookCover.updateBufferedImage();
+									bookCover.revalidate();
+									bookCover.repaint();
+								
+								}
+							}
+						} , game.getDirectory(), "powershell", script.toString() );
 					} catch ( Exception e ) {
 						e.printStackTrace();
 					}

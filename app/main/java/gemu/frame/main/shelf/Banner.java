@@ -92,10 +92,8 @@ public class Banner extends JPanel {
 	public Game getGame() {
 		return game;
 	}
-	public void setGame( Game game ) {
-		this.game = game;
-		titleLabel.setText(  game.getTitle() );
-		requestFocusInWindow();
+	
+	public void updateBufferedImage() {
 		try {
 			File cover = game.getCoverImage();
 			if ( cover != null ) {
@@ -106,8 +104,15 @@ public class Banner extends JPanel {
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}
-			revalidate();
-			repaint();
+	}
+	
+	public void setGame( Game game ) {
+		this.game = game;
+		titleLabel.setText(  game.getTitle() );
+		requestFocusInWindow();                   
+		updateBufferedImage();
+		revalidate();
+		repaint();
 	}
 	
 	@Override
