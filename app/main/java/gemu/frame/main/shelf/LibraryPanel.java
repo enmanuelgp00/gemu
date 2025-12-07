@@ -6,7 +6,8 @@ import java.awt.*;
 import java.io.*;
 import java.awt.event.*;  
 import gemu.game.*;
-import gemu.shell.*;
+import gemu.shell.*;  
+import gemu.util.*;
 
 public class LibraryPanel extends GemuSplitPane {
 	Banner banner;
@@ -72,16 +73,22 @@ public class LibraryPanel extends GemuSplitPane {
 		
 		GemuButton buttonPlay = new GemuButton("Play", 5, 5 ) {
 			{
-				setVisible( false );
+				setEnabled( false );
 				Insets insets = getInsets();
 				setBorder( BorderFactory.createEmptyBorder( insets.top, 30, insets.bottom, 30 ));
 			}
 		};
 		
 		GemuButton buttonScreenshot = new GemuButton("Screenshot");    
-		GemuButton buttonZip = new GemuButton("7zip");
+		GemuButton buttonZip = new GemuButton("7zip", 5, 5 );
 		GemuButton buttonFiles = new GemuButton("Files");
-		GemuButton buttonDelete = new GemuButton("Delete");
+		GemuButton buttonDelete = new GemuButton("Delete") {
+			{
+				setBackgroundColor( Style.COLOR_BACKGROUND );
+				setPressedBackground( new Color( 227, 2, 26 ) );
+				setRolloverBackground( new Color( 237, 2, 36 ) );
+			}
+		};
 		
 		GemuButton[] buttons = new GemuButton[] {
 			buttonScreenshot,
@@ -89,6 +96,9 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonFiles, 
 			buttonDelete
 		};
+		Label playingTimeLabel = new Label("");
+		Label lastTimePlayedLabel = new Label("");
+		
 		
 		protected ActionBar() {
 			super(BoxLayout.X_AXIS );			
@@ -100,7 +110,18 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonScreenshot.addActionListener( screenshotAction );
 			buttonFiles.addActionListener( exploreFilesAction );
 			
-			add( buttonPlay );   
+			add( buttonPlay );
+			add( new JPanel( new GridLayout( 2, 2, 1, 1 ) ) {
+				{                       
+					setBackground( null );
+					setOpaque( false );
+					setBorder( BorderFactory.createEmptyBorder( 0, 7, 0, 0 ) );
+					add( new Label("Playing Time"));                                         
+					add( new Label("Last Time Played"));
+					add( playingTimeLabel );
+					add( lastTimePlayedLabel );
+				}
+			});
 			add( Box.createHorizontalGlue());
 			
 			for ( GemuButton button : buttons ) {                                                           
@@ -111,19 +132,38 @@ public class LibraryPanel extends GemuSplitPane {
 			addMouseMotionListener( draggDivider );
 		} 
 		
+		class Label extends JLabel {
+			Label( String name ) {
+				super( name );
+				setFont( Style.FONT_MONO_SPACE );
+				setForeground( Style.COLOR_FOREGROUND );
+			}
+		}
+		
 		protected void setButtonZipUnzipStyle() { 
-			buttonZip.setVisible( true );  
-			buttonZip.setText("Unzip");
+			buttonZip.setEnabled( true );  
+			buttonZip.setText("Unzip");      
+			buttonZip.setBackgroundColor( new Color( 0, 160, 0 ) );
+			buttonZip.setPressedBackground( new Color( 0, 150, 0 ) );
+			buttonZip.setRolloverBackground( new Color( 0, 180, 0 ) );
 		}
 		
 		protected void setButtonZipStandbyStyle() {
-			buttonZip.setVisible( true );  
-			buttonZip.setText("7zip");
+			buttonZip.setEnabled( true );  
+			buttonZip.setText("ZipUp");
+   
+			buttonZip.setBackgroundColor( Style.COLOR_BACKGROUND );
+			buttonZip.setPressedBackground( new Color( 223, 187, 14 ) );
+			buttonZip.setRolloverBackground( new Color(  211, 173, 10 ) );
 		
 		}
-		
+		protected void setbuttonPlayDisabledStyle() {   
+			buttonPlay.setEnabled( false ); 
+			buttonPlay.setText("Play");
+			buttonPlay.setBackgroundColor( Style.COLOR_BACKGROUND );
+		}
 		protected void setButtonPlayReadyStyle() { 
-			buttonPlay.setVisible( true );  
+			buttonPlay.setEnabled( true );  
 			buttonPlay.setText("Play");
 			buttonPlay.setBackgroundColor( new Color( 0, 160, 0 ) );
 			buttonPlay.setPressedBackground( new Color( 0, 150, 0 ) );
@@ -131,21 +171,27 @@ public class LibraryPanel extends GemuSplitPane {
 		}
 		
 		protected void setButtonPlayStopStyle() { 			
-			buttonPlay.setVisible( true ); 
+			buttonPlay.setEnabled( true ); 
 			buttonPlay.setText("Stop");
 			buttonPlay.setBackgroundColor( Style.COLOR_BACKGROUND );
 			buttonPlay.setPressedBackground( new Color( 227, 2, 26 ) );
 			buttonPlay.setRolloverBackground( new Color( 237, 2, 36 ) );
 		}
 		
+		protected void updateGameInfoLabels() {   
+			playingTimeLabel.setText( HumanVerbose.hours( getGame().getPlayingTime() ) );
+			lastTimePlayedLabel.setText( HumanVerbose.date( getGame().getLastTimePlayed() ) );
+		}
+		
 		protected void setBookCover( BookCover bookCover ) {
 			this.bookCover = bookCover;
 			Game game = bookCover.getGame();
+			updateGameInfoLabels();
 			if ( game != null ) {
 			
-				buttonPlay.setVisible( true );
+				buttonPlay.setEnabled( true );
 				for ( GemuButton button : buttons ) {
-					button.setVisible( true );
+					button.setEnabled( true );
 				}
 				if ( game.isInZipProcess() ) {
 					setInZipProcessStyle();
@@ -165,40 +211,44 @@ public class LibraryPanel extends GemuSplitPane {
 		}
 		
 		protected void setStandbyStyle() {
-			buttonScreenshot.setVisible( false );
+			buttonScreenshot.setEnabled( false );
 			setButtonPlayReadyStyle(); 
 			setButtonZipStandbyStyle();
-			buttonFiles.setVisible( true );
-			buttonDelete.setVisible( true );
+			buttonFiles.setEnabled( true );
+			buttonDelete.setEnabled( true );
 		}
 		
 		protected void setRunningStyle() {  
-			buttonScreenshot.setVisible( true );
+			buttonScreenshot.setEnabled( true );
 			setButtonPlayStopStyle();
 			setButtonZipStandbyStyle();
+			buttonZip.setEnabled( false );
+			buttonFiles.setEnabled( true );
+			buttonDelete.setEnabled( false );
 		}
 		
 		protected void setInZipStyle() {
-			buttonPlay.setVisible( false );
+			setbuttonPlayDisabledStyle();
 			setButtonZipUnzipStyle(); 
-			buttonScreenshot.setVisible( false );
-			buttonFiles.setVisible( true );
-			buttonDelete.setVisible( true );
-		}
-		
-		protected void setDeletedStyle() {
-			buttonPlay.setVisible( false );
-			for ( GemuButton button : buttons ) {
-				button.setVisible( false );
-			}
-		};
+			buttonScreenshot.setEnabled( false );
+			buttonFiles.setEnabled( true );
+			buttonDelete.setEnabled( true );
+		} 
 		
 		protected void setInZipProcessStyle() {
-			buttonPlay.setVisible( false );
+			buttonPlay.setEnabled( false );
 			for ( GemuButton button : buttons ) {
-				button.setVisible( false );
+				button.setEnabled( false );
 			}
 		};
+		
+		protected void setDeletedStyle() {
+			buttonPlay.setEnabled( false );
+			for ( GemuButton button : buttons ) {
+				button.setEnabled( false );
+			}
+		};
+		
 		
 		
 		
@@ -221,6 +271,7 @@ public class LibraryPanel extends GemuSplitPane {
 						@Override
 						public void processFinished( Process process, int exitCode ) {
 							if ( process == getGame().getProcess() ) {
+								updateGameInfoLabels();
 								setStandbyStyle();
 							}
 						}

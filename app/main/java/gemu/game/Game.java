@@ -61,8 +61,8 @@ public class Game {
 				} 
 				@Override
 				public void processFinished( Process process, int exitCode ) { 
+					setPlayingTime( getPlayingTime() + System.currentTimeMillis() - getLastTimePlayed() ); 
 					adapter.processFinished( process, exitCode );
-					setPlayingTime( getPlayingTime() + System.currentTimeMillis() - getLastTimePlayed() );
 					setProcess( null );     
 					if ( getCoverImage() == null ) {
 						findCoverImage();		
