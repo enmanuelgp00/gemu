@@ -38,7 +38,6 @@ public class Game {
 		if ( game.getCoverImage() == null ) {
 			game.findCoverImage();		
 		}
-		game.checkLength();
 		return game;
 	}
 	
@@ -153,9 +152,11 @@ public class Game {
 	//length
 	private void checkLength() {
 		if ( isStandby() ) {
-			setLength( getCurrentLength() );
+			setLength( getDirectoryLength( getDirectory() ) );
 		} else if ( isInZip() ) {
-			setZipLength( getCurrentLength() );
+			try {
+				setZipLength( ZipFiles.get( getExecutables()[0] ).getRootZipFile().length() );
+			} catch ( Exception e ) {}
 		}
 	}
 	
@@ -185,13 +186,17 @@ public class Game {
 	}	
 	
 	public Long getCurrentLength() {
+		return getDirectoryLength( getDirectory() );
+	}
+	
+	private Long getDirectoryLength( File file ) {
 		long length = 0;
-		File[] files = getDirectory().listFiles();
-		if ( files.length <= 1 ) {
-			return null;
-		}
-		for ( File f : files ) {
-			length += f.length();
+		for ( File f : file.listFiles() ) {
+			if ( f.isDirectory() ) {
+				length += getDirectoryLength(f);
+			} else {
+				length += f.length();
+			}
 		}
 		return length;
 	}

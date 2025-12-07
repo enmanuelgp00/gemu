@@ -5,6 +5,14 @@ public final class HumanVerbose {
 		if (l == null ) {
 			return "??kb";
 		}
-		return "100gb";
+		String[] names = new String[]{"b ", "kb", "mb", "gb", "tb"};
+		int scale = 1000;
+		int shiftCount = 0;
+		double value = (double)l;
+		while( value > scale ) {
+			value /= scale;
+			shiftCount++;
+		}
+		return String.format("%.1f%s", value, names[shiftCount]);
 	}
 }
