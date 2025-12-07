@@ -25,7 +25,7 @@ public class SearchPanel extends JPanel {
 		
 	}
 	
-	public void addResultElementMouseListener( OnResultComponentMouseAdapter listener ) {
-		resultPanel.addResultElementMouseListener( listener );
+	public void addResultComponentMouseListener( OnResultComponentMouseAdapter listener ) {
+		resultPanel.addResultComponentMouseListener( listener );
 	}
 }

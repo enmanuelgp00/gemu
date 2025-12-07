@@ -22,7 +22,7 @@ public class ResultPanel extends GemuScrollPane {
 		
 	}
 	
-	public void addResultElementMouseListener( OnResultComponentMouseAdapter listener ) {
+	public void addResultComponentMouseListener( OnResultComponentMouseAdapter listener ) {
 		listeners.add( listener );
 	}
 	

@@ -20,7 +20,7 @@ public class MainFrame extends JFrame {
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
 		LibraryPanel libraryPanel = new LibraryPanel( games );
 		SearchPanel searchPanel = new SearchPanel( libraryPanel.getShelf() );
-		searchPanel.addResultElementMouseListener( new OnResultComponentMouseAdapter() {
+		searchPanel.addResultComponentMouseListener( new OnResultComponentMouseAdapter() {
 			@Override
 			public void mousePressed( ResultComponent element, MouseEvent event ) {
 				libraryPanel.setFocusedBookCover( element.getBookCover() );

@@ -38,21 +38,54 @@ public class InputPanel extends Box {
 			setBorder( BorderFactory.createEmptyBorder( 0, 7, 0, 7 ));
 			placeholderColor = getBackground();
 			addKeyListener( new KeyAdapter() {
+				boolean wasJustReleased = false;
+				boolean isThreadRunning = false;  
+				
 				@Override
 				public void keyReleased( KeyEvent event ) {
-					if ( getText().isEmpty() ) {
-						resultPanel.clear();
+					wasJustReleased = true;
+					if ( isThreadRunning ) {
 						return;
-					}
-					ArrayList<BookCover> search = new ArrayList<>();
-					Game g;
-					for( BookCover bookCover : bookCovers ) {
-						g = bookCover.getGame();
-						if (g.getTitle().toLowerCase().contains(getText().toLowerCase())) {
-							search.add(bookCover);
+					} 
+					Thread th = new Thread(()->{
+						isThreadRunning = true;
+						try {
+							while( wasJustReleased ) {
+								System.out.println("was just released");
+								wasJustReleased = false;
+								try {                     
+									Thread.sleep( 300 );
+								} catch ( Exception e ) {}
+							}
+							if ( getText().isEmpty() ) {
+								resultPanel.clear();
+								return;
+							}
+							System.out.println("Searching game");
+							ArrayList<BookCover> search = new ArrayList<>();
+							Game g;
+							for( BookCover bookCover : bookCovers ) {
+								if ( bookCover != null ) {
+									g = bookCover.getGame();
+									if (g.getTitle().toLowerCase().contains(getText().toLowerCase())) {
+										search.add(bookCover);
+									}
+								}
+							}
+							resultPanel.show(search.toArray( new BookCover[search.size()]));
+						
+						} catch( Exception e ) {
+						   e.printStackTrace();
+						} finally {               
+							System.out.println("Thread stoped");
+							isThreadRunning = false;
+						
 						}
-					}
-					resultPanel.show(search.toArray( new BookCover[search.size()]));
+					});
+					th.start();
+					
+					
+					
 				}
 			} );
 			addFocusListener( new FocusAdapter() {

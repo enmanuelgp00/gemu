@@ -227,11 +227,13 @@ public class LibraryPanel extends GemuSplitPane {
 			addMouseMotionListener( draggDivider );
 		}
 		
-		protected void setButtonZipUnzipStyle() {
+		protected void setButtonZipUnzipStyle() { 
+			buttonZip.setVisible( true );  
 			buttonZip.setText("Unzip");
 		}
 		
 		protected void setButtonZipStandbyStyle() {
+			buttonZip.setVisible( true );  
 			buttonZip.setText("7zip");
 		
 		}
@@ -282,6 +284,8 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonScreenshot.setVisible( false );
 			setButtonPlayReadyStyle(); 
 			setButtonZipStandbyStyle();
+			buttonFiles.setVisible( true );
+			buttonDelete.setVisible( true );
 		}
 		
 		protected void setRunningStyle() {  
