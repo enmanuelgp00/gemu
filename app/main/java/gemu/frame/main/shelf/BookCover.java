@@ -54,8 +54,18 @@ public class BookCover extends JPanel {
 			{
 				add( new Box( BoxLayout.Y_AXIS ) {
 					{
-						Tag lengthTag =  new Tag( HumanVerbose.bytes( game.getLength() ), Color.WHITE.darker(), Color.BLACK );
-						Tag zipLengthTag = new Tag( HumanVerbose.bytes( game.getZipLength() ), Style.COLOR_BACKGROUND, Color.WHITE );
+						int alpha = 200;
+						Tag lengthTag =  new Tag(
+							HumanVerbose.bytes( game.getLength(), HumanVerbose.DECIMAL_BYTES ),
+							new Color( 200, 200, 200, alpha ),
+							Color.BLACK );
+							
+						Color dftBackground = Style.COLOR_BACKGROUND;	
+						Tag zipLengthTag = new Tag(
+							HumanVerbose.bytes( game.getZipLength(), HumanVerbose.DECIMAL_BYTES ),
+							new Color( dftBackground.getRed(), dftBackground.getGreen(), dftBackground.getBlue(), alpha ),
+							Color.WHITE );
+							
 						setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1 ) );
 						add( lengthTag );
 						add( Box.createRigidArea( new Dimension( 2, 2 )));
@@ -84,6 +94,7 @@ public class BookCover extends JPanel {
 			add( Box.createHorizontalGlue());
 			add( new JLabel( name ) { 
 				{
+					setFont( Style.FONT_MONO_SPACE );
 					setForeground( foreground );
 				}
 			});

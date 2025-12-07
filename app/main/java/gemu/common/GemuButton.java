@@ -32,7 +32,7 @@ public class GemuButton extends JButton {
 	
 	private void a() {
 		setForeground( foreground );
-		setFont( Style.FONT_BUTTON );
+		setFont( Style.FONT_MONO_SPACE );
 		setContentAreaFilled( false );
 		setBorderPainted( false );
 		setFocusPainted( false );

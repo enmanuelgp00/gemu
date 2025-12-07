@@ -8,6 +8,6 @@ public final class Style {
 	public static Color COLOR_SECONDARY = COLOR_BACKGROUND.brighter();
 	public static Font FONT_TITLE_BAR = new Font("Consolas", Font.PLAIN, 13 );  
 	public static Font FONT_LABEL = new Font("Arial", Font.PLAIN, 14 );        
-	public static Font FONT_BUTTON = new Font("Consolas", Font.PLAIN, 14 );     
+	public static Font FONT_MONO_SPACE = new Font("Consolas", Font.PLAIN, 14 );     
 	public static Font FONT_TAGS = new Font("Arial", Font.PLAIN, 12 );
 }
