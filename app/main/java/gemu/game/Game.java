@@ -20,12 +20,14 @@ public class Game {
 	
 	public Game( Executable... executables) throws Exception {
 		info = Info.createInfo( executables );
+		checkLength();
 	}
 													  
 		
 	public static Game inZip( ZipFile f ) throws Exception {
 		Game game = new Game();
-		game.info = Info.createInfo(f); 
+		game.info = Info.createInfo(f);
+		game.checkLength(); 
 		return game;
 		
 	}               
@@ -36,24 +38,21 @@ public class Game {
 		if ( game.getCoverImage() == null ) {
 			game.findCoverImage();		
 		}
+		game.checkLength();
 		return game;
 	}
 	
 	public File getInfoFile() {
 		return info.getFile();
-	}
-	
-	private void defaultConstructor() {
-	
-	}
-	
+	}	
 	
 	//play
 	public void play( OnProcessListener adapter ) {
 		Thread th = new Thread(() -> { 
 			Shell.run( new OnProcessListener() {
 				@Override
-				public void processStarted( Process process ){
+				public void processStarted( Process process ){   
+					setLastTimePlayed( System.currentTimeMillis() );
 					setProcess( process );
 					adapter.processStarted( process );
 				}
@@ -62,12 +61,13 @@ public class Game {
 					adapter.streamLineRead( process, line );
 				} 
 				@Override
-				public void processFinished( Process process, int exitCode ) {                  
-					adapter.processFinished( process, exitCode );
+				public void processFinished( Process process, int exitCode ) {
+					setPlayingTime( getPlayingTime() + System.currentTimeMillis() - getLastTimePlayed() );
 					setProcess( null );     
 					if ( getCoverImage() == null ) {
 						findCoverImage();		
-					}                   
+					}
+					adapter.processFinished( process, exitCode );					
 				}
 			}, getDirectory(), getLauncher().getAbsolutePath() );		
 		});
@@ -84,8 +84,32 @@ public class Game {
 		}
 	}
 	
-	//states
+	//playing time
+	private void setPlayingTime( long l ) {
+		info.set( Info.PLAYING_TIME, String.valueOf(l) );
+		info.commit();
+	}
 	
+	public long getPlayingTime() {
+		try {
+			return Long.parseLong(  info.get( Info.PLAYING_TIME ) );
+		} catch( Exception e ) {}
+		return 0;
+	}
+	
+	private void setLastTimePlayed( long l ) {
+		info.set( Info.LAST_TIME_PLAYED, String.valueOf(l) );
+		info.commit();
+	}
+	
+	public Long getLastTimePlayed() {
+		try {                               
+			return Long.parseLong(  info.get( Info.LAST_TIME_PLAYED ) );
+		} catch( Exception e ) { }
+		return null;
+	}
+	
+	//states
 	public void setZipProcess( Process p ) {
 		zipProcess = p;
 	}
@@ -103,7 +127,7 @@ public class Game {
 	}
 	
 	public boolean isInZip() {
-		return ZipFiles.isZipFile( getLauncher() ) && !isInZipProcess() ;
+		return ZipFiles.isZipFile( getExecutables()[0] ) && !isInZipProcess() ;
 	}
 	
 	public boolean isDeleted() {
@@ -126,6 +150,51 @@ public class Game {
 		return process;
 	}
 	
+	//length
+	private void checkLength() {
+		if ( isStandby() ) {
+			setLength( getCurrentLength() );
+		} else if ( isInZip() ) {
+			setZipLength( getCurrentLength() );
+		}
+	}
+	
+	private void setLength( long l ) { 
+		info.set( Info.LENGTH, String.valueOf(l) );
+		info.commit();
+	}
+	
+	private void setZipLength( long l ) {
+		info.set( Info.ZIP_LENGTH, String.valueOf(l) );
+		info.commit();
+	}
+	
+	public Long getLength() {
+		try {
+			return Long.parseLong( info.get( Info.LENGTH ) );
+		} catch( Exception e ) {}
+		return null;
+	}
+	
+	public Long getZipLength() {
+		try {
+			return Long.parseLong( info.get( Info.ZIP_LENGTH ) );
+		} catch( Exception e ) {}
+		return null;
+	
+	}	
+	
+	public Long getCurrentLength() {
+		long length = 0;
+		File[] files = getDirectory().listFiles();
+		if ( files.length <= 1 ) {
+			return null;
+		}
+		for ( File f : files ) {
+			length += f.length();
+		}
+		return length;
+	}
 	
 	//title
 	public void setTitle( String title ) {
@@ -212,47 +281,50 @@ public class Game {
 					}
 					@Override
 					public void processFinished( Process p, int exitCode, File dir ) {
-						//info most be next to launcher
-						if ( !getDirectory().getAbsolutePath().equals( dir.getAbsolutePath() ) ) {
-							info.setFile( new File( dir + "\\" + info.file.getName() ));						
-							File oldGameRootDir = new File( likeAbsolutePath( FileNames.relativePath( rootZipFile, zipLauncher ) ) ).getParentFile();
-							
-							for ( File f : oldGameRootDir.listFiles() ) {
-								f.renameTo( new File( dir + "\\" + f.getName() ) );
+						if ( exitCode == 0 ) {
+							if ( !getDirectory().getAbsolutePath().equals( dir.getAbsolutePath() ) ) {
+								info.setFile( new File( dir + "\\" + info.file.getName() ));						
+								File oldGameRootDir = new File( likeAbsolutePath( FileNames.relativePath( rootZipFile, zipLauncher ) ) ).getParentFile();
+								
+								for ( File f : oldGameRootDir.listFiles() ) {
+									f.renameTo( new File( dir + "\\" + f.getName() ) );
+								}
+								
+								if ( oldGameRootDir.listFiles().length == 0 ) {
+									if ( oldGameRootDir.delete() ) {
+										System.out.println("Could not delete old root game : " + oldGameRootDir );
+									}
+								}
+													
 							}
 							
-							if ( oldGameRootDir.listFiles().length == 0 ) {
-								if ( oldGameRootDir.delete() ) {
-									System.out.println("Could not delete old root game : " + oldGameRootDir );
-								}
+							Executable[] executables = getExecutables();
+							info.clear( Info.EXECUTABLES );
+							for ( Executable executable : executables ) {
+								info.add( Info.EXECUTABLES, executable.getName() );
+								if ( executable.getName().equals( zipLauncher.getName()) ) {
+									info.set( Info.LAUNCHER, executable.getName() );							
+								} 
 							}
-												
+							
+							info.commit();
+							checkLength();
+							
+							if ( getCoverImage() == null ) {
+								findCoverImage();		
+							}
+							
+							if ( !rootZipFile.delete() ) {
+								throw new RuntimeException() {
+									@Override
+									public void printStackTrace() {
+										System.out.println("Could not delete " + rootZipFile + " after extraction ");
+										super.printStackTrace();
+									}
+								};
+							};  
 						}
 						
-						Executable[] executables = getExecutables();
-						info.clear( Info.EXECUTABLES );
-						for ( Executable executable : executables ) {
-							info.add( Info.EXECUTABLES, executable.getName() );
-							if ( executable.getName().equals( zipLauncher.getName()) ) {
-								info.set( Info.LAUNCHER, executable.getName() );							
-							} 
-						}
-						
-						info.commit();
-												
-						if ( getCoverImage() == null ) {
-							findCoverImage();		
-						}
-						
-						if ( !rootZipFile.delete() ) {
-							throw new RuntimeException() {
-								@Override
-								public void printStackTrace() {
-									System.out.println("Could not delete " + rootZipFile + " after extraction ");
-									super.printStackTrace();
-								}
-							};
-						};
 						
 						setZipProcess( null );
 						listener.processFinished( p, exitCode);
@@ -296,8 +368,10 @@ public class Game {
 						if ( !infoFileBaseName.equals( outfBaseName ) ) {
 							info.setFile( new File( getDirectory() + "\\" + outfBaseName + Info.FILE_EXTENSION ) );
 						}
-						setZipProcess( null );
+						checkLength();
 					} 
+					
+					setZipProcess( null );
 					listener.processFinished( p, exitCode );
 				}
 			

@@ -182,6 +182,8 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonPlay.setVisible( false );
 			setButtonZipUnzipStyle(); 
 			buttonScreenshot.setVisible( false );
+			buttonFiles.setVisible( true );
+			buttonDelete.setVisible( true );
 		}
 		
 		protected void setDeletedStyle() {
