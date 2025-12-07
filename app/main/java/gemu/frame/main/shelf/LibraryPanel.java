@@ -78,7 +78,6 @@ public class LibraryPanel extends GemuSplitPane {
 			}
 		};
 		
-		
 		GemuButton buttonScreenshot = new GemuButton("Screenshot");    
 		GemuButton buttonZip = new GemuButton("7zip");
 		GemuButton buttonFiles = new GemuButton("Files");
@@ -96,125 +95,10 @@ public class LibraryPanel extends GemuSplitPane {
 			 
 			setBorder( BorderFactory.createEmptyBorder( 3, 3, 3, 3 ));
 			setDeletedStyle();
-			buttonPlay.addActionListener( new ActionListener() {
-				@Override
-				public void actionPerformed( ActionEvent event ) {
-					if ( !getGame().isRunning() ) {				
-						getGame().play( new OnProcessListener() {
-							@Override
-							public void processStarted( Process process ) {
-								if ( process == getGame().getProcess() ) {
-									setRunningStyle();
-								}
-							}
-							@Override
-							public void processFinished( Process process, int exitCode ) {
-								if ( process == getGame().getProcess() ) {
-									setStandbyStyle();
-								}
-							}
-						});
-					} else {
-						getGame().stop();
-					}	
-				}
-			} );
-			buttonZip.addActionListener( new ActionListener() {
-				@Override
-				public void actionPerformed( ActionEvent event ) {
-					Game game = getGame();
-					Thread th = new Thread(()->{
-						if ( game.isInZip() ) {
-							game.unzip( new OnProcessListener() { @Override
-								public void processStarted( Process p ) {
-									setInZipProcessStyle();
-								}
-								@Override
-								public void processFinished( Process p, int exitCode ) {
-									if ( exitCode == 0 ) {
-										if ( !game.isInZip() ) {
-											setStandbyStyle();
-										}
-									}
-								}
-							});
-						} else if ( !game.isDeleted() ) {
-							System.out.println("Tring to pack");
-							game.pack( new OnProcessListener() {
-								@Override
-								public void processStarted( Process p ) {
-									setInZipProcessStyle();
-								}
-								@Override
-								public void processFinished( Process p, int exitCode ) {
-									if ( exitCode == 0 ) {
-										if ( game.isInZip() ) {
-											setInZipStyle();
-										}
-									}
-								}
-							} );
-						}
-						
-					});
-					th.start();
-					
-				}
-			});
-			buttonScreenshot.addActionListener( new ActionListener() {
-				@Override
-				public void actionPerformed( ActionEvent event ) {
-					Game game = getGame();
-					if ( !game.isRunning() ) {
-						return;
-					}                        
-					try {
-											 
-						long id = game.getProcess().pid();
-						File scriptFile = new File( new File( LibraryPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath() ).getParentFile() + "\\screenshot_script.txt" ); 
-						BufferedReader reader = new BufferedReader( new InputStreamReader ( new FileInputStream( scriptFile ) ));
-						char ch;
-						int code;
-						String screenshotFileName = "main_screeshot.jpg";
-						StringBuilder script = new StringBuilder();
-						script.append("$id = " + id + "\n" );            
-						script.append("$screenshotFileName = '" + screenshotFileName + "'\n" );
-						while( ( code = reader.read() ) != -1 ) {
-							ch = (char)code;
-							if ( ch == '"' ) {  
-								script.append( "\\" );							
-							}
-							script.append( ch );
-						}
-						reader.close();
-						Shell.run( new OnProcessListener() {
-							@Override
-							public void processFinished( Process p, int exitCode ) {
-								if ( exitCode == 0 ) {                             
-									game.setCoverImage( new File( game.likeAbsolutePath( screenshotFileName ) ) );
-									System.out.println("A");
-									banner.updateBufferedImage();
-									banner.revalidate();
-									banner.repaint();
-									
-									bookCover.updateBufferedImage();
-									bookCover.revalidate();
-									bookCover.repaint();
-								
-								}
-							}
-						} , game.getDirectory(), "powershell", script.toString() );
-					} catch ( Exception e ) {
-						e.printStackTrace();
-					}
-				}
-			});
-			buttonFiles.addActionListener( new ActionListener() {
-				@Override
-				public void actionPerformed( ActionEvent event )  {
-					getGame().openDirectory();	
-				}
-			});
+			buttonPlay.addActionListener( playAction );
+			buttonZip.addActionListener( zipAction );
+			buttonScreenshot.addActionListener( screenshotAction );
+			buttonFiles.addActionListener( exploreFilesAction );
 			
 			add( buttonPlay );   
 			add( Box.createHorizontalGlue());
@@ -225,7 +109,7 @@ public class LibraryPanel extends GemuSplitPane {
 			
 			addMouseListener( draggDivider );   
 			addMouseMotionListener( draggDivider );
-		}
+		} 
 		
 		protected void setButtonZipUnzipStyle() { 
 			buttonZip.setVisible( true );  
@@ -319,6 +203,131 @@ public class LibraryPanel extends GemuSplitPane {
 		protected Game getGame() {
 			return bookCover.getGame();
 		}
+		//actionlisteners
+		
+		protected ActionListener playAction = new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent event ) {
+				if ( !getGame().isRunning() ) {				
+					getGame().play( new OnProcessListener() {
+						@Override
+						public void processStarted( Process process ) {
+							if ( process == getGame().getProcess() ) {
+								setRunningStyle();
+							}
+						}
+						@Override
+						public void processFinished( Process process, int exitCode ) {
+							if ( process == getGame().getProcess() ) {
+								setStandbyStyle();
+							}
+						}
+					});
+				} else {
+					getGame().stop();
+				}	
+			}
+		};
+		
+		protected ActionListener zipAction = new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent event ) {
+				Game game = getGame();
+				Thread th = new Thread(()->{
+					if ( game.isInZip() ) {
+						game.unzip( new OnProcessListener() { @Override
+							public void processStarted( Process p ) {
+								setInZipProcessStyle();
+							}
+							@Override
+							public void processFinished( Process p, int exitCode ) {
+								if ( exitCode == 0 ) {
+									if ( !game.isInZip() ) {
+										setStandbyStyle();
+									}
+								}
+							}
+						});
+					} else if ( !game.isDeleted() ) {
+						System.out.println("Tring to pack");
+						game.pack( new OnProcessListener() {
+							@Override
+							public void processStarted( Process p ) {
+								setInZipProcessStyle();
+							}
+							@Override
+							public void processFinished( Process p, int exitCode ) {
+								if ( exitCode == 0 ) {
+									if ( game.isInZip() ) {
+										setInZipStyle();
+									}
+								}
+							}
+						} );
+					}
+					
+				});
+				th.start();
+				
+			}
+		};
+			
+		
+		protected ActionListener screenshotAction = new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent event ) {
+				Game game = getGame();
+				if ( !game.isRunning() ) {
+					return;
+				}                        
+				try {
+										 
+					long id = game.getProcess().pid();
+					File scriptFile = new File( new File( LibraryPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath() ).getParentFile() + "\\screenshot_script.txt" ); 
+					BufferedReader reader = new BufferedReader( new InputStreamReader ( new FileInputStream( scriptFile ) ));
+					char ch;
+					int code;
+					String screenshotFileName = "main_screeshot.jpg";
+					StringBuilder script = new StringBuilder();
+					script.append("$id = " + id + "\n" );            
+					script.append("$screenshotFileName = '" + screenshotFileName + "'\n" );
+					while( ( code = reader.read() ) != -1 ) {
+						ch = (char)code;
+						if ( ch == '"' ) {  
+							script.append( "\\" );							
+						}
+						script.append( ch );
+					}
+					reader.close();
+					Shell.run( new OnProcessListener() {
+						@Override
+						public void processFinished( Process p, int exitCode ) {
+							if ( exitCode == 0 ) {                             
+								game.setCoverImage( new File( game.likeAbsolutePath( screenshotFileName ) ) );
+								System.out.println("A");
+								banner.updateBufferedImage();
+								banner.revalidate();
+								banner.repaint();
+								
+								bookCover.updateBufferedImage();
+								bookCover.revalidate();
+								bookCover.repaint();
+							
+							}
+						}
+					} , game.getDirectory(), "powershell", script.toString() );
+				} catch ( Exception e ) {
+					e.printStackTrace();
+				}
+			}
+		};
+		
+		protected ActionListener exploreFilesAction = new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent event )  {
+				getGame().openDirectory();	
+			}
+		}; 
 		
 		MouseAdapter draggDivider = new MouseAdapter() {
 																

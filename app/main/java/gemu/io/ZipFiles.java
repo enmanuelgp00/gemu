@@ -48,6 +48,8 @@ public final class ZipFiles {
 		}
 		cmd.add("-sdel");
 		cmd.add("-t7z");
+		cmd.add("-mmt8");
+		cmd.add("-mx9");
 		cmd.add("-bsp1");
 		cmd.add("a");
 		cmd.add(archive.getName());

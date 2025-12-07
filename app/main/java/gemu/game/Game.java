@@ -139,7 +139,7 @@ public class Game {
 		}
 		if ( isInZip() ) {
 			try {
-				return ZipFiles.get(getExecutables()[0]).getRootZipFile().getName();			
+				return FileNames.getBaseName( ZipFiles.get(getExecutables()[0]).getRootZipFile() );			
 			} catch ( Exception e ) {}
 		}
 		return getDirectory().getName();
@@ -280,17 +280,24 @@ public class Game {
 					listener.streamLineRead( p, line );
 				}
 				public void processFinished( Process p, int exitCode, File outf ) {
-					info.clear( Info.EXECUTABLES );   
-					String path;
-					for ( Executable executable : executables ) {
-						path =  "\\" + outf.getName() + "\\" + executable.getName() ;
-						info.add( Info.EXECUTABLES, path );
-						if ( launcher.getName().equals( executable.getName() ) ) {
-							info.set( Info.LAUNCHER, path );
+					if ( exitCode == 0 ) {           
+						info.clear( Info.EXECUTABLES );   
+						String path;
+						for ( Executable executable : executables ) {
+							path =  "\\" + outf.getName() + "\\" + executable.getName();
+							info.add( Info.EXECUTABLES, path );
+							if ( launcher.getName().equals( executable.getName() ) ) {
+								info.set( Info.LAUNCHER, path );
+							}
 						}
-					}
-					info.commit(); 
-					setZipProcess( null );
+						info.commit();
+						String infoFileBaseName = FileNames.getBaseName( info.getFile() );
+						String outfBaseName = FileNames.getBaseName( outf );
+						if ( !infoFileBaseName.equals( outfBaseName ) ) {
+							info.setFile( new File( getDirectory() + "\\" + outfBaseName + Info.FILE_EXTENSION ) );
+						}
+						setZipProcess( null );
+					} 
 					listener.processFinished( p, exitCode );
 				}
 			
@@ -353,4 +360,5 @@ public class Game {
 		} catch( Exception e ) {}
 		return null;
 	}
+	
 }

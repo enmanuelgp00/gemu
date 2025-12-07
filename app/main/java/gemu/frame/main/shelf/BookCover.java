@@ -40,7 +40,7 @@ public class BookCover extends JPanel {
 					public void paintComponent( Graphics g ) {
 						Graphics2D g2d = (Graphics2D)g.create();
 						g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-						Color alphacolor = new Color( 100, 100,100,100);
+						Color alphacolor = new Color( 100, 100, 100, 100 );
 						g2d.drawImage( Drawing.drawHeart( alphacolor ), 0, 0, getWidth(), getHeight(), this );
 						g2d.dispose();
 					}
@@ -151,9 +151,10 @@ public class BookCover extends JPanel {
 	};
 	
 	@Override
-	public void paintComponent( Graphics g ) {
-		if ( bufferedImage != null ) {     
-			Graphics2D g2 = (Graphics2D)g.create();
+	public void paintComponent( Graphics g ) {        
+		Graphics2D g2 = (Graphics2D)g.create();   
+		g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+		if ( bufferedImage != null ) {  
 			double scale = (double)bufferedImage.getWidth( null ) / (double)bufferedImage.getHeight( null ); 
 			double height = getHeight();
 			double width = scale * height;
@@ -166,21 +167,27 @@ public class BookCover extends JPanel {
 			}
 			int pos = x - coverXViewport;
 			if ( pos > - (detailWidth - getWidth()) && pos < 0 ) {
-				if ( getGame().isInZip() ) {
+				
+					/*
 					BufferedImage intGray = new BufferedImage( bufferedImage.getWidth(),bufferedImage.getHeight() , BufferedImage.TYPE_BYTE_GRAY );
 					Graphics2D g2dGray = intGray.createGraphics();
 					g2dGray.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 					g2dGray.drawImage( bufferedImage, 0, 0, null );
 					g2dGray.dispose();                                                            
 					g2.drawImage( intGray, pos, 0, (int)width, (int)height, this );
-			
-				} else {
-					g2.drawImage( bufferedImage, pos, 0, (int)width, (int)height, this ); 			
-				}
+					*/
+														  
+				g2.drawImage( bufferedImage, pos, 0, (int)width, (int)height, this );
+				
 			}
-			g2.dispose();	
 		} else {
-			super.paintComponent(g);			
+			super.paintComponent(g2);			
+		} 	
+		
+		if ( game.isInZip() ) {     
+			g2.setColor( new Color( 255, 255, 255, 100 ));
+			g2.fillPolygon( new int[]{0, 0, getWidth() }, new int[]{0, getHeight(), getHeight() }, 3 ); 
 		}
+		g2.dispose();	
 	}
 }

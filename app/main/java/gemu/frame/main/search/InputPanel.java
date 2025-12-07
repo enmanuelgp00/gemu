@@ -51,7 +51,6 @@ public class InputPanel extends Box {
 						isThreadRunning = true;
 						try {
 							while( wasJustReleased ) {
-								System.out.println("was just released");
 								wasJustReleased = false;
 								try {                     
 									Thread.sleep( 300 );
@@ -61,7 +60,6 @@ public class InputPanel extends Box {
 								resultPanel.clear();
 								return;
 							}
-							System.out.println("Searching game");
 							ArrayList<BookCover> search = new ArrayList<>();
 							Game g;
 							for( BookCover bookCover : bookCovers ) {
@@ -77,7 +75,6 @@ public class InputPanel extends Box {
 						} catch( Exception e ) {
 						   e.printStackTrace();
 						} finally {               
-							System.out.println("Thread stoped");
 							isThreadRunning = false;
 						
 						}
