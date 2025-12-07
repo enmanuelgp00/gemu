@@ -7,7 +7,8 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.imageio.*;
 import gemu.common.*;
-import gemu.game.*;
+import gemu.game.*;     
+import gemu.util.*;
 
 public class BookCover extends JPanel {
 	Box boxOnTop;
@@ -25,9 +26,9 @@ public class BookCover extends JPanel {
 		setLayout( new OverlayLayout( this ) );
 		setPreferredSize( standardSize );
 		setBackground( Style.COLOR_SECONDARY.brighter() );
-		Box buttonsPane = new Box( BoxLayout.Y_AXIS );
+		Box layer0 = new Box( BoxLayout.Y_AXIS );
 		
-		buttonsPane.add( new Box( BoxLayout.X_AXIS ) {
+		layer0.add( new Box( BoxLayout.X_AXIS ) {
 			{
 				add( Box.createHorizontalGlue());
 				add( new GemuButton("") {
@@ -48,12 +49,54 @@ public class BookCover extends JPanel {
 			}
 		});
 		
-		buttonsPane.add( Box.createVerticalGlue());
-		add( buttonsPane );
+		layer0.add( Box.createVerticalGlue());
+		layer0.add( new Box( BoxLayout.X_AXIS ) {
+			{
+				add( new Box( BoxLayout.Y_AXIS ) {
+					{
+						Tag lengthTag =  new Tag( HumanVerbose.bytes( game.getLength() ), Color.WHITE.darker(), Color.BLACK );
+						Tag zipLengthTag = new Tag( HumanVerbose.bytes( game.getZipLength() ), Style.COLOR_BACKGROUND, Color.WHITE );
+						setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1 ) );
+						add( lengthTag );
+						add( Box.createRigidArea( new Dimension( 2, 2 )));
+						add( zipLengthTag );
+						lengthTag.setMaximumSize( new Dimension( 100, getMaximumSize().height ) );
+						zipLengthTag.setMaximumSize( new Dimension( 100, getMaximumSize().height ) );
+					}
+				} );
+				add( Box.createHorizontalGlue() );
+			}
+		} );
+		
+		add( layer0 );
 		setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1));
 		addMouseMotionListener( expandOnRollover );  
 		addMouseListener( expandOnRollover );
 		
+	}
+	
+	private class Tag extends Box {
+		Color background;
+		Tag( String name, Color background, Color foreground ) {
+			super( BoxLayout.X_AXIS );       
+			this.background = background;
+			setBorder( BorderFactory.createEmptyBorder( 1, 3, 1, 3 ));
+			add( Box.createHorizontalGlue());
+			add( new JLabel( name ) { 
+				{
+					setForeground( foreground );
+				}
+			});
+		}
+		@Override
+		public void paintComponent( Graphics g ) { 
+			super.paintComponent(g);
+			Graphics2D g2 = (Graphics2D)g.create();
+			g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+			g2.setColor( background );
+			g2.fillRoundRect( 0, 0, getWidth(), getHeight(), 10, 10 );
+			g2.dispose();
+		}
 	}
 	
 	public void updateBufferedImage() { 

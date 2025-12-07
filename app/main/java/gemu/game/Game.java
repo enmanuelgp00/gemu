@@ -61,13 +61,13 @@ public class Game {
 					adapter.streamLineRead( process, line );
 				} 
 				@Override
-				public void processFinished( Process process, int exitCode ) {
+				public void processFinished( Process process, int exitCode ) { 
+					adapter.processFinished( process, exitCode );
 					setPlayingTime( getPlayingTime() + System.currentTimeMillis() - getLastTimePlayed() );
 					setProcess( null );     
 					if ( getCoverImage() == null ) {
 						findCoverImage();		
-					}
-					adapter.processFinished( process, exitCode );					
+					}					
 				}
 			}, getDirectory(), getLauncher().getAbsolutePath() );		
 		});
