@@ -58,21 +58,21 @@ public final class ZipFiles {
 		Shell.run( new OnProcessListener() {
 		
 			@Override
-			public void processStarted( Process p) {
-				listener.processStarted( p );
+			public void processStarted( long processId ) {
+				listener.processStarted( processId );
 			}    
 			@Override
-			public void streamLineRead( Process p, String line ) {
+			public void streamLineRead( long processId, String line ) {
 				System.out.println( line );
-				listener.streamLineRead( p, line );
+				listener.streamLineRead( processId, line );
 			}   
 			@Override
-			public void processFinished( Process p, int exitCode ) {
+			public void processFinished( long processId, int exitCode ) {
 				if ( exitCode != 0 ) {
-					listener.processFinished( p, exitCode, null );
+					listener.processFinished( processId, exitCode, null );
 					return;
 				}                     
-				listener.processFinished( p, exitCode, archive );
+				listener.processFinished( processId, exitCode, archive );
 			}
 			
 		}, dir, cmd.toArray( new String[ cmd.size() ]) );

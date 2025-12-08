@@ -2,17 +2,17 @@ package gemu.game;
 
 import java.io.*;
 import java.nio.*;    
-import java.util.*;
+import java.util.*;                   
+import java.util.stream.Collectors;
 import gemu.io.*;
 import gemu.shell.*;                  
-import gemu.util.*;
+import gemu.util.*;                
 
 
 public class Game {
-	String COVER_NAME = "main_screenshot.jpg";
 	Info info;
-	Process process = null;
-	Process zipProcess = null;
+	long processId = -1;
+	long zippingProcessId = -1;
 	
 	private Game() {
 		
@@ -47,28 +47,51 @@ public class Game {
 	
 	//play
 	public void play( OnProcessListener adapter ) {
-		Thread th = new Thread(() -> { 
+		Thread th = new Thread(() -> {
+			String[] cmd;
+			
+			if ( needsAdmin() ) {
+				cmd = new String[] {"powershell", "$process = start-process -PassThru -verb runas -filePath '" + getLauncher().getAbsolutePath() + "';",
+				"write-host $process.id;" };
+			} else {
+				cmd = new String[] { getLauncher().getAbsolutePath() };
+			}
+			
 			Shell.run( new OnProcessListener() {
 				@Override
-				public void processStarted( Process process ){   
+				public void processStarted( long processId ){   
 					setLastTimePlayed( System.currentTimeMillis() );
-					setProcess( process );
-					adapter.processStarted( process );
+					
+					if ( !needsAdmin() ) {
+						setProcessId( processId );
+						adapter.processStarted( processId );
+					}
+					
 				}
 				@Override
-				public void streamLineRead( Process process, String line ) {
-					adapter.streamLineRead( process, line );
+				public void streamLineRead( long processId, String line ) {
+					if ( needsAdmin() ) {
+						try {
+							long id = Long.parseLong( line );
+							setProcessId( id );
+						} catch( Exception e ) {}
+					} 
+					adapter.streamLineRead( processId, line );
 				} 
 				@Override
-				public void processFinished( Process process, int exitCode ) { 
+				public void processFinished( long processId, int exitCode ) {
+					if ( needsAdmin() ) {
+						adapter.processStarted( getProcessId() ); 
+						Shell.waitProcess( getProcessId() );
+					}
 					setPlayingTime( getPlayingTime() + System.currentTimeMillis() - getLastTimePlayed() ); 
-					adapter.processFinished( process, exitCode );
-					setProcess( null );     
+					adapter.processFinished( getProcessId() , exitCode );
+					setProcessId( -1L );     
 					if ( getCoverImage() == null ) {
 						findCoverImage();		
 					}					
 				}
-			}, getDirectory(), getLauncher().getAbsolutePath() );		
+			}, getDirectory(), cmd );		
 		});
 		
 		th.start();
@@ -77,7 +100,7 @@ public class Game {
 	public void stop() {
 		if ( isRunning() ) {
 			Thread th = new Thread(()->{
-				Shell.run( null, null, "taskkill", "/pid", String.valueOf(getProcess().pid()));
+				Shell.run( null, null, "taskkill", "/pid", String.valueOf( getProcessId() ));
 			});
 			th.start();
 		}
@@ -109,24 +132,24 @@ public class Game {
 	}
 	
 	//states
-	public void setZipProcess( Process p ) {
-		zipProcess = p;
+	private void setZippingProcessId( Long processId ) {
+		zippingProcessId = processId;
 	}
 	
-	public boolean isInZipProcess() {
-		return zipProcess != null;
+	public boolean isInZippingProcess() {
+		return zippingProcessId != -1;
 	}
 	
 	public boolean isRunning() {
-		return process != null;
+		return processId != -1;
 	}
 	
 	public boolean isStandby() {
-		return !isRunning() && !isInZip() && !isDeleted() && !isInZipProcess();
+		return !isRunning() && !isInZip() && !isDeleted() && !isInZippingProcess();
 	}
 	
 	public boolean isInZip() {
-		return ZipFiles.isZipFile( getExecutables()[0] ) && !isInZipProcess() ;
+		return ZipFiles.isZipFile( getExecutables()[0] ) && !isInZippingProcess() ;
 	}
 	
 	public boolean isDeleted() {
@@ -141,12 +164,27 @@ public class Game {
 		return !sample.exists();
 	}
 	
-	private void setProcess( Process process ) {
-		this.process = process;		
+	public boolean needsAdmin() {
+		try {
+			return Boolean.parseBoolean(info.get( Info.NEEDS_ADMIN ));
+		} catch( Exception e ) {
+			e.printStackTrace();
+		}
+		return false;
+		
 	}
 	
-	public Process getProcess() {
-		return process;
+	private void setNeedsAdmin( boolean val ) {
+		info.set( Info.NEEDS_ADMIN, String.valueOf(val) );
+		info.commit();
+	}
+	
+	private void setProcessId( Long processId ) {
+		this.processId = processId;		
+	}
+	
+	public Long getProcessId() {
+		return processId;
 	}
 	
 	//length
@@ -156,7 +194,9 @@ public class Game {
 		} else if ( isInZip() ) {
 			try {
 				setZipLength( ZipFiles.get( getExecutables()[0] ).getRootZipFile().length() );
-			} catch ( Exception e ) {}
+			} catch ( Exception e ) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -274,18 +314,17 @@ public class Game {
 				
 				rootZipFile.unzip( new OnZipProcessListener() {
 					@Override
-					public void processStarted( Process p ) {
-						setZipProcess(p);
-						listener.processStarted( p);
+					public void processStarted( long processId ) {
+						setZippingProcessId( processId );
+						listener.processStarted( processId );
 					}
 					@Override
-					public void streamLineRead( Process p, String line ) {
-						System.out.println( line );
-						listener.streamLineRead( p, line );
+					public void streamLineRead( long processId, String line ) {
+						listener.streamLineRead( processId, line );
 					
 					}
 					@Override
-					public void processFinished( Process p, int exitCode, File dir ) {
+					public void processFinished( long processId, int exitCode, File dir ) {
 						if ( exitCode == 0 ) {
 							if ( !getDirectory().getAbsolutePath().equals( dir.getAbsolutePath() ) ) {
 								info.setFile( new File( dir + "\\" + info.file.getName() ));						
@@ -313,7 +352,6 @@ public class Game {
 							}
 							
 							info.commit();
-							checkLength();
 							
 							if ( getCoverImage() == null ) {
 								findCoverImage();		
@@ -331,8 +369,9 @@ public class Game {
 						}
 						
 						
-						setZipProcess( null );
-						listener.processFinished( p, exitCode);
+						setZippingProcessId( -1L );  
+						checkLength();
+						listener.processFinished( processId, exitCode);
 					
 					}
 				} ) ;
@@ -349,14 +388,14 @@ public class Game {
 			File launcher = getLauncher();
 			ZipFiles.pack( new OnZipProcessListener() {
 
-				public void processStarted( Process p) {
-					setZipProcess(p);
-					listener.processStarted( p );
+				public void processStarted( long processId) {
+					setZippingProcessId( processId );
+					listener.processStarted( processId );
 				}
-				public void streamLineRead( Process p, String line ) {
-					listener.streamLineRead( p, line );
+				public void streamLineRead( long processId, String line ) {
+					listener.streamLineRead( processId, line );
 				}
-				public void processFinished( Process p, int exitCode, File outf ) {
+				public void processFinished( long processId, int exitCode, File outf ) {
 					if ( exitCode == 0 ) {           
 						info.clear( Info.EXECUTABLES );   
 						String path;
@@ -373,11 +412,11 @@ public class Game {
 						if ( !infoFileBaseName.equals( outfBaseName ) ) {
 							info.setFile( new File( getDirectory() + "\\" + outfBaseName + Info.FILE_EXTENSION ) );
 						}
-						checkLength();
 					} 
 					
-					setZipProcess( null );
-					listener.processFinished( p, exitCode );
+					setZippingProcessId( -1L );
+					checkLength();
+					listener.processFinished( processId, exitCode );
 				}
 			
 			}, dir, dir, getInfoFile(), getCoverImage() );
@@ -414,7 +453,7 @@ public class Game {
 	
 	public void findCoverImage() {
 		for ( File f : getDirectory().listFiles() ) {
-			if ( f.getName().equals(COVER_NAME)) {
+			if ( f.getName().equals(Games.COVER_NAME)) {
 				setCoverImage( f );
 				break;
 			}

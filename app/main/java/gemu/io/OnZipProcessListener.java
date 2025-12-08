@@ -4,7 +4,7 @@ import java.io.*;
 
 public abstract class OnZipProcessListener {                     
 
-	public void processStarted( Process p) { }
-	public void streamLineRead( Process p, String line ) { }
-	public void processFinished( Process p, int exitCode, File f ) {	}
+	public void processStarted( long processId) { }
+	public void streamLineRead( long processId, String line ) { }
+	public void processFinished( long processId, int exitCode, File f ) {	}
 }

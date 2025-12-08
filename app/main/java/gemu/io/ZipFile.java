@@ -64,22 +64,22 @@ public class ZipFile extends File {
 	private void unzip( OnZipProcessListener listener, File dir, Iterator<String> passwordIterator )  {
 		Shell.run( new OnProcessListener() {
 			@Override
-			public void processStarted( Process p ) {
-				listener.processStarted( p );
+			public void processStarted( long processId ) {
+				listener.processStarted( processId );
 			}
 			@Override
-			public void streamLineRead( Process p, String line ) {
-				listener.streamLineRead( p, line );
+			public void streamLineRead( long processId, String line ) {
+				listener.streamLineRead( processId, line );
 			}
 			@Override
-			public void processFinished( Process p, int exitCode ) {
+			public void processFinished( long processId, int exitCode ) {
 				if ( exitCode == 0 ) {
-					listener.processFinished( p, exitCode, dir );
+					listener.processFinished( processId, exitCode, dir );
 					return;
 				}
 				
 				if ( !passwordIterator.hasNext() ) {
-					listener.processFinished( p, exitCode, null );
+					listener.processFinished( processId, exitCode, null );
 					throw new RuntimeException () {
 						@Override
 						public void printStackTrace() {
@@ -92,7 +92,7 @@ public class ZipFile extends File {
 				unzip( listener, dir, passwordIterator );
 				
 			}
-		}, null, "7z",  "-o" + dir.getAbsolutePath() ,"-bsp1", "-y", "-p" + passwordIterator.next() , "x", getRootZipFile().getAbsolutePath() );
+		}, null, "7z",  "-o" + dir.getAbsolutePath() ,"-bsp1", "-y", "-processId" + passwordIterator.next() , "x", getRootZipFile().getAbsolutePath() );
 	}
 	
 	@Override
@@ -109,7 +109,7 @@ public class ZipFile extends File {
 		Shell.run( new OnProcessListener() {
 			String path;
 			@Override
-			public void streamLineRead( Process p, String line ){
+			public void streamLineRead( long processId, String line ){
 				if ( line.contains("Path = ")) {
 					path = line.substring( "Path = ".length(), line.length() );
 				} else if ( line.contains("Attributes =")) {
@@ -125,7 +125,7 @@ public class ZipFile extends File {
 				
 			}
 			
-			public void processFinished( Process p, int exitCode ) {
+			public void processFinished( long processId, int exitCode ) {
 				if ( exitCode != 0 ) {
 					if ( !passwordIterator.hasNext() ) {
 						throw new RuntimeException () {
@@ -140,6 +140,6 @@ public class ZipFile extends File {
 				}
 			}
 			
-		}, null , "7z","-p" + passwordIterator.next(), "l", "-slt", "-ba", getAbsolutePath() );
+		}, null , "7z","-processId" + passwordIterator.next(), "l", "-slt", "-ba", getAbsolutePath() );
 	}
 }

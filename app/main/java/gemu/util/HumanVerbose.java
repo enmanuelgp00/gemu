@@ -21,7 +21,7 @@ public final class HumanVerbose {
 			value /= scale;
 			shiftCount++;
 		}
-		return String.format("%.1f%s", value, names[shiftCount]);
+		return String.format("%.1f %s", value, names[shiftCount]);
 	}
 	
 	public static String hours( Long l ) {
@@ -49,7 +49,7 @@ public final class HumanVerbose {
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTimeInMillis(l);
 			SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE dd MMMM YYYY", Locale.US ); 
-			SimpleDateFormat hourFormat = new SimpleDateFormat("hh:mm", Locale.US );
+			SimpleDateFormat hourFormat = new SimpleDateFormat("hh:mm a", Locale.US );
 			String played = dateFormat.format( calendar.getTime() );
 			String current = dateFormat.format( Calendar.getInstance().getTime() );
 			if ( played.equals(current)) {

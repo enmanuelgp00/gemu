@@ -3,7 +3,8 @@ package gemu.frame.main.shelf;
 import gemu.common.*;
 import javax.swing.*;
 import java.awt.*;        
-import java.io.*;
+import java.io.*;         
+import java.util.*;
 import java.awt.event.*;  
 import gemu.game.*;
 import gemu.shell.*;  
@@ -13,6 +14,7 @@ public class LibraryPanel extends GemuSplitPane {
 	Banner banner;
 	ActionBar actionBar;
 	Shelf shelf;
+	ArrayList<OnProcessListener> actionBarProcessListeners = new ArrayList<>();
 	public LibraryPanel( Game[] games ) {                
 		super( JSplitPane.VERTICAL_SPLIT );
 		shelf = new Shelf( games );
@@ -57,7 +59,9 @@ public class LibraryPanel extends GemuSplitPane {
 		
 		setDividerSize(0);
 	}
-	
+	public void addOnActionBarProcessListener( OnProcessListener listener ) {
+		actionBarProcessListeners.add( listener );
+	}
 	public Shelf getShelf() {
 		return shelf;
 	}
@@ -104,7 +108,7 @@ public class LibraryPanel extends GemuSplitPane {
 			super(BoxLayout.X_AXIS );			
 			 
 			setBorder( BorderFactory.createEmptyBorder( 3, 3, 3, 3 ));
-			setDeletedStyle();
+			setDisabledStyle();
 			buttonPlay.addActionListener( playAction );
 			buttonZip.addActionListener( zipAction );
 			buttonScreenshot.addActionListener( screenshotAction );
@@ -116,8 +120,16 @@ public class LibraryPanel extends GemuSplitPane {
 					setBackground( null );
 					setOpaque( false );
 					setBorder( BorderFactory.createEmptyBorder( 0, 7, 0, 0 ) );
-					add( new Label("Playing Time"));                                         
-					add( new Label("Last Time Played"));
+					add( new Label("Playing Time") {						
+						{
+							setForeground( Color.GRAY );
+						}
+					});                                         
+					add( new Label("Last Time Played"){ 
+						{
+							setForeground( Color.GRAY );
+						}
+					});
 					add( playingTimeLabel );
 					add( lastTimePlayedLabel );
 				}
@@ -132,13 +144,43 @@ public class LibraryPanel extends GemuSplitPane {
 			addMouseMotionListener( draggDivider );
 		} 
 		
-		class Label extends JLabel {
-			Label( String name ) {
-				super( name );
-				setFont( Style.FONT_MONO_SPACE );
-				setForeground( Style.COLOR_FOREGROUND );
+		
+		protected BookCover getBookCover() {
+			return bookCover;
+		}
+		
+		protected Game getGame() {
+			return bookCover.getGame();
+		}
+		
+		
+		protected void setBookCover( BookCover bookCover ) {
+			this.bookCover = bookCover;
+			Game game = bookCover.getGame();
+			updateGameInfoLabels();
+			if ( game != null ) {
+			
+				buttonPlay.setEnabled( true );
+				for ( GemuButton button : buttons ) {
+					button.setEnabled( true );
+				}
+				if ( game.isInZippingProcess() ) {
+					setInZipProcessStyle();
+				} else if ( game.isStandby() ) { 
+					setStandbyStyle();
+				} else if( game.isRunning() ) { 
+					setRunningStyle(); 
+				} else if( game.isInZip() ) {					
+					setInZipStyle();
+				} else if ( game.isDeleted() ) {
+					setDisabledStyle();
+				}
+				
+			} else {
+				setDisabledStyle();
 			}
 		}
+		
 		
 		protected void setButtonZipUnzipStyle() { 
 			buttonZip.setEnabled( true );  
@@ -183,32 +225,6 @@ public class LibraryPanel extends GemuSplitPane {
 			lastTimePlayedLabel.setText( HumanVerbose.date( getGame().getLastTimePlayed() ) );
 		}
 		
-		protected void setBookCover( BookCover bookCover ) {
-			this.bookCover = bookCover;
-			Game game = bookCover.getGame();
-			updateGameInfoLabels();
-			if ( game != null ) {
-			
-				buttonPlay.setEnabled( true );
-				for ( GemuButton button : buttons ) {
-					button.setEnabled( true );
-				}
-				if ( game.isInZipProcess() ) {
-					setInZipProcessStyle();
-				} else if ( game.isStandby() ) { 
-					setStandbyStyle();
-				} else if( game.isRunning() ) { 
-					setRunningStyle(); 
-				} else if( game.isInZip() ) {					
-					setInZipStyle();
-				} else if ( game.isDeleted() ) {
-					setDeletedStyle();
-				}
-				
-			} else {
-				setDeletedStyle();
-			}
-		}
 		
 		protected void setStandbyStyle() {
 			buttonScreenshot.setEnabled( false );
@@ -236,43 +252,54 @@ public class LibraryPanel extends GemuSplitPane {
 		} 
 		
 		protected void setInZipProcessStyle() {
+			setbuttonPlayDisabledStyle();
+			for ( GemuButton button : buttons ) {
+				button.setEnabled( false );
+			}
+		};
+		
+		protected void setDisabledStyle() {
 			buttonPlay.setEnabled( false );
 			for ( GemuButton button : buttons ) {
 				button.setEnabled( false );
 			}
 		};
 		
-		protected void setDeletedStyle() {
-			buttonPlay.setEnabled( false );
-			for ( GemuButton button : buttons ) {
-				button.setEnabled( false );
-			}
-		};
 		
 		
-		
-		
-		protected Game getGame() {
-			return bookCover.getGame();
-		}
 		//actionlisteners
 		
 		protected ActionListener playAction = new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent event ) {
-				if ( !getGame().isRunning() ) {				
+				if ( getGame().isStandby() ) {
+					setDisabledStyle();
 					getGame().play( new OnProcessListener() {
 						@Override
-						public void processStarted( Process process ) {
-							if ( process == getGame().getProcess() ) {
-								setRunningStyle();
+						public void processStarted( long processId ) {
+							if ( processId == getGame().getProcessId() ) { 
+								setRunningStyle();				
+							}
+							
+							for ( OnProcessListener listener : actionBarProcessListeners ) {
+								listener.processStarted( processId );
 							}
 						}
 						@Override
-						public void processFinished( Process process, int exitCode ) {
-							if ( process == getGame().getProcess() ) {
+						public void streamLineRead( long processId, String line ) {
+							for ( OnProcessListener listener : actionBarProcessListeners ) {
+								listener.streamLineRead( processId, line );
+							}
+						}
+						@Override
+						public void processFinished( long processId, int exitCode ) {
+							if ( processId == getGame().getProcessId() ) {
 								updateGameInfoLabels();
 								setStandbyStyle();
+							}
+							
+							for ( OnProcessListener listener : actionBarProcessListeners ) {
+								listener.processFinished( processId, exitCode );
 							}
 						}
 					});
@@ -287,33 +314,68 @@ public class LibraryPanel extends GemuSplitPane {
 			public void actionPerformed( ActionEvent event ) {
 				Game game = getGame();
 				Thread th = new Thread(()->{
+					BookCover bookCover = getBookCover();
 					if ( game.isInZip() ) {
-						game.unzip( new OnProcessListener() { @Override
-							public void processStarted( Process p ) {
+						game.unzip( new OnProcessListener() {
+							@Override
+							public void processStarted( long processId ) {
 								setInZipProcessStyle();
+							
+								for ( OnProcessListener listener : actionBarProcessListeners ) {
+									listener.processStarted( processId );
+								}
 							}
 							@Override
-							public void processFinished( Process p, int exitCode ) {
+							public void streamLineRead( long processId, String line ) {
+								for ( OnProcessListener listener : actionBarProcessListeners ) {
+									listener.streamLineRead( processId, line );
+								}
+							}
+							@Override
+							public void processFinished( long processId, int exitCode ) {
 								if ( exitCode == 0 ) {
 									if ( !game.isInZip() ) {
-										setStandbyStyle();
+										setStandbyStyle();  
+										bookCover.updateLengthTags();
+										bookCover.revalidate();
+										bookCover.repaint();
 									}
+								}
+							
+								for ( OnProcessListener listener : actionBarProcessListeners ) {
+									listener.processFinished( processId, exitCode );
 								}
 							}
 						});
 					} else if ( !game.isDeleted() ) {
-						System.out.println("Tring to pack");
 						game.pack( new OnProcessListener() {
 							@Override
-							public void processStarted( Process p ) {
+							public void processStarted( long processId ) {
 								setInZipProcessStyle();
+								for ( OnProcessListener listener : actionBarProcessListeners ) {
+									listener.processStarted( processId );
+								}
 							}
+							
 							@Override
-							public void processFinished( Process p, int exitCode ) {
+							public void streamLineRead( long processId, String line ) {
+								for ( OnProcessListener listener : actionBarProcessListeners ) {
+									listener.streamLineRead( processId, line );
+								}
+							}
+							
+							@Override
+							public void processFinished( long processId, int exitCode ) {
 								if ( exitCode == 0 ) {
 									if ( game.isInZip() ) {
 										setInZipStyle();
+										bookCover.updateLengthTags();
+										bookCover.revalidate();
+										bookCover.repaint();
 									}
+								}
+								for ( OnProcessListener listener : actionBarProcessListeners ) {
+									listener.processFinished( processId, exitCode );
 								}
 							}
 						} );
@@ -335,12 +397,12 @@ public class LibraryPanel extends GemuSplitPane {
 				}                        
 				try {
 										 
-					long id = game.getProcess().pid();
+					long id = game.getProcessId();
 					File scriptFile = new File( new File( LibraryPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath() ).getParentFile() + "\\screenshot_script.txt" ); 
 					BufferedReader reader = new BufferedReader( new InputStreamReader ( new FileInputStream( scriptFile ) ));
 					char ch;
 					int code;
-					String screenshotFileName = "main_screeshot.jpg";
+					String screenshotFileName = Games.COVER_NAME;
 					StringBuilder script = new StringBuilder();
 					script.append("$id = " + id + "\n" );            
 					script.append("$screenshotFileName = '" + screenshotFileName + "'\n" );
@@ -354,10 +416,9 @@ public class LibraryPanel extends GemuSplitPane {
 					reader.close();
 					Shell.run( new OnProcessListener() {
 						@Override
-						public void processFinished( Process p, int exitCode ) {
+						public void processFinished( long processId, int exitCode ) {
 							if ( exitCode == 0 ) {                             
 								game.setCoverImage( new File( game.likeAbsolutePath( screenshotFileName ) ) );
-								System.out.println("A");
 								banner.updateBufferedImage();
 								banner.revalidate();
 								banner.repaint();
@@ -415,6 +476,16 @@ public class LibraryPanel extends GemuSplitPane {
 				
 			}
 		};
+		
+		
+		
+		class Label extends JLabel {
+			Label( String name ) {
+				super( name );
+				setFont( Style.FONT_MONO_SPACE );
+				setForeground( Style.COLOR_FOREGROUND );
+			}
+		}
 		
 	}
 	

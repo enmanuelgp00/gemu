@@ -2,7 +2,7 @@ package gemu.shell;
 
 public abstract class OnProcessListener {                     
 
-	public void processStarted( Process p) { }
-	public void streamLineRead( Process p, String line ) { }
-	public void processFinished( Process p, int exitCode ) {	}
+	public void processStarted( long id ) { }
+	public void streamLineRead( long id, String line ) { }
+	public void processFinished( long id, int exitCode ) {	}
 }

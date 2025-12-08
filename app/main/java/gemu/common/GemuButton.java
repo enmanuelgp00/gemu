@@ -15,18 +15,18 @@ public class GemuButton extends JButton {
 	private Color rolloverForeground = Style.COLOR_FOREGROUND;
 	
 	int v = 0;
-	int p = 0;
+	int processId = 0;
 	
 	public GemuButton( String title ) {
 		super( title );
 		a();
 	}       
 	
-	public GemuButton( String title, int v, int p ) {
+	public GemuButton( String title, int v, int processId ) {
 		super( title );
 		a();
 		this.v = v;
-		this.p = p;
+		this.processId = processId;
 	}
 	
 	
@@ -61,7 +61,7 @@ public class GemuButton extends JButton {
 			g2d.setColor( background );
 			setForeground( getForeground() );
 		}
-		g2d.fillRoundRect( 0, 0, getWidth(), getHeight(), v, p );
+		g2d.fillRoundRect( 0, 0, getWidth(), getHeight(), v, processId );
 		super.paintComponent( g2d );
 	}
 	

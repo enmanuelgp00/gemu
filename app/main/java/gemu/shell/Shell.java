@@ -3,6 +3,12 @@ package gemu.shell;
 import java.io.*;
 
 public final class Shell {
+	
+	public static void waitProcess( long processId ) {
+		new ProcessWaiter( processId );
+	}
+	
+	
 	public static void run( OnProcessListener listener, File dir, String... cmd) {
 		OnProcessListener adapter = new OnProcessListener() { };
 		
@@ -23,7 +29,8 @@ public final class Shell {
 			}
 			
 			Process process = pb.start();
-			adapter.processStarted( process );
+			long processId = process.pid();
+			adapter.processStarted( processId );
 			
 			
 			Thread th = new Thread(()->{
@@ -42,14 +49,50 @@ public final class Shell {
 			BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream(), "SHIFT-JIS" ));
 			String line;
 			while( (line = reader.readLine()) != null ) {
-				adapter.streamLineRead( process, line );
+				adapter.streamLineRead( processId, line );
 			}                                            
 			reader.close();
 			int exitCode = process.waitFor();
-			adapter.processFinished( process, exitCode );
+			adapter.processFinished( processId, exitCode );
 			
 		} catch( Exception e ) {
 			e.printStackTrace();
+		}
+	}
+	
+	private static class ProcessWaiter {
+		private boolean processFound = false;
+		
+		private ProcessWaiter( long processId ) {
+			setProcessFound( true );
+			while( isProcessFound() ) {
+				System.out.println("Waiting for process : " + processId );
+				try {
+					Thread.sleep( 300 );
+				} catch( Exception e ) {}
+				
+				Shell.run( new OnProcessListener(){
+					int lineCount = 0;
+					@Override
+					public void streamLineRead( long processId, String line ) {
+						lineCount++;                                                      
+					}
+					@Override
+					public void processFinished( long processId, int exitCode ) {
+						if ( lineCount < 6 ) {
+							setProcessFound( false );
+						}
+					}
+				}, null, "wmic", "process", "where", "processId=" + processId, "get", "name");
+			}
+		}
+		
+		private boolean isProcessFound() {
+			return processFound;
+		}
+		
+		private void setProcessFound( boolean b ) {
+			processFound = b;
 		}
 	}
 	

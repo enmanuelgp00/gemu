@@ -17,7 +17,10 @@ public class BookCover extends JPanel {
 	int coverXViewport = 0;
 	boolean isMouseInside = false;
 	BufferedImage bufferedImage = null;
-	Game game;
+	Game game;               
+	Tag lengthTag;
+	Tag zipLengthTag;
+	
 	public BookCover( Game game ) {
 		super();
 		this.game = game;
@@ -27,6 +30,7 @@ public class BookCover extends JPanel {
 		setPreferredSize( standardSize );
 		setBackground( Style.COLOR_SECONDARY.brighter() );
 		Box layer0 = new Box( BoxLayout.Y_AXIS );
+		
 		
 		layer0.add( new Box( BoxLayout.X_AXIS ) {
 			{
@@ -55,13 +59,13 @@ public class BookCover extends JPanel {
 				add( new Box( BoxLayout.Y_AXIS ) {
 					{
 						int alpha = 200;
-						Tag lengthTag =  new Tag(
+						lengthTag =  new Tag(
 							HumanVerbose.bytes( game.getLength(), HumanVerbose.DECIMAL_BYTES ),
 							new Color( 200, 200, 200, alpha ),
 							Color.BLACK );
 							
 						Color dftBackground = Style.COLOR_BACKGROUND;	
-						Tag zipLengthTag = new Tag(
+						zipLengthTag = new Tag(
 							HumanVerbose.bytes( game.getZipLength(), HumanVerbose.DECIMAL_BYTES ),
 							new Color( dftBackground.getRed(), dftBackground.getGreen(), dftBackground.getBlue(), alpha ),
 							Color.WHITE );
@@ -85,19 +89,29 @@ public class BookCover extends JPanel {
 		
 	}
 	
+	public void updateLengthTags() {
+		lengthTag.setText( HumanVerbose.bytes( game.getLength(), HumanVerbose.DECIMAL_BYTES ));
+		zipLengthTag.setText( HumanVerbose.bytes( game.getZipLength(), HumanVerbose.DECIMAL_BYTES ) );
+	}
+	
 	private class Tag extends Box {
 		Color background;
+		JLabel label;
 		Tag( String name, Color background, Color foreground ) {
 			super( BoxLayout.X_AXIS );       
 			this.background = background;
-			setBorder( BorderFactory.createEmptyBorder( 1, 3, 1, 3 ));
+			setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1 ));
 			add( Box.createHorizontalGlue());
-			add( new JLabel( name ) { 
+			label = new JLabel( name ) { 
 				{
 					setFont( Style.FONT_MONO_SPACE );
 					setForeground( foreground );
 				}
-			});
+			};
+			add( label );
+		}
+		public void setText( String name ) {
+			label.setText( name );
 		}
 		@Override
 		public void paintComponent( Graphics g ) { 
@@ -239,7 +253,8 @@ public class BookCover extends JPanel {
 		} 	
 		
 		if ( game.isInZip() ) {     
-			g2.setColor( new Color( 255, 255, 255, 100 ));
+			Color background = Style.COLOR_BACKGROUND;
+			g2.setColor( new Color( background.getRed(), background.getGreen(), background.getBlue(), 150 ));
 			g2.fillPolygon( new int[]{0, 0, getWidth() }, new int[]{0, getHeight(), getHeight() }, 3 ); 
 		}
 		g2.dispose();	

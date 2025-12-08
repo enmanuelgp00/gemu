@@ -6,7 +6,8 @@ import java.awt.event.*;
 import gemu.common.*;
 import gemu.frame.main.search.*;  
 import gemu.frame.main.shelf.*;       
-import gemu.game.*;
+import gemu.game.*;                      
+import gemu.shell.*;
 
 
 public class MainFrame extends JFrame {
@@ -16,9 +17,33 @@ public class MainFrame extends JFrame {
 		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		getContentPane().setBackground( Style.COLOR_BACKGROUND );
 		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(4, 4, 4, 4));
-		setMinimumSize( new Dimension(800, 600 )); 
+		setMinimumSize( new Dimension(1000, 600 )); 
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
+		
+		JLabel logBar = new JLabel(" ");
+		logBar.setBorder( BorderFactory.createEmptyBorder( 5, 3, 1, 3 ));
+		logBar.setFont( Style.FONT_MONO_SPACE );
+		logBar.setForeground( Style.COLOR_FOREGROUND );
+		add( logBar, BorderLayout.SOUTH );
+		
 		LibraryPanel libraryPanel = new LibraryPanel( games );
+		libraryPanel.addOnActionBarProcessListener( new OnProcessListener() {
+			@Override
+			public void streamLineRead( long processId, String line ) {
+				if ( line.contains("%") ) {
+					logBar.setText( line );
+				}
+				
+			}
+			@Override
+			public void processFinished( long processId, int exitCode ) {
+				if ( exitCode == 0 ) {
+					logBar.setText("Success");
+					return;
+				}
+				logBar.setText("Error");
+			}
+		});
 		SearchPanel searchPanel = new SearchPanel( libraryPanel.getShelf() );
 		searchPanel.addResultComponentMouseListener( new OnResultComponentMouseAdapter() {
 			@Override
