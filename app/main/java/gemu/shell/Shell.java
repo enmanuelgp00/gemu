@@ -66,7 +66,6 @@ public final class Shell {
 		private ProcessWaiter( long processId ) {
 			setProcessFound( true );
 			while( isProcessFound() ) {
-				System.out.println("Waiting for process : " + processId );
 				try {
 					Thread.sleep( 300 );
 				} catch( Exception e ) {}

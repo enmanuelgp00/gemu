@@ -80,10 +80,12 @@ public class Game {
 				} 
 				@Override
 				public void processFinished( long processId, int exitCode ) {
-					if ( needsAdmin() ) {
-						adapter.processStarted( getProcessId() ); 
+					if ( needsAdmin() ) {                  
+						adapter.processStarted( getProcessId() );
 						Shell.waitProcess( getProcessId() );
 					}
+					
+					
 					setPlayingTime( getPlayingTime() + System.currentTimeMillis() - getLastTimePlayed() ); 
 					adapter.processFinished( getProcessId() , exitCode );
 					setProcessId( -1L );     

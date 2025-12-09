@@ -199,10 +199,9 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonZip.setRolloverBackground( new Color(  211, 173, 10 ) );
 		
 		}
-		protected void setbuttonPlayDisabledStyle() {   
-			buttonPlay.setEnabled( false ); 
-			buttonPlay.setText("Play");
+		protected void setbuttonPlayDisabledStyle() {
 			buttonPlay.setBackgroundColor( Style.COLOR_BACKGROUND );
+			buttonPlay.setEnabled( false ); 
 		}
 		protected void setButtonPlayReadyStyle() { 
 			buttonPlay.setEnabled( true );  
@@ -262,7 +261,8 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonPlay.setEnabled( false );
 			for ( GemuButton button : buttons ) {
 				button.setEnabled( false );
-			}
+			}              
+			buttonFiles.setEnabled( true );
 		};
 		
 		
@@ -312,9 +312,9 @@ public class LibraryPanel extends GemuSplitPane {
 		protected ActionListener zipAction = new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent event ) {
-				Game game = getGame();
+				Game game = getGame();                             
+				BookCover bookCover = getBookCover();
 				Thread th = new Thread(()->{
-					BookCover bookCover = getBookCover();
 					if ( game.isInZip() ) {
 						game.unzip( new OnProcessListener() {
 							@Override
@@ -334,8 +334,11 @@ public class LibraryPanel extends GemuSplitPane {
 							@Override
 							public void processFinished( long processId, int exitCode ) {
 								if ( exitCode == 0 ) {
-									if ( !game.isInZip() ) {
+									if ( processId == game.getProcessId() ) {
 										setStandbyStyle();  
+									}
+									
+									if ( !game.isInZip() ) {
 										bookCover.updateLengthTags();
 										bookCover.revalidate();
 										bookCover.repaint();
@@ -367,8 +370,11 @@ public class LibraryPanel extends GemuSplitPane {
 							@Override
 							public void processFinished( long processId, int exitCode ) {
 								if ( exitCode == 0 ) {
-									if ( game.isInZip() ) {
+									if ( processId == game.getProcessId() ) {
 										setInZipStyle();
+									}
+									
+									if ( game.isInZip() ) {
 										bookCover.updateLengthTags();
 										bookCover.revalidate();
 										bookCover.repaint();
