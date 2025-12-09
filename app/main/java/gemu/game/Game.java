@@ -138,6 +138,10 @@ public class Game {
 		zippingProcessId = processId;
 	}
 	
+	public long getZippingProcessId() {
+		return zippingProcessId;
+	}
+	
 	public boolean isInZippingProcess() {
 		return zippingProcessId != -1;
 	}
@@ -371,9 +375,9 @@ public class Game {
 						}
 						
 						
-						setZippingProcessId( -1L );  
-						checkLength();
+						checkLength();											   
 						listener.processFinished( processId, exitCode);
+						setZippingProcessId( -1L );  
 					
 					}
 				} ) ;
@@ -415,10 +419,10 @@ public class Game {
 							info.setFile( new File( getDirectory() + "\\" + outfBaseName + Info.FILE_EXTENSION ) );
 						}
 					} 
-					
-					setZippingProcessId( -1L );
-					checkLength();
+							
+					checkLength();						 
 					listener.processFinished( processId, exitCode );
+					setZippingProcessId( -1L );
 				}
 			
 			}, dir, dir, getInfoFile(), getCoverImage() );

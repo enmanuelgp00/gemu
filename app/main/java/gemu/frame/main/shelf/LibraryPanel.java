@@ -15,6 +15,7 @@ public class LibraryPanel extends GemuSplitPane {
 	ActionBar actionBar;
 	Shelf shelf;
 	ArrayList<OnProcessListener> actionBarProcessListeners = new ArrayList<>();
+	ArrayList<BookCover> zippingList = new ArrayList<>();
 	public LibraryPanel( Game[] games ) {                
 		super( JSplitPane.VERTICAL_SPLIT );
 		shelf = new Shelf( games );
@@ -72,7 +73,8 @@ public class LibraryPanel extends GemuSplitPane {
 	}
 	
 	private class ActionBar extends Box {
-	
+		
+		boolean zippingThreadRunning = false;
 		BookCover bookCover;
 		
 		GemuButton buttonPlay = new GemuButton("Play", 5, 5 ) {
@@ -164,7 +166,7 @@ public class LibraryPanel extends GemuSplitPane {
 				for ( GemuButton button : buttons ) {
 					button.setEnabled( true );
 				}
-				if ( game.isInZippingProcess() ) {
+				if ( game.isInZippingProcess() || zippingList.contains( bookCover) ) {
 					setInZipProcessStyle();
 				} else if ( game.isStandby() ) { 
 					setStandbyStyle();
@@ -307,86 +309,100 @@ public class LibraryPanel extends GemuSplitPane {
 					getGame().stop();
 				}	
 			}
-		};
-		
+		};                              
+		private void setZippingThreadRunning( boolean b ) {
+			zippingThreadRunning = b;
+		}
+		protected boolean isZippingThreadRunning() {
+			return zippingThreadRunning;
+		}
 		protected ActionListener zipAction = new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent event ) {
-				Game game = getGame();                             
-				BookCover bookCover = getBookCover();
+				zippingList.add( getBookCover() ); 
+				setInZipProcessStyle();
+				if ( isZippingThreadRunning() ) {
+					return;
+				}
+				
 				Thread th = new Thread(()->{
-					if ( game.isInZip() ) {
-						game.unzip( new OnProcessListener() {
-							@Override
-							public void processStarted( long processId ) {
-								setInZipProcessStyle();
-							
-								for ( OnProcessListener listener : actionBarProcessListeners ) {
-									listener.processStarted( processId );
-								}
-							}
-							@Override
-							public void streamLineRead( long processId, String line ) {
-								for ( OnProcessListener listener : actionBarProcessListeners ) {
-									listener.streamLineRead( processId, line );
-								}
-							}
-							@Override
-							public void processFinished( long processId, int exitCode ) {
-								if ( exitCode == 0 ) {
-									if ( processId == game.getProcessId() ) {
-										setStandbyStyle();  
-									}
-									
-									if ( !game.isInZip() ) {
-										bookCover.updateLengthTags();
-										bookCover.revalidate();
-										bookCover.repaint();
+					setZippingThreadRunning( true );
+					while ( zippingList.size() > 0 ) {
+						BookCover bookCover = zippingList.get(0);
+						Game game = bookCover.getGame();
+						if ( game.isInZip() ) {
+							game.unzip( new OnProcessListener() {
+								@Override
+								public void processStarted( long processId ) {
+								
+									for ( OnProcessListener listener : actionBarProcessListeners ) {
+										listener.processStarted( processId );
 									}
 								}
-							
-								for ( OnProcessListener listener : actionBarProcessListeners ) {
-									listener.processFinished( processId, exitCode );
-								}
-							}
-						});
-					} else if ( !game.isDeleted() ) {
-						game.pack( new OnProcessListener() {
-							@Override
-							public void processStarted( long processId ) {
-								setInZipProcessStyle();
-								for ( OnProcessListener listener : actionBarProcessListeners ) {
-									listener.processStarted( processId );
-								}
-							}
-							
-							@Override
-							public void streamLineRead( long processId, String line ) {
-								for ( OnProcessListener listener : actionBarProcessListeners ) {
-									listener.streamLineRead( processId, line );
-								}
-							}
-							
-							@Override
-							public void processFinished( long processId, int exitCode ) {
-								if ( exitCode == 0 ) {
-									if ( processId == game.getProcessId() ) {
-										setInZipStyle();
-									}
-									
-									if ( game.isInZip() ) {
-										bookCover.updateLengthTags();
-										bookCover.revalidate();
-										bookCover.repaint();
+								@Override
+								public void streamLineRead( long processId, String line ) {
+									for ( OnProcessListener listener : actionBarProcessListeners ) {
+										listener.streamLineRead( processId, line );
 									}
 								}
-								for ( OnProcessListener listener : actionBarProcessListeners ) {
-									listener.processFinished( processId, exitCode );
+								@Override
+								public void processFinished( long processId, int exitCode ) {
+									if ( exitCode == 0 ) {
+										if ( processId == getGame().getZippingProcessId() ) {
+											setStandbyStyle();  
+										}
+										
+										if ( !game.isInZip() ) {
+											bookCover.updateLengthTags();
+											bookCover.revalidate();
+											bookCover.repaint();
+										}
+									}
+								
+									for ( OnProcessListener listener : actionBarProcessListeners ) {
+										listener.processFinished( processId, exitCode );
+									}
 								}
-							}
-						} );
-					}
+							});
+						} else if ( !game.isDeleted() ) {
+							game.pack( new OnProcessListener() {
+								@Override
+								public void processStarted( long processId ) {
+									for ( OnProcessListener listener : actionBarProcessListeners ) {
+										listener.processStarted( processId );
+									}
+								}
+								
+								@Override
+								public void streamLineRead( long processId, String line ) {
+									for ( OnProcessListener listener : actionBarProcessListeners ) {
+										listener.streamLineRead( processId, line );
+									}
+								}
+								
+								@Override
+								public void processFinished( long processId, int exitCode ) {
+									if ( exitCode == 0 ) {
+										if ( processId == getGame().getZippingProcessId() ) {
+											setInZipStyle();
+										}
+										
+										if ( game.isInZip() ) {
+											bookCover.updateLengthTags();
+											bookCover.revalidate();
+											bookCover.repaint();
+										}
+									}
+									for ( OnProcessListener listener : actionBarProcessListeners ) {
+										listener.processFinished( processId, exitCode );
+									}
+								}
+							} );
+						}
+						zippingList.remove( bookCover );
+					} // end while
 					
+					setZippingThreadRunning( false );	
 				});
 				th.start();
 				
