@@ -9,17 +9,22 @@ import java.awt.event.*;
 import gemu.game.*;
 import gemu.shell.*;  
 import gemu.util.*;
+import gemu.frame.main.search.*;
 
 public class LibraryPanel extends GemuSplitPane {
 	Banner banner;
 	ActionBar actionBar;
 	Shelf shelf;
+	ZippingStatePanel zippingStatePanel;
+	
 	ArrayList<OnProcessListener> actionBarProcessListeners = new ArrayList<>();
 	ArrayList<BookCover> zippingList = new ArrayList<>();
 	public LibraryPanel( Game[] games ) {                
 		super( JSplitPane.VERTICAL_SPLIT );
 		shelf = new Shelf( games );
 		actionBar = new ActionBar();
+		zippingStatePanel = new ZippingStatePanel();
+		
 		banner = new Banner() {
 			@Override
 			public void paintComponent( Graphics g ) {
@@ -60,6 +65,15 @@ public class LibraryPanel extends GemuSplitPane {
 		
 		setDividerSize(0);
 	}
+	
+	public BookCover[] getZippingList() {
+		return zippingList.toArray( new BookCover[zippingList.size()] );
+	}
+	
+	public ZippingStatePanel getZippingStatePanel() {
+		return zippingStatePanel;
+	}
+	
 	public void addOnActionBarProcessListener( OnProcessListener listener ) {
 		actionBarProcessListeners.add( listener );
 	}
@@ -70,6 +84,16 @@ public class LibraryPanel extends GemuSplitPane {
 	public void setFocusedBookCover( BookCover bookCover ) {
 		actionBar.setBookCover( bookCover );	
 		banner.setGame( bookCover.getGame() );	
+	}
+	
+	public class ZippingStatePanel extends ResultPanel {
+			ZippingStatePanel() {
+			super();
+		}
+	
+		public void refresh() {
+			show( getZippingList() );
+		}
 	}
 	
 	private class ActionBar extends Box {
@@ -321,6 +345,7 @@ public class LibraryPanel extends GemuSplitPane {
 			public void actionPerformed( ActionEvent event ) {
 				zippingList.add( getBookCover() ); 
 				setInZipProcessStyle();
+				zippingStatePanel.refresh();
 				if ( isZippingThreadRunning() ) {
 					return;
 				}
@@ -351,14 +376,11 @@ public class LibraryPanel extends GemuSplitPane {
 										if ( processId == getGame().getZippingProcessId() ) {
 											setStandbyStyle();  
 										}
-										
-										if ( !game.isInZip() ) {
-											bookCover.updateLengthTags();
-											bookCover.revalidate();
-											bookCover.repaint();
-										}
+										bookCover.updateLengthTags();
+										bookCover.revalidate();
+										bookCover.repaint();
 									}
-								
+									
 									for ( OnProcessListener listener : actionBarProcessListeners ) {
 										listener.processFinished( processId, exitCode );
 									}
@@ -386,13 +408,11 @@ public class LibraryPanel extends GemuSplitPane {
 										if ( processId == getGame().getZippingProcessId() ) {
 											setInZipStyle();
 										}
-										
-										if ( game.isInZip() ) {
-											bookCover.updateLengthTags();
-											bookCover.revalidate();
-											bookCover.repaint();
-										}
+										bookCover.updateLengthTags();
+										bookCover.revalidate();
+										bookCover.repaint();
 									}
+									
 									for ( OnProcessListener listener : actionBarProcessListeners ) {
 										listener.processFinished( processId, exitCode );
 									}
@@ -400,6 +420,8 @@ public class LibraryPanel extends GemuSplitPane {
 							} );
 						}
 						zippingList.remove( bookCover );
+						zippingStatePanel.refresh();
+						
 					} // end while
 					
 					setZippingThreadRunning( false );	
@@ -498,6 +520,7 @@ public class LibraryPanel extends GemuSplitPane {
 				
 			}
 		};
+		
 		
 		
 		

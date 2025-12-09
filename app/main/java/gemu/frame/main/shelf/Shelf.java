@@ -22,7 +22,7 @@ public class Shelf extends GemuScrollPane {
 		Thread th = new Thread(()->{
 			bookCovers = new BookCover[ games.length ];
 			for ( int i = 0; i < games.length; i++ ) {
-			
+				
 				bookCovers[i] = new BookCover( games[i] );
 				BookCover bookCover = bookCovers[i];
 				bookCover.addMouseListener( new MouseAdapter(){

@@ -25,9 +25,11 @@ public class MainFrame extends JFrame {
 		logBar.setFont( Style.FONT_MONO_SPACE );
 		logBar.setForeground( Style.COLOR_FOREGROUND );
 		add( logBar, BorderLayout.SOUTH );
-		
-		LibraryPanel libraryPanel = new LibraryPanel( games );
+														   
+		LibraryPanel libraryPanel = new LibraryPanel( games );         
+		SearchPanel searchPanel = new SearchPanel( libraryPanel );
 		libraryPanel.addOnActionBarProcessListener( new OnProcessListener() {
+			
 			@Override
 			public void streamLineRead( long processId, String line ) {
 				if ( line.contains("%") ) {
@@ -44,7 +46,6 @@ public class MainFrame extends JFrame {
 				logBar.setText("Error");
 			}
 		});
-		SearchPanel searchPanel = new SearchPanel( libraryPanel.getShelf() );
 		searchPanel.addResultComponentMouseListener( new OnResultComponentMouseAdapter() {
 			@Override
 			public void mousePressed( ResultComponent element, MouseEvent event ) {

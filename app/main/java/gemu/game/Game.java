@@ -194,7 +194,7 @@ public class Game {
 	}
 	
 	//length
-	private void checkLength() {
+	public void checkLength() {
 		if ( isStandby() ) {
 			setLength( getDirectoryLength( getDirectory() ) );
 		} else if ( isInZip() ) {
