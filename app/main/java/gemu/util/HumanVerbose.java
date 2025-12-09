@@ -28,6 +28,12 @@ public final class HumanVerbose {
 		if ( l != 0 ) {
 			String[] names = new String[]{ "sec", "min", "h" };
 			
+			int s = (int)Math.floor( l / 1000f % 60f );
+			int m = (int)Math.floor( l / ( 1000f * 60f ) % 60f);
+			int h = (int)Math.floor( l / ( 1000f * 60f * 60f ) % 60f);
+			
+			return String.format("%2d%s %2d%s %2d%s", h, "h", m , "m", s , "s" );
+			/*
 			int[] val = new int[] { 1000, 60, 60 };
 			double result = (double)l;
 			for ( int i = 0; i < names.length; i++ ) {
@@ -40,6 +46,7 @@ public final class HumanVerbose {
 					}
 				}
 			}
+			*/
 		}
 		return "?";
 	}

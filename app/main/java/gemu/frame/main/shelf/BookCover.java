@@ -52,9 +52,9 @@ public class BookCover extends JPanel {
 						g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 						Color color;
 						if ( game.isPinned() ) {
-							color = Color.RED;
+							color = new Color( 200, 0, 0, 200 );
 						} else {
-							color = Color.WHITE;
+							color = new Color( 200, 200, 200, 100 );
 						}
 						g2d.setColor( color );
 						int centerX = getWidth() / 2;
@@ -75,6 +75,7 @@ public class BookCover extends JPanel {
 										
 						g2d.fill(heart);
 						g2d.setColor( Color.BLACK );
+						g2d.setStroke( new BasicStroke(1));
 						g2d.draw(heart);
 						g2d.dispose();
 					}

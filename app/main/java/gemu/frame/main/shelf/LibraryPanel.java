@@ -40,12 +40,6 @@ public class LibraryPanel extends GemuSplitPane {
 				}
 			}
 		};
-		/*
-		if( games.length > 0 ) {
-			System.out.println( shelf.listBookCovers().length );
-			setFocusedBookCover( shelf.listBookCovers()[0] );   
-		}
-		*/
 		
 		shelf.addOnBookCoverMouseAdapter( new Shelf.OnBookCoverMouseAdapter() {
 			@Override
@@ -126,8 +120,8 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonFiles, 
 			buttonDelete
 		};
-		Label playingTimeLabel = new Label("");
-		Label lastTimePlayedLabel = new Label("");
+		Label playingTimeLabel = new Label("?");
+		Label lastTimePlayedLabel = new Label("?");
 		
 		
 		protected ActionBar() {
@@ -141,23 +135,46 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonFiles.addActionListener( exploreFilesAction );
 			
 			add( buttonPlay );
-			add( new JPanel( new GridLayout( 2, 2, 1, 1 ) ) {
+			add( new JPanel( new GridBagLayout() ) {
 				{                       
 					setBackground( null );
+					GridBagConstraints gbc = new GridBagConstraints();
+					
 					setOpaque( false );
 					setBorder( BorderFactory.createEmptyBorder( 0, 7, 0, 0 ) );
-					add( new Label("Playing Time") {						
+					gbc.insets = new Insets( 0, 7, 0, 7 );
+					gbc.anchor = GridBagConstraints.WEST;
+					gbc.fill = GridBagConstraints.VERTICAL;
+					
+					gbc.gridx = 0;
+					gbc.gridy = 0;
+					add( new Label("Time Playing") {						
 						{
 							setForeground( Color.GRAY );
 						}
-					});                                         
+					}, gbc );
+					
+					gbc.gridx = 1;
+					gbc.gridy = 0;
 					add( new Label("Last Time Played"){ 
 						{
 							setForeground( Color.GRAY );
+							setHorizontalAlignment( SwingConstants.LEFT );
 						}
-					});
-					add( playingTimeLabel );
-					add( lastTimePlayedLabel );
+					}, gbc );
+					
+					gbc.gridx = 0;
+					gbc.gridy = 1;
+					add( playingTimeLabel, gbc );
+					
+					gbc.gridx = 1;
+					gbc.gridy = 1;
+					add( lastTimePlayedLabel, gbc );
+					
+				}
+				@Override
+				public Dimension getMaximumSize() {
+					return new Dimension( getPreferredSize() );
 				}
 			});
 			add( Box.createHorizontalGlue());
@@ -301,13 +318,24 @@ public class LibraryPanel extends GemuSplitPane {
 				if ( getGame().isStandby() ) {
 					setDisabledStyle(); 
 					BookCover bookCover = getBookCover();
-					getGame().play( new OnProcessListener() {
+					Game game = getGame();
+					Thread playingTimeChecker = new Thread(()->{
+						while( game.isRunning() ) {
+							try {               
+								game.checkPlayingTime();
+								updateGameInfoLabels();
+								Thread.sleep( 1000 );
+							} catch( Exception e ) {}
+						}
+					});
+					game.play( new OnProcessListener() {
 						@Override
 						public void processStarted( long processId ) {
 							if ( processId == getGame().getProcessId() ) { 
 								setRunningStyle();				
 							}
 							
+							playingTimeChecker.start();
 							for ( OnProcessListener listener : actionBarProcessListeners ) {
 								listener.processStarted( processId );
 							}

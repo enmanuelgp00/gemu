@@ -13,7 +13,7 @@ public class Game {
 	Info info;
 	long processId = -1;
 	long zippingProcessId = -1;
-	
+	long playingTimeBeforeRunning = 0;
 	private Game() {
 		
 	}
@@ -61,9 +61,9 @@ public class Game {
 				@Override
 				public void processStarted( long processId ){   
 					setLastTimePlayed( System.currentTimeMillis() );
-					
 					if ( !needsAdmin() ) {
 						setProcessId( processId );
+						setPlayingTimeBeforeRunning( getPlayingTime() );
 						adapter.processStarted( processId );
 					}
 					
@@ -81,13 +81,14 @@ public class Game {
 				@Override
 				public void processFinished( long processId, int exitCode ) {
 					if ( needsAdmin() ) {                  
+						setPlayingTimeBeforeRunning( getPlayingTime() );
 						adapter.processStarted( getProcessId() );
 						Shell.waitProcess( getProcessId() );
 					}
 					
 												
 					checkLength();
-					setPlayingTime( getPlayingTime() + System.currentTimeMillis() - getLastTimePlayed() ); 
+					checkPlayingTime();
 					adapter.processFinished( getProcessId() , exitCode );
 					setProcessId( -1L );     
 					if ( getCoverImage() == null ) {
@@ -109,7 +110,22 @@ public class Game {
 		}
 	}
 	
+	
 	//playing time
+	public long getPlayingTimeBeforeRunning() {
+		return playingTimeBeforeRunning;
+	}
+	
+	public void setPlayingTimeBeforeRunning( long l ) {
+		playingTimeBeforeRunning = l;
+	}
+	
+	public void checkPlayingTime() {
+		if ( isRunning() ) {
+			setPlayingTime( getPlayingTimeBeforeRunning() + System.currentTimeMillis() - getLastTimePlayed() ); 		
+		} 
+	}
+	
 	private void setPlayingTime( long l ) {
 		info.set( Info.PLAYING_TIME, String.valueOf(l) );
 		info.commit();

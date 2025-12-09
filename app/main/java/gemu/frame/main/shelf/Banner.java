@@ -71,7 +71,7 @@ public class Banner extends JPanel {
 				g2.dispose();
 			}
 		};
-		//titleLabel.setAlignmentX( Component.RIGHT_ALIGNMENT );
+		
 		titleLabel.setAlignmentY( Component.BOTTOM_ALIGNMENT );
 		Box box = new Box( BoxLayout.X_AXIS );
 		box.add( Box.createHorizontalGlue());
