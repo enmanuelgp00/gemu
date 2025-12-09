@@ -3,6 +3,7 @@ package gemu.frame.main.shelf;
 import java.awt.*;   
 import java.awt.image.*;
 import java.io.*;
+import java.awt.geom.Path2D;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.imageio.*;
@@ -40,13 +41,41 @@ public class BookCover extends JPanel {
 						setPreferredSize( new Dimension( 30, 30));
 						setMaximumSize( new Dimension( 30, 30 ));
 						setBackground( Style.COLOR_BACKGROUND );
+						addActionListener(( actionEvent )->{
+							game.setPinned( !game.isPinned() );
+							repaint();
+						});
 					}
 					@Override
 					public void paintComponent( Graphics g ) {
-						Graphics2D g2d = (Graphics2D)g.create();
+						Graphics2D g2d = (Graphics2D)g.create();  
 						g2d.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-						Color alphacolor = new Color( 100, 100, 100, 100 );
-						g2d.drawImage( Drawing.drawHeart( alphacolor ), 0, 0, getWidth(), getHeight(), this );
+						Color color;
+						if ( game.isPinned() ) {
+							color = Color.RED;
+						} else {
+							color = Color.WHITE;
+						}
+						g2d.setColor( color );
+						int centerX = getWidth() / 2;
+						int centerY = getHeight() / 2;
+						
+						Path2D heart = new Path2D.Double();
+						
+						heart.moveTo( centerX, getWidth() - centerY / 3 );
+						heart.curveTo(   
+							0, centerY / 2 + centerY,
+							0 + centerX / 2, 0 + centerY / 3,
+							centerX, centerY );
+						
+						heart.curveTo(   
+							getWidth() - centerX / 2, 0 + centerY / 3,        
+							getWidth(), centerY / 2 + centerY,
+							centerX, getWidth() - centerY / 3 );
+										
+						g2d.fill(heart);
+						g2d.setColor( Color.BLACK );
+						g2d.draw(heart);
 						g2d.dispose();
 					}
 				});

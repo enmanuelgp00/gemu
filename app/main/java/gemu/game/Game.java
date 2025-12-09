@@ -85,13 +85,14 @@ public class Game {
 						Shell.waitProcess( getProcessId() );
 					}
 					
-					
+												
+					checkLength();
 					setPlayingTime( getPlayingTime() + System.currentTimeMillis() - getLastTimePlayed() ); 
 					adapter.processFinished( getProcessId() , exitCode );
 					setProcessId( -1L );     
 					if ( getCoverImage() == null ) {
 						findCoverImage();		
-					}					
+					}
 				}
 			}, getDirectory(), cmd );		
 		});
@@ -134,6 +135,19 @@ public class Game {
 	}
 	
 	//states
+	public boolean isPinned() {
+		try {
+			return Boolean.parseBoolean( info.get( Info.PINNED ) );
+		} catch( Exception e ) {}
+		setPinned( false );
+		return false;
+	}
+	
+	public void setPinned( boolean b ) {
+		info.set( Info.PINNED, String.valueOf(b) );
+		info.commit();
+	}
+	
 	private void setZippingProcessId( Long processId ) {
 		zippingProcessId = processId;
 	}
@@ -195,7 +209,7 @@ public class Game {
 	
 	//length
 	public void checkLength() {
-		if ( isStandby() ) {
+		if ( isStandby() || isRunning() ) {
 			setLength( getDirectoryLength( getDirectory() ) );
 		} else if ( isInZip() ) {
 			try {

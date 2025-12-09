@@ -17,7 +17,8 @@ public class Info {
 	final static Key ZIP_LENGTH = new Key("zip_length");
 	final static Key LAST_TIME_PLAYED = new Key("last_time_played");
 	final static Key PLAYING_TIME = new Key("playing_time");              
-	final static Key NEEDS_ADMIN = new Key("needs_admin");
+	final static Key NEEDS_ADMIN = new Key("needs_admin");                  
+	final static Key PINNED = new Key("pinned");
 	
 	public final static HashSet<Key> KEYS = new HashSet<>( Arrays.<Key>asList(
 		COVER_IMAGE,
@@ -29,7 +30,8 @@ public class Info {
 		ZIP_LENGTH,
 		LAST_TIME_PLAYED,
 		PLAYING_TIME,
-		NEEDS_ADMIN
+		NEEDS_ADMIN,
+		PINNED
 	));
 	
 	File file;

@@ -145,13 +145,23 @@ public class Gemu {
 	public static void main( String[] args ) {
 		
 		Gemu g = new Gemu( new File( ( args.length > 0 ) ? args[0] : "."  ) );
-		ArrayList<Game> gameList = new ArrayList<>();
-		List<List<Game>> states = new ArrayList<>();
+		ArrayList<Game> gameList = new ArrayList<>();                                  
+		ArrayList<Game> pinnedGames = new ArrayList<>();
+		List<List<Game>> states = new ArrayList<>();                                          
+		for ( Game game : g.games ) {
+			if ( game.isPinned() ) {
+				pinnedGames.add( game );
+			}
+		}
+		for ( Game game : pinnedGames ) {
+				g.games.remove(game);
+		}
+		states.add( pinnedGames );
 		states.add(g.games.stream().filter(Game::isStandby).collect( Collectors.toList() ) );     
 		states.add(g.games.stream().filter(Game::isInZip).collect( Collectors.toList() ) );
 		states.add(g.games.stream().filter(Game::isDeleted).collect( Collectors.toList() ) );
 							 
-		List<Game> ls = states.get(0);
+		List<Game> ls = states.get(1);
 		int control = 0;
 		int size = ls.size();
 		Game g0;
@@ -186,7 +196,7 @@ public class Gemu {
 			}
 		}
 		
-		System.out.println("Games found : " + g.games.size() );
+		System.out.println("Games found : " + gameList.size() );
 		new MainFrame( gameList.toArray( new Game[gameList.size()] ) );
 	}
 }

@@ -299,7 +299,8 @@ public class LibraryPanel extends GemuSplitPane {
 			@Override
 			public void actionPerformed( ActionEvent event ) {
 				if ( getGame().isStandby() ) {
-					setDisabledStyle();
+					setDisabledStyle(); 
+					BookCover bookCover = getBookCover();
 					getGame().play( new OnProcessListener() {
 						@Override
 						public void processStarted( long processId ) {
@@ -324,6 +325,9 @@ public class LibraryPanel extends GemuSplitPane {
 								setStandbyStyle();
 							}
 							
+							bookCover.updateLengthTags();
+							bookCover.revalidate();
+							bookCover.repaint();
 							for ( OnProcessListener listener : actionBarProcessListeners ) {
 								listener.processFinished( processId, exitCode );
 							}
