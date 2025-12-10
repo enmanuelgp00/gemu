@@ -27,9 +27,9 @@ public class GemuScrollPane extends JScrollPane {
 					if ( c instanceof JScrollBar ) {
 						scrollbar = (JScrollBar)c; 
 						if ( scrollbar.getOrientation() == JScrollBar.VERTICAL ) {
-							scrollbar.setPreferredSize(new Dimension( 9, scrollbar.getPreferredSize().height ));						
+							scrollbar.setPreferredSize(new Dimension( 11, scrollbar.getPreferredSize().height ));						
 						} else {
-							scrollbar.setPreferredSize(new Dimension( scrollbar.getPreferredSize().width , 9 ));
+							scrollbar.setPreferredSize(new Dimension( scrollbar.getPreferredSize().width , 11 ));
 						}
 						scrollbar.setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1 ) );
 						scrollbar.setBackground( null );

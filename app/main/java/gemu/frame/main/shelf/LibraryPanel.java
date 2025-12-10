@@ -43,7 +43,7 @@ public class LibraryPanel extends GemuSplitPane {
 		
 		shelf.addOnBookCoverMouseAdapter( new Shelf.OnBookCoverMouseAdapter() {
 			@Override
-			public void mousePressed( MouseEvent event, BookCover cover ) {
+			public void mouseClicked( MouseEvent event, BookCover cover ) {
 				setFocusedBookCover( cover ); 
 			}
 		});
@@ -76,8 +76,9 @@ public class LibraryPanel extends GemuSplitPane {
 	}
 	
 	public void setFocusedBookCover( BookCover bookCover ) {
-		actionBar.setBookCover( bookCover );	
+		actionBar.setBookCover( bookCover );                
 		banner.setGame( bookCover.getGame() );	
+		shelf.scrollTo( bookCover );
 	}
 	
 	public class ZippingStatePanel extends ResultPanel {

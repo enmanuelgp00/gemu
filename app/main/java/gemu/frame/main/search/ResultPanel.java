@@ -32,9 +32,9 @@ public class ResultPanel extends GemuScrollPane {
 			ResultComponent rcomponent = new ResultComponent( bookCover );
 			rcomponent.addMouseListener( new MouseAdapter() {
 				@Override
-				public void mousePressed( MouseEvent event ) {
+				public void mouseClicked( MouseEvent event ) {
 					for ( OnResultComponentMouseAdapter listener : listeners ) {
-						listener.mousePressed( rcomponent, event );
+						listener.mouseClicked( rcomponent, event );
 					}
 				}
 			});

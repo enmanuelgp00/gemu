@@ -4,5 +4,5 @@ import java.awt.event.*;
 
 public abstract class OnResultComponentMouseAdapter {
 
-	public void mousePressed( ResultComponent element, MouseEvent event ) { }
+	public void mouseClicked( ResultComponent element, MouseEvent event ) { }
 }

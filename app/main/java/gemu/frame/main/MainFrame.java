@@ -48,7 +48,7 @@ public class MainFrame extends JFrame {
 		});
 		searchPanel.addResultComponentMouseListener( new OnResultComponentMouseAdapter() {
 			@Override
-			public void mousePressed( ResultComponent element, MouseEvent event ) {
+			public void mouseClicked( ResultComponent element, MouseEvent event ) {
 				libraryPanel.setFocusedBookCover( element.getBookCover() );
 			}
 		});

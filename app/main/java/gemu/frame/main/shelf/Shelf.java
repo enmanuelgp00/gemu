@@ -18,21 +18,15 @@ public class Shelf extends GemuScrollPane {
 		Content content = new Content();
 		setBorder( BorderFactory.createEmptyBorder( 0, 0, 0, 0 ) ); 
 		setViewportView( content );
-		
+		addOnBookCoverMouseAdapter( draggingScroll );
 		Thread th = new Thread(()->{
 			bookCovers = new BookCover[ games.length ];
 			for ( int i = 0; i < games.length; i++ ) {
 				
 				bookCovers[i] = new BookCover( games[i] );
 				BookCover bookCover = bookCovers[i];
-				bookCover.addMouseListener( new MouseAdapter(){
-					@Override
-					public void mousePressed( MouseEvent event ) {
-						for ( OnBookCoverMouseAdapter listener : onBookCoverMouseListeners ) {
-							listener.mousePressed( event, bookCover );
-						}
-					}
-				});
+				bookCover.addMouseListener( createDedicatedMouseListener( bookCover ) );   
+				bookCover.addMouseMotionListener( createDedicatedMouseListener( bookCover ) );
 						
 				content.add( bookCover );
 				revalidate();
@@ -49,18 +43,98 @@ public class Shelf extends GemuScrollPane {
 		});
 	}
 	
+	public void scrollTo( BookCover bookCover ) {
+		Rectangle  bookBounds = bookCover.getBounds();
+		JViewport viewport = getViewport();
+		
+		if ( viewport.getViewPosition().y > bookBounds.y ) {
+			viewport.setViewPosition( new Point( 0, bookBounds.y ));
+		} else if ( viewport.getViewPosition().y + getHeight() < bookBounds.y + bookBounds.height ) {
+			viewport.setViewPosition( new Point( 0, bookBounds.y - getHeight() + bookBounds.height ));
+		}
+	}
+	
 	public void addOnBookCoverMouseAdapter( OnBookCoverMouseAdapter listener ) {
 		onBookCoverMouseListeners.add( listener );
 	}
 	
-	static abstract class OnBookCoverMouseAdapter {
-		void mousePressed( MouseEvent event, BookCover cover ) { }
+	static abstract class OnBookCoverMouseAdapter {                      
+		void mouseClicked( MouseEvent event, BookCover cover ) { }    
+		void mouseEntered( MouseEvent event, BookCover cover ) { } 
+		void mouseExited( MouseEvent event, BookCover cover ) { } 
+		void mousePressed( MouseEvent event, BookCover cover ) { } 
+		void mouseReleased( MouseEvent event, BookCover cover ) { }
+		void mouseMoved( MouseEvent event, BookCover cover ) { }
+		void mouseDragged( MouseEvent event, BookCover cover ) { }
 	}
 	
 	
 	public BookCover[] listBookCovers() {
 		return bookCovers;
 	}
+	
+	OnBookCoverMouseAdapter draggingScroll = new OnBookCoverMouseAdapter() {
+		Point initialMousePosition;    
+		@Override
+		public void mousePressed( MouseEvent event, BookCover bookCover ) {
+			initialMousePosition = event.getPoint();
+		} 
+		@Override
+		public void mouseDragged( MouseEvent event, BookCover bookCover ) {
+			JViewport viewport = Shelf.this.getViewport();
+			Point currentPoint = event.getPoint();
+			Point mouseMovement = new Point(
+				initialMousePosition.x - currentPoint.x,
+				initialMousePosition.y - currentPoint.y	);
+			Point movement =  new Point( 0,  viewport.getViewPosition().y + mouseMovement.y );
+			if ( movement.y < 0 || movement.y > viewport.getView().getHeight() - getHeight() ) {
+				initialMousePosition = currentPoint;
+				return;
+			}
+			viewport.setViewPosition( movement );
+		}
+	};
+	
+	MouseAdapter createDedicatedMouseListener( BookCover bookCover ) {
+		return new MouseAdapter(){          
+			@Override
+			public void mouseClicked( MouseEvent event ) {
+				onBookCoverMouseListeners.forEach( listener -> listener.mouseClicked( event, bookCover ) );
+			}   
+			@Override
+			public void mouseEntered( MouseEvent event ) {
+				onBookCoverMouseListeners.forEach( listener -> listener.mouseEntered( event, bookCover ) );
+			}   
+			@Override
+			public void mouseExited( MouseEvent event ) {
+				onBookCoverMouseListeners.forEach( listener -> listener.mouseExited( event, bookCover ) );
+			}
+			@Override
+			public void mousePressed( MouseEvent event ) {
+				for ( OnBookCoverMouseAdapter listener : onBookCoverMouseListeners ) {
+					listener.mousePressed( event, bookCover );
+				}
+			}
+			@Override
+			public void mouseReleased( MouseEvent event ) {
+				for ( OnBookCoverMouseAdapter listener : onBookCoverMouseListeners ) {
+					listener.mouseReleased( event, bookCover );
+				}
+			}
+			@Override
+			public void mouseMoved( MouseEvent event ) {
+				for ( OnBookCoverMouseAdapter listener : onBookCoverMouseListeners ) {
+					listener.mouseMoved( event, bookCover );
+				}
+			}  
+			@Override
+			public void mouseDragged( MouseEvent event ) {
+				for ( OnBookCoverMouseAdapter listener : onBookCoverMouseListeners ) {
+					listener.mouseDragged( event, bookCover );
+				}
+			}
+		};
+	} 
 	
 	class Content extends JPanel {
 		Content() {
@@ -94,7 +168,7 @@ public class Shelf extends GemuScrollPane {
 			}
 			Insets insets = getInsets();
 			int gap = ((FlowLayout)getLayout()).getVgap();
-			return new Dimension( width + insets.left + insets.right, height + insets.top + insets.bottom  + gap);  
+			return new Dimension( width + insets.left + insets.right, height + insets.top + insets.bottom  + gap );  
 		}
 		
 	}

@@ -36,14 +36,17 @@ public class BookCover extends JPanel {
 		layer0.add( new Box( BoxLayout.X_AXIS ) {
 			{
 				add( Box.createHorizontalGlue());
-				add( new GemuButton("") {
+				add( new Box( BoxLayout.X_AXIS ) {
 					{
 						setPreferredSize( new Dimension( 30, 30));
 						setMaximumSize( new Dimension( 30, 30 ));
-						setBackground( Style.COLOR_BACKGROUND );
-						addActionListener(( actionEvent )->{
-							game.setPinned( !game.isPinned() );
-							repaint();
+						
+						addMouseListener( new MouseAdapter() {
+							@Override
+							public void mouseClicked( MouseEvent event ) {
+								game.setPinned( !game.isPinned() );
+								repaint();
+							}
 						});
 					}
 					@Override

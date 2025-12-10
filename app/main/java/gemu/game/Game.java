@@ -1,7 +1,8 @@
 package gemu.game;
 
 import java.io.*;
-import java.nio.*;    
+import java.nio.file.*;  
+import java.nio.file.attribute.*;   
 import java.util.*;                   
 import java.util.stream.Collectors;
 import gemu.io.*;
@@ -222,7 +223,7 @@ public class Game {
 	public Long getProcessId() {
 		return processId;
 	}
-	
+	//Attributes
 	//length
 	public void checkLength() {
 		if ( isStandby() || isRunning() ) {
@@ -340,6 +341,20 @@ public class Game {
 		}
 	}
 	
+	public long getInfoFileCreationInMills() {
+		Path path = getInfoFile().toPath();
+		try {
+			BasicFileAttributes attrs = Files.readAttributes(
+				path,
+				BasicFileAttributes.class
+			);
+			
+			FileTime creationTime = attrs.creationTime();
+			return creationTime.toMillis();
+		} catch( Exception e ) {}        
+		return 0;
+	}
+	
 	//zip
 	public void unzip( OnProcessListener listener ) {
 		if ( isInZip() ) {
@@ -404,10 +419,10 @@ public class Game {
 							};  
 						}
 						
-						
-						checkLength();											   
+																   
 						listener.processFinished( processId, exitCode);
-						setZippingProcessId( -1L );  
+						setZippingProcessId( -1L );     
+						checkLength();	
 					
 					}
 				} ) ;
@@ -449,10 +464,10 @@ public class Game {
 							info.setFile( new File( getDirectory() + "\\" + outfBaseName + Info.FILE_EXTENSION ) );
 						}
 					} 
-							
-					checkLength();						 
+											 
 					listener.processFinished( processId, exitCode );
-					setZippingProcessId( -1L );
+					setZippingProcessId( -1L ); 
+					checkLength();		
 				}
 			
 			}, dir, dir, getInfoFile(), getCoverImage() );
