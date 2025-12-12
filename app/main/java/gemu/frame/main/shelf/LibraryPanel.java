@@ -10,20 +10,22 @@ import gemu.game.*;
 import gemu.shell.*;  
 import gemu.util.*;
 import gemu.frame.main.search.*;
+import gemu.frame.pref.*;
 
 public class LibraryPanel extends GemuSplitPane {
 	Banner banner;
 	ActionBar actionBar;
 	Shelf shelf;
-	ZippingStatePanel zippingStatePanel;
-	
+	RunningProcessPanel runningProcessPanel;
+	PreferencesFrame preferencesFrame;
 	ArrayList<OnProcessListener> actionBarProcessListeners = new ArrayList<>();
 	ArrayList<BookCover> zippingList = new ArrayList<>();
 	public LibraryPanel( Game[] games ) {                
 		super( JSplitPane.VERTICAL_SPLIT );
 		shelf = new Shelf( games );
 		actionBar = new ActionBar();
-		zippingStatePanel = new ZippingStatePanel();
+		preferencesFrame = new PreferencesFrame();
+		runningProcessPanel = new RunningProcessPanel();
 		
 		banner = new Banner() {
 			@Override
@@ -64,8 +66,8 @@ public class LibraryPanel extends GemuSplitPane {
 		return zippingList.toArray( new BookCover[zippingList.size()] );
 	}
 	
-	public ZippingStatePanel getZippingStatePanel() {
-		return zippingStatePanel;
+	public RunningProcessPanel getRunningProcessPanel() {
+		return runningProcessPanel;
 	}
 	
 	public void addOnActionBarProcessListener( OnProcessListener listener ) {
@@ -76,13 +78,22 @@ public class LibraryPanel extends GemuSplitPane {
 	}
 	
 	public void setFocusedBookCover( BookCover bookCover ) {
+		BookCover focusedBook = getFocusedBookCover();
+		if ( focusedBook != null ) {
+			focusedBook.setHighlight( false );
+		}
 		actionBar.setBookCover( bookCover );                
+		preferencesFrame.setBookCover( bookCover );
 		banner.setGame( bookCover.getGame() );	
 		shelf.scrollTo( bookCover );
 	}
 	
-	public class ZippingStatePanel extends ResultPanel {
-			ZippingStatePanel() {
+	public BookCover getFocusedBookCover() {
+		return actionBar.getBookCover();
+	}
+	
+	public class RunningProcessPanel extends ResultPanel {
+			RunningProcessPanel() {
 			super();
 		}
 	
@@ -107,6 +118,12 @@ public class LibraryPanel extends GemuSplitPane {
 		GemuButton buttonScreenshot = new GemuButton("Screenshot");    
 		GemuButton buttonZip = new GemuButton("7zip", 5, 5 );
 		GemuButton buttonFiles = new GemuButton("Files");
+		GemuButton buttonPreferences = new GemuButton("Settings") {
+			{
+				addActionListener( (ActionEvent ) -> preferencesFrame.setVisible( true ) );
+			}
+		}; 
+		/*		
 		GemuButton buttonDelete = new GemuButton("Delete") {
 			{
 				setBackgroundColor( Style.COLOR_BACKGROUND );
@@ -114,24 +131,27 @@ public class LibraryPanel extends GemuSplitPane {
 				setRolloverBackground( new Color( 237, 2, 36 ) );
 			}
 		};
+		*/
 		
 		GemuButton[] buttons = new GemuButton[] {
 			buttonScreenshot,
 			buttonZip,
 			buttonFiles, 
-			buttonDelete
+			buttonPreferences
+			//,buttonDelete
 		};
-		Label playingTimeLabel = new Label("?");
-		Label lastTimePlayedLabel = new Label("?");
+		GemuLabel playingTimeLabel = new GemuLabel("?");
+		GemuLabel lastTimePlayedLabel = new GemuLabel("?");
 		
 		
 		protected ActionBar() {
 			super(BoxLayout.X_AXIS );			
 			 
 			setBorder( BorderFactory.createEmptyBorder( 3, 3, 3, 3 ));
-			setDisabledStyle();
+			setDeletedStyle();
 			buttonPlay.addActionListener( playAction );
 			buttonZip.addActionListener( zipAction );
+			buttonPreferences.addActionListener( openPreferencesWindow );
 			buttonScreenshot.addActionListener( screenshotAction );
 			buttonFiles.addActionListener( exploreFilesAction );
 			
@@ -149,7 +169,7 @@ public class LibraryPanel extends GemuSplitPane {
 					
 					gbc.gridx = 0;
 					gbc.gridy = 0;
-					add( new Label("Time Playing") {						
+					add( new GemuLabel("Time Playing") {						
 						{
 							setForeground( Color.GRAY );
 						}
@@ -157,7 +177,7 @@ public class LibraryPanel extends GemuSplitPane {
 					
 					gbc.gridx = 1;
 					gbc.gridy = 0;
-					add( new Label("Last Time Played"){ 
+					add( new GemuLabel("Last Time Played"){ 
 						{
 							setForeground( Color.GRAY );
 							setHorizontalAlignment( SwingConstants.LEFT );
@@ -199,7 +219,8 @@ public class LibraryPanel extends GemuSplitPane {
 		
 		
 		protected void setBookCover( BookCover bookCover ) {
-			this.bookCover = bookCover;
+			this.bookCover = bookCover;            
+			bookCover.setHighlight( true );
 			Game game = bookCover.getGame();
 			updateGameInfoLabels();
 			if ( game != null ) {
@@ -217,7 +238,7 @@ public class LibraryPanel extends GemuSplitPane {
 				} else if( game.isInZip() ) {					
 					setInZipStyle();
 				} else if ( game.isDeleted() ) {
-					setDisabledStyle();
+					setDeletedStyle();
 				}
 				
 			} else {
@@ -274,7 +295,8 @@ public class LibraryPanel extends GemuSplitPane {
 			setButtonPlayReadyStyle(); 
 			setButtonZipStandbyStyle();
 			buttonFiles.setEnabled( true );
-			buttonDelete.setEnabled( true );
+			buttonPreferences.setEnabled( true ); 
+			//buttonDelete.setEnabled( true );
 		}
 		
 		protected void setRunningStyle() {  
@@ -283,7 +305,7 @@ public class LibraryPanel extends GemuSplitPane {
 			setButtonZipStandbyStyle();
 			buttonZip.setEnabled( false );
 			buttonFiles.setEnabled( true );
-			buttonDelete.setEnabled( false );
+			buttonPreferences.setEnabled( false );
 		}
 		
 		protected void setInZipStyle() {
@@ -291,7 +313,7 @@ public class LibraryPanel extends GemuSplitPane {
 			setButtonZipUnzipStyle(); 
 			buttonScreenshot.setEnabled( false );
 			buttonFiles.setEnabled( true );
-			buttonDelete.setEnabled( true );
+			buttonPreferences.setEnabled( true );
 		} 
 		
 		protected void setInZipProcessStyle() {
@@ -309,10 +331,22 @@ public class LibraryPanel extends GemuSplitPane {
 			buttonFiles.setEnabled( true );
 		};
 		
+		protected void setDeletedStyle() {
+			buttonPlay.setEnabled( false );
+			for ( GemuButton button : buttons ) {
+				button.setEnabled( false );
+			}              
+		};
 		
 		
 		//actionlisteners
-		
+		ActionListener openPreferencesWindow = new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent event ) {
+				preferencesFrame.setBookCover( getBookCover() );
+				preferencesFrame.setVisible( true );
+			}
+		};
 		protected ActionListener playAction = new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent event ) {
@@ -378,7 +412,7 @@ public class LibraryPanel extends GemuSplitPane {
 			public void actionPerformed( ActionEvent event ) {
 				zippingList.add( getBookCover() ); 
 				setInZipProcessStyle();
-				zippingStatePanel.refresh();
+				runningProcessPanel.refresh();
 				if ( isZippingThreadRunning() ) {
 					return;
 				}
@@ -453,7 +487,7 @@ public class LibraryPanel extends GemuSplitPane {
 							} );
 						}
 						zippingList.remove( bookCover );
-						zippingStatePanel.refresh();
+						runningProcessPanel.refresh();
 						
 					} // end while
 					
@@ -482,7 +516,7 @@ public class LibraryPanel extends GemuSplitPane {
 					String screenshotFileName = Games.COVER_NAME;
 					StringBuilder script = new StringBuilder();
 					script.append("$id = " + id + "\n" );            
-					script.append("$screenshotFileName = '" + screenshotFileName + "'\n" );
+					script.append("$screenshotFileName = '" + screenshotFileName + ".jpg'\n" );
 					while( ( code = reader.read() ) != -1 ) {
 						ch = (char)code;
 						if ( ch == '"' ) {  
@@ -553,17 +587,6 @@ public class LibraryPanel extends GemuSplitPane {
 				
 			}
 		};
-		
-		
-		
-		
-		class Label extends JLabel {
-			Label( String name ) {
-				super( name );
-				setFont( Style.FONT_MONO_SPACE );
-				setForeground( Style.COLOR_FOREGROUND );
-			}
-		}
 		
 	}
 	

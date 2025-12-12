@@ -21,10 +21,10 @@ public final class FileNames {
 	}
 	
 	public static String getBaseName( File f ) {
-		if ( f.isDirectory() ) {
+		String name = f.getName();
+		if ( !name.contains(".") ) {
 			return f.getName();
 		}
-		String name = f.getName();
 		name = name.substring( 0, name.lastIndexOf(".")  ); 
 		return name;
 	}

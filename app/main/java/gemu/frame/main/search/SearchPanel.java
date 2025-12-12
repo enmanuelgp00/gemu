@@ -20,7 +20,7 @@ public class SearchPanel extends JPanel {
 		inputPanel = new InputPanel( library.getShelf(), resultPanel );
 		add( inputPanel );   
 		add( resultPanel );
-		add( library.getZippingStatePanel() );
+		add( library.getRunningProcessPanel() );
 		
 	}
 	

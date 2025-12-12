@@ -13,7 +13,7 @@ import gemu.util.*;
 
 public class BookCover extends JPanel {
 	Box boxOnTop;
-	final Dimension standardSize = new Dimension( 110, 140 );
+	final Dimension standardSize = new Dimension( 110, 168 );
 	int detailWidth = 0;
 	int coverXViewport = 0;
 	boolean isMouseInside = false;
@@ -21,7 +21,7 @@ public class BookCover extends JPanel {
 	Game game;               
 	Tag lengthTag;
 	Tag zipLengthTag;
-	
+	boolean pointed = false;
 	public BookCover( Game game ) {
 		super();
 		this.game = game;
@@ -119,7 +119,16 @@ public class BookCover extends JPanel {
 		setBorder( BorderFactory.createEmptyBorder( 1, 1, 1, 1));
 		addMouseMotionListener( expandOnRollover );  
 		addMouseListener( expandOnRollover );
-		
+	
+	}
+	
+	public void setHighlight( boolean bool ) {
+		pointed = bool;
+		repaint();
+	}
+	
+	public boolean isHighlight() {
+		return pointed;
 	}
 	
 	public void updateLengthTags() {
@@ -286,10 +295,68 @@ public class BookCover extends JPanel {
 			super.paintComponent(g2);			
 		} 	
 		
-		if ( game.isInZip() ) {     
+		if ( game.isInZip() ) {
 			Color background = Style.COLOR_BACKGROUND;
+			/*
+			if ( bufferedImage != null ) {
+				int count = 0;
+				int width = bufferedImage.getWidth() / 2;
+				int height = bufferedImage.getHeight();
+				
+				int[] buffer = bufferedImage.getRGB( 0, 0, width, height, null, 0, width );
+				int average = 0;
+				int b ;
+				int gr;
+				int r ;
+				int a ;
+				int pixel;
+				for ( int x = 0; x < width; x++ ) {
+					for ( int y = 0; y < height; y++ ) {
+						pixel = buffer[ y * width + x ];
+						a = ( pixel >> 24 ) & 0xff;          
+						r = ( pixel >> 12 ) & 0xff;
+						gr = ( pixel >> 6 ) & 0xff;            
+						b = pixel & 0xff;
+						average += ( r + gr + b ) / 3;
+						count++;
+					
+					}
+				}
+				
+				average /= count;
+				if ( average < 60 ) {
+					background = Color.WHITE;
+				} 
+			}
+			*/
+			
+			
 			g2.setColor( new Color( background.getRed(), background.getGreen(), background.getBlue(), 150 ));
 			g2.fillPolygon( new int[]{0, 0, getWidth() }, new int[]{0, getHeight(), getHeight() }, 3 ); 
+		} else if ( game.isDeleted() ){
+			
+			Path2D redcross = new Path2D.Float();
+			redcross.moveTo( 0, 0 );           
+			redcross.lineTo( getWidth(), getHeight() );
+			redcross.moveTo( getWidth(), 0 );           
+			redcross.lineTo( 0, getHeight() );
+			g2.setStroke( new BasicStroke( 10 ));
+			Color transparentRed = new Color( 255, 0, 0, 50);
+			g2.setColor( transparentRed );
+			g2.draw( redcross );
+		}
+		
+		if ( isHighlight() ) {
+			
+			Path2D frame = new Path2D.Double();
+			frame.moveTo( 0, 0);
+			frame.lineTo( getWidth() - 1, 0 );
+			frame.lineTo( getWidth() - 1, getHeight() - 1 );
+			frame.lineTo( 0, getHeight() - 1 );
+			frame.closePath();
+			g2.setStroke( new BasicStroke( 1 ) );
+			g2.setColor( Color.GREEN );
+			g2.draw( frame );
 		}
 		g2.dispose();	
 	}

@@ -40,7 +40,7 @@ public class MainFrame extends JFrame {
 			@Override
 			public void processFinished( long processId, int exitCode ) {
 				if ( exitCode == 0 ) {
-					logBar.setText("Success");
+					logBar.setText("");
 					return;
 				}
 				logBar.setText("Error");

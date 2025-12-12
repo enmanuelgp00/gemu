@@ -81,17 +81,19 @@ public class Shelf extends GemuScrollPane {
 		} 
 		@Override
 		public void mouseDragged( MouseEvent event, BookCover bookCover ) {
-			JViewport viewport = Shelf.this.getViewport();
-			Point currentPoint = event.getPoint();
-			Point mouseMovement = new Point(
-				initialMousePosition.x - currentPoint.x,
-				initialMousePosition.y - currentPoint.y	);
-			Point movement =  new Point( 0,  viewport.getViewPosition().y + mouseMovement.y );
-			if ( movement.y < 0 || movement.y > viewport.getView().getHeight() - getHeight() ) {
-				initialMousePosition = currentPoint;
-				return;
+			if ( (event.getModifiersEx() & InputEvent.BUTTON1_DOWN_MASK) != 0 ) { 
+				JViewport viewport = Shelf.this.getViewport();
+				Point currentPoint = event.getPoint();
+				Point mouseMovement = new Point(
+					initialMousePosition.x - currentPoint.x,
+					initialMousePosition.y - currentPoint.y	);
+				Point movement =  new Point( 0,  viewport.getViewPosition().y + mouseMovement.y );
+				if ( movement.y < 0 || movement.y > viewport.getView().getHeight() - getHeight() ) {
+					initialMousePosition = currentPoint;
+					return;
+				}
+				viewport.setViewPosition( movement );
 			}
-			viewport.setViewPosition( movement );
 		}
 	};
 	
@@ -138,7 +140,7 @@ public class Shelf extends GemuScrollPane {
 	
 	class Content extends JPanel {
 		Content() {
-			super( new FlowLayout( FlowLayout.CENTER ));
+			super( new FlowLayout( FlowLayout.CENTER, 5, 5 ));
 			setBackground( Style.COLOR_SECONDARY );
 		}
 		@Override

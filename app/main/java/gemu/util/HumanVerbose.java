@@ -55,7 +55,7 @@ public final class HumanVerbose {
 		if ( l != null ) {			
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTimeInMillis(l);
-			SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE dd MMMM YYYY", Locale.US ); 
+			SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM", Locale.US ); 
 			SimpleDateFormat hourFormat = new SimpleDateFormat("hh:mm a", Locale.US );
 			String played = dateFormat.format( calendar.getTime() );
 			String current = dateFormat.format( Calendar.getInstance().getTime() );

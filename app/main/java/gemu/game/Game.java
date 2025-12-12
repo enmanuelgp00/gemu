@@ -211,7 +211,7 @@ public class Game {
 		
 	}
 	
-	private void setNeedsAdmin( boolean val ) {
+	public void setNeedsAdmin( boolean val ) {
 		info.set( Info.NEEDS_ADMIN, String.valueOf(val) );
 		info.commit();
 	}
@@ -504,9 +504,11 @@ public class Game {
 	
 	public void findCoverImage() {
 		for ( File f : getDirectory().listFiles() ) {
-			if ( f.getName().equals(Games.COVER_NAME)) {
-				setCoverImage( f );
-				break;
+			if ( !f.isDirectory() ) {
+				if ( FileNames.getBaseName(f).equals(Games.COVER_NAME)) {
+					setCoverImage( f );
+					break;
+				}
 			}
 		}
 	} 
