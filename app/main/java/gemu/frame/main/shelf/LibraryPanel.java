@@ -296,7 +296,6 @@ public class LibraryPanel extends GemuSplitPane {
 			setButtonZipStandbyStyle();
 			buttonFiles.setEnabled( true );
 			buttonPreferences.setEnabled( true ); 
-			//buttonDelete.setEnabled( true );
 		}
 		
 		protected void setRunningStyle() {  

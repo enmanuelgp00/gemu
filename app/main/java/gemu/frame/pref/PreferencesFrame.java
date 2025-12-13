@@ -6,6 +6,7 @@ import java.util.*;
 import java.awt.*;      
 import java.awt.geom.*;
 import java.awt.event.*;
+import gemu.frame.*;
 import gemu.frame.main.shelf.*;
 import gemu.game.*;
 
@@ -31,6 +32,7 @@ public class PreferencesFrame extends JFrame {
 		}, ( bookCover ) -> { 
 			Game game = bookCover.getGame();
 			game.setPinned( !game.isPinned() );
+			bookCover.repaint();
 		});
 		
 	SimpleOption DeleteOption = new SimpleOption("", new GemuButton("Delete", 5, 5 ){
@@ -39,8 +41,13 @@ public class PreferencesFrame extends JFrame {
 				setPressedBackground( new Color( 227, 2, 26 ) );
 				setRolloverBackground( new Color( 237, 2, 36 ) );
 			}
-		}, ( game ) -> { 
-			System.out.println("Deleting game");
+		}, ( bookCover ) -> {
+			new ConfirmationFrame(( isAccepted )->{
+				if ( isAccepted ) {
+					bookCover.getGame().delete();
+					bookCover.repaint();
+				}
+			});
 		});  
 	BookCover bookCover;
 	
@@ -121,7 +128,7 @@ public class PreferencesFrame extends JFrame {
 		JComponent button;
 		SimpleOption( String title, JComponent button, OptionAction optionAction ) {
 			super( BoxLayout.X_AXIS );
-			setBorder( BorderFactory.createEmptyBorder( 7, 7, 7, 7 ) );
+			setBorder( BorderFactory.createEmptyBorder( 7, 19, 7, 7 ) );
 			GemuLabel label = new GemuLabel( title );
 			button.addMouseListener( new MouseAdapter() {
 				@Override

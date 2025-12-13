@@ -355,6 +355,41 @@ public class Game {
 		return 0;
 	}
 	
+	public void delete() {
+		
+		try {
+		
+			String screenshotPath = getCoverImage().getCanonicalPath();
+			String infoFilePath = getInfoFile().getCanonicalPath();
+			
+			String path;
+			for ( File f : getDirectory().listFiles() ) {
+				path = f.getCanonicalPath();
+				if ( path.equals( screenshotPath ) || path.equals( infoFilePath ) ) {
+					
+				} else {
+				
+					if ( f.isDirectory() ) {
+						rmdir(f);
+					}
+					f.delete();
+				
+				}
+			}
+		} catch(Exception e) {
+		
+		}
+	}
+	
+	private void rmdir(File dir) {
+		for ( File f :  dir.listFiles()) {
+			if(f.isDirectory()) {
+				rmdir(f);
+			}
+			f.delete();
+		}
+	}	
+	
 	//zip
 	public void unzip( OnProcessListener listener ) {
 		if ( isInZip() ) {
