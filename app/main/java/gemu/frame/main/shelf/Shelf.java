@@ -140,7 +140,7 @@ public class Shelf extends GemuScrollPane {
 	
 	class Content extends JPanel {
 		Content() {
-			super( new FlowLayout( FlowLayout.CENTER, 5, 5 ));
+			super( new FlowLayout( FlowLayout.LEFT, 5, 5 ));
 			setBackground( Style.COLOR_SECONDARY );
 		}
 		@Override

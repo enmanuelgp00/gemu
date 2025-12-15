@@ -124,7 +124,6 @@ public class Game {
 				"$startTime = (get-date).ticks - " + getPlayingTime() * 10000,
 				"$timeFocused = 0",
 				"while ( !$process.hasExited ) {",
-				"	start-sleep -milliseconds 1000;",
 				"	$foregroundWindow = [WindowFocus]::GetForegroundWindow()",
 				"	[System.UInt32]$foregroundPID = $null;",
 				"	if ( $foregroundWindow -ne [IntPtr]::Zero ) {",
@@ -136,11 +135,12 @@ public class Game {
 				"		} else {",                     
 				"			$startTime = (get-date).ticks - $timeFocused",
 				"		}",
-				"	 }",
+				"	 }", 
+				"	start-sleep -milliseconds 1000;",
 				"}",
 				"#$timeSpan = [TimeSpan]::FromTicks($timeFocused)",
 				"#$timeSpan.TotalMilliseconds",
-				"[convert]::toInt64($timeFocused / 10000)"
+				"#[convert]::toInt64($timeFocused / 10000)"
 			};
 			StringBuilder sb = new StringBuilder();
 			for ( String s : script ) {
