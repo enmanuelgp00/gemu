@@ -25,7 +25,7 @@ public class Banner extends JPanel {
 				setBackground( null );
 				setBorder( BorderFactory.createEmptyBorder( 1, 3, 0, 2 ) );
 				setOpaque( false );
-				setFont( new Font( "MS Gothic", Font.PLAIN, 30 ) );
+				setFont( Style.FONT_LABEL );// new Font( "MS Gothic", Font.PLAIN, 30 ) );
 				setForeground( Style.COLOR_FOREGROUND );                      
 				setCaretColor( Style.COLOR_FOREGROUND );
 				setHorizontalAlignment( SwingConstants.RIGHT );

@@ -11,7 +11,12 @@ import gemu.frame.main.shelf.*;
 import gemu.game.*;
 
 public class PreferencesFrame extends JFrame {
-	
+	GemuLabel title = new GemuLabel("") {
+		{
+			setFont( Style.FONT_LABEL );
+			setBorder( BorderFactory.createEmptyBorder( 3, 3, 3, 3 ));
+		}
+	};
 	SimpleOption adminOption = new SimpleOption("Needs Admin", new GemuSwitch() {
 			@Override
 			public boolean isTurnOn() {
@@ -62,6 +67,7 @@ public class PreferencesFrame extends JFrame {
 		setUndecorated( true );  
 		setOpacity( 0.8f );			       
 		getContentPane().setBackground( Style.COLOR_BACKGROUND );
+		add( title, BorderLayout.NORTH );
 		Box box = new Box( BoxLayout.Y_AXIS );
 		box.add( Box.createRigidArea( new Dimension( 10, 10 )) );
 		options.forEach( option -> box.add( option ));
@@ -115,8 +121,9 @@ public class PreferencesFrame extends JFrame {
 	}	
 	
 	public void setBookCover( BookCover bookCover ) {
-		this.bookCover = bookCover;           
-		setSize( new Dimension( 290, getPreferredSize().height ) );
+		this.bookCover = bookCover;
+		title.setText( bookCover.getGame().getTitle() );
+		setSize( new Dimension( 290 , getPreferredSize().height ) );
 		setShape( new RoundRectangle2D.Double( 0, 0, getWidth(), getHeight(), 5, 5 ));
 	}
 	

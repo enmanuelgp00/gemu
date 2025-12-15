@@ -8,11 +8,14 @@ import gemu.frame.main.search.*;
 import gemu.frame.main.shelf.*;       
 import gemu.game.*;                      
 import gemu.shell.*;
+import gemu.util.*;
 
 
 public class MainFrame extends JFrame {
+	Game[] games;
 	public MainFrame( Game[] games ) {
 		super();
+		this.games = games;
 		setUndecorated( true );
 		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		getContentPane().setBackground( Style.COLOR_BACKGROUND );
@@ -20,10 +23,14 @@ public class MainFrame extends JFrame {
 		setMinimumSize( new Dimension(1000, 600 )); 
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
 		
-		JLabel logBar = new JLabel(" ");
+		Box logBar = new Box( BoxLayout.X_AXIS );
 		logBar.setBorder( BorderFactory.createEmptyBorder( 5, 3, 1, 3 ));
-		logBar.setFont( Style.FONT_MONO_SPACE );
-		logBar.setForeground( Style.COLOR_FOREGROUND );
+		GemuLabel logLabel = new GemuLabel("");
+		GemuLabel totalPlayingTimeLabel = new GemuLabel("");
+		logBar.add( logLabel );          
+		logBar.add( Box.createHorizontalGlue() );
+		logBar.add( totalPlayingTimeLabel ); 
+		totalPlayingTimeLabel.setText( HumanVerbose.hours( getTotalPlayingTime() ) );
 		add( logBar, BorderLayout.SOUTH );
 														   
 		LibraryPanel libraryPanel = new LibraryPanel( games );         
@@ -33,17 +40,18 @@ public class MainFrame extends JFrame {
 			@Override
 			public void streamLineRead( long processId, String line ) {
 				if ( line.contains("%") ) {
-					logBar.setText( line );
+					logLabel.setText( line );
 				}
 				
 			}
 			@Override
-			public void processFinished( long processId, int exitCode ) {
+			public void processFinished( long processId, int exitCode ) {   
+				totalPlayingTimeLabel.setText( HumanVerbose.hours( getTotalPlayingTime() ) );
 				if ( exitCode == 0 ) {
-					logBar.setText("");
+					logLabel.setText("");
 					return;
 				}
-				logBar.setText("Error");
+				logLabel.setText("Error");
 			}
 		});
 		searchPanel.addResultComponentMouseListener( new OnResultComponentMouseAdapter() {
@@ -64,6 +72,14 @@ public class MainFrame extends JFrame {
 			}
 		});
 		
+	}
+	
+	long getTotalPlayingTime() {
+		long totalTime = 0;
+		for ( Game g : games ) {
+			totalTime += g.getPlayingTime();
+		}
+		return totalTime;
 	}
 	
 	MouseAdapter resizeAdapter = new MouseAdapter() {

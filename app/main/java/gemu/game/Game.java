@@ -61,10 +61,11 @@ public class Game {
 			Shell.run( new OnProcessListener() {
 				@Override
 				public void processStarted( long processId ){   
-					setLastTimePlayed( System.currentTimeMillis() );
+					setLastTimePlayed( System.currentTimeMillis() );  
+					setProcessId( processId );
+					handlePlayingTimeOnFocus( adapter );
 					if ( !needsAdmin() ) {
-						setProcessId( processId );
-						setPlayingTimeBeforeRunning( getPlayingTime() );
+						//setPlayingTimeBeforeRunning( getPlayingTime() );
 						adapter.processStarted( processId );
 					}
 					
@@ -81,15 +82,16 @@ public class Game {
 				} 
 				@Override
 				public void processFinished( long processId, int exitCode ) {
+					
 					if ( needsAdmin() ) {                  
-						setPlayingTimeBeforeRunning( getPlayingTime() );
+						//setPlayingTimeBeforeRunning( getPlayingTime() );
 						adapter.processStarted( getProcessId() );
 						Shell.waitProcess( getProcessId() );
 					}
 					
 												
 					checkLength();
-					checkPlayingTime();
+					//checkPlayingTime();
 					adapter.processFinished( getProcessId() , exitCode );
 					setProcessId( -1L );     
 					if ( getCoverImage() == null ) {
@@ -100,6 +102,78 @@ public class Game {
 		});
 		
 		th.start();
+	}
+	
+	public void handlePlayingTimeOnFocus( OnProcessListener listener ) {
+		Thread th = new Thread(()-> {
+			System.out.println("handlePlayingTimeOnFocus");
+			String[] script = new String[]{
+				"add-type @\\\"",
+				"using System;",
+				"using System.Runtime.InteropServices;",
+				"using System.Text;",
+				
+				"public class WindowFocus {",
+				"	[DllImport(\\\"user32.dll\\\")]",
+				"	public static extern IntPtr GetForegroundWindow();",
+				
+				"	[DllImport(\\\"user32.dll\\\", SetLastError = true)]",
+				"	public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId );",
+				"}",
+				"\\\"@",
+				"$process = get-process -id " + getProcessId(),  
+				"$startTime = (get-date).ticks - " + getPlayingTime() * 10000,
+				"$timeFocused = 0",
+				"while ( $process.hasExited -eq $false ) {",
+				"	start-sleep -milliseconds 1000;",
+				"	$foregroundWindow = [WindowFocus]::GetForegroundWindow()",
+				"	[System.UInt32]$foregroundPID = $null;",
+				"	if ( $foregroundWindow -ne [IntPtr]::Zero ) {",
+				"		$null = [WindowFocus]::GetWindowThreadProcessId( $foregroundWindow, [ref]$foregroundPID );", 
+				"		if ( $process.id -eq $foregroundPID ) {", 
+				"			$timeFocused = (get-date).ticks - $startTime",
+				"			[convert]::toInt64($timeFocused / 10000)",  
+				
+				"		} else {",                     
+				"			$startTime = (get-date).ticks - $timeFocused",
+				"		}",
+				"	 }",
+				"}",
+				"#$timeSpan = [TimeSpan]::FromTicks($timeFocused)",
+				"#$timeSpan.TotalMilliseconds",
+				"[convert]::toInt64($timeFocused / 10000)"
+			};
+			StringBuilder sb = new StringBuilder();
+			for ( String s : script ) {
+				sb.append( s + "\n" );
+			}                                    
+			
+			Shell.run( new OnProcessListener() {
+				@Override
+				public void processStarted( long processId ) {
+				
+				}                            
+				@Override
+				public void streamLineRead( long processId, String line ) {
+					try {
+						long playingTime = Long.parseLong( line );
+						setPlayingTime( playingTime );
+					} catch( Exception e ) {}  
+					listener.streamLineRead( processId, line );
+				}
+				@Override
+				public void processFinished( long processId, int exitCode ) {
+					if ( isRunning() ) {
+						handlePlayingTimeOnFocus( listener );
+					}
+					
+				}
+			}, null, "powershell", sb.toString() );
+		});
+			
+		
+		th.start();
+		
 	}
 	
 	public void stop() {
@@ -120,12 +194,13 @@ public class Game {
 	public void setPlayingTimeBeforeRunning( long l ) {
 		playingTimeBeforeRunning = l;
 	}
-	
+	/*
 	public void checkPlayingTime() {
 		if ( isRunning() ) {
 			setPlayingTime( getPlayingTimeBeforeRunning() + System.currentTimeMillis() - getLastTimePlayed() ); 		
 		} 
 	}
+	*/
 	
 	private void setPlayingTime( long l ) {
 		info.set( Info.PLAYING_TIME, String.valueOf(l) );

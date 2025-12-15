@@ -190,6 +190,8 @@ public class Gemu {
 			
 			control++;
 		}
+		
+		control = 0;
 		for ( List<Game> l : states ) {
 			for ( Game game : l ) {
 				gameList.add( game );
