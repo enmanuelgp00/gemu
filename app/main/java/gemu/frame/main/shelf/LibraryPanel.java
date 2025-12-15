@@ -343,15 +343,7 @@ public class LibraryPanel extends GemuSplitPane {
 					setDisabledStyle(); 
 					BookCover bookCover = getBookCover();
 					Game game = getGame();
-					/*
-					Thread playingTimeChecker = new Thread(()->{
-						while( game.isRunning() ) {
-							try {               
-								Thread.sleep( 1000 );
-							} catch( Exception e ) {}
-						}
-					});
-					*/
+					
 					game.play( new OnProcessListener() {
 						@Override
 						public void processStarted( long processId ) {
@@ -359,7 +351,6 @@ public class LibraryPanel extends GemuSplitPane {
 								setRunningStyle();				
 							}
 							
-							//playingTimeChecker.start();
 							for ( OnProcessListener listener : actionBarProcessListeners ) {
 								listener.processStarted( processId );
 							}
@@ -497,16 +488,107 @@ public class LibraryPanel extends GemuSplitPane {
 					return;
 				}                        
 				try {
+					String screenshotFileName = Games.COVER_NAME + ".jpg";
 										 
 					long id = game.getProcessId();
+					String[] scriptCode = new String[] {
+						"add-type -assemblyname system.windows.forms",
+						"add-type -assemblyname system.drawing",
+						
+						"add-type @\\\"",
+						"	using System;",
+						"	using System.Runtime.InteropServices;",
+						"	public class Win32 {",
+						"		",
+						"		[DllImport(\\\"user32.dll\\\")]",
+						"		public static extern bool GetForegroundWindow();",
+						
+						"		[DllImport(\\\"user32.dll\\\")]",
+						"		public static extern bool SetForegroundWindow(IntPtr hWind);",
+						
+						"		[DllImport(\\\"user32.dll\\\")]",
+						"		public static extern bool GetClientRect(IntPtr hWind, out RECT rect);",
+						"		",
+						"		[DllImport(\\\"user32.dll\\\")]",
+						"		public static extern bool ClientToScreen(IntPtr hWind, ref POINT point);",
+						"				",
+						"		[DllImport(\\\"user32.dll\\\")]",
+						"		public static extern bool GetSystemMetrics(IntPtr nIndex);",
+						"		",
+						"		[DllImport(\\\"user32.dll\\\")]",
+						"		public static extern bool GetWindowRect(IntPtr hWind, out RECT rect);",
+						"		",
+						"		[DllImport(\\\"user32.dll\\\")]",
+						"		public static extern bool ShowWindow(IntPtr hWind, int nCmdShow);",
+						
+						"		[DllImport(\\\"user32.dll\\\")]",
+						"		public static extern bool IsIconic(IntPtr hWind);",
+						"		",
+						
+						"	}",
+						
+						"	[StructLayout(LayoutKind.Sequential)]",
+						"	public struct POINT {",
+						"		public int X; public int Y;",
+						"	}",
+						
+						"	[StructLayout(LayoutKind.Sequential)]",
+						"	public struct RECT {",
+						"		public int Left; public int Top; public int Right; public int Bottom;",
+						"	}",
+						"\\\"@",
+						
+						"$SW_RESTORE = 9",
+						"$SW_HIDE = 0",
+						"$SW_SHOW = 5",
+						
+						"$process = get-process -id " + game.getProcessId(),
+						"if ( -not $process) { return $false }",
+						
+						"$hWind = $process.MainWindowHandle",
+						"if ( [Win32]::IsIconic($hWind) ) {",
+						"	[void][Win32]::ShowWindow($hWind, $SW_RESTORE);",
+						"}",
+						
+						"[void][Win32]::SetForegroundWindow($process.MainWindowHandle)",
+						
+						"Start-Sleep -Milliseconds 500",
+						
+						
+						"$clientRect = New-Object RECT",
+						"[void][Win32]::GetClientRect($process.MainWindowHandle, [ref]$clientRect )",
+						
+						"$clientPoint = New-Object POINT",
+						"$clientPoint.X = 0",
+						"$clientPoint.Y = 0",
+						
+						"[void][Win32]::ClientToScreen( $hWind, [ref]$clientPoint )",
+						
+						"$width = $clientRect.Right - $clientRect.Left",
+						"$height = $clientRect.Bottom - $clientRect.Top",
+						
+						"$bitmap = New-Object System.Drawing.Bitmap $width, $height",
+						"$graphics = [System.Drawing.Graphics]::fromImage($bitmap)",
+						"$graphics.CopyFromScreen($clientPoint.X, $clientPoint.Y, 0, 0, $bitmap.size )",
+						
+						"[void]$bitmap.Save( \\\"" + screenshotFileName + "\\\", [System.Drawing.Imaging.ImageFormat]::jpeg )",
+						
+						"$bitmap.dispose()",
+						"$graphics.dispose()"
+					};
+					StringBuilder cmd = new StringBuilder();
+					for ( String s : scriptCode ) {
+						cmd.append(s + '\n');
+					}
+					/*
 					File scriptFile = new File( new File( LibraryPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath() ).getParentFile() + "\\screenshot_script.txt" ); 
 					BufferedReader reader = new BufferedReader( new InputStreamReader ( new FileInputStream( scriptFile ) ));
 					char ch;
 					int code;
-					String screenshotFileName = Games.COVER_NAME;
+					String screenshotFileName = Games.COVER_NAME + ".jpg";
 					StringBuilder script = new StringBuilder();
 					script.append("$id = " + id + "\n" );            
-					script.append("$screenshotFileName = '" + screenshotFileName + ".jpg'\n" );
+					script.append("$screenshotFileName = \\\"" + screenshotFileName + "\\\"\n" );
 					while( ( code = reader.read() ) != -1 ) {
 						ch = (char)code;
 						if ( ch == '"' ) {  
@@ -515,6 +597,7 @@ public class LibraryPanel extends GemuSplitPane {
 						script.append( ch );
 					}
 					reader.close();
+					*/
 					Shell.run( new OnProcessListener() {
 						@Override
 						public void processFinished( long processId, int exitCode ) {
@@ -528,7 +611,8 @@ public class LibraryPanel extends GemuSplitPane {
 							
 							}
 						}
-					} , game.getDirectory(), "powershell", script.toString() );
+					} , game.getDirectory(), "powershell", cmd.toString() );
+					
 				} catch ( Exception e ) {
 					e.printStackTrace();
 				}

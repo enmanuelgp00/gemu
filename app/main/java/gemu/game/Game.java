@@ -14,7 +14,6 @@ public class Game {
 	Info info;
 	long processId = -1;
 	long zippingProcessId = -1;
-	long playingTimeBeforeRunning = 0;
 	private Game() {
 		
 	}
@@ -65,7 +64,6 @@ public class Game {
 					setProcessId( processId );
 					handlePlayingTimeOnFocus( adapter );
 					if ( !needsAdmin() ) {
-						//setPlayingTimeBeforeRunning( getPlayingTime() );
 						adapter.processStarted( processId );
 					}
 					
@@ -84,14 +82,12 @@ public class Game {
 				public void processFinished( long processId, int exitCode ) {
 					
 					if ( needsAdmin() ) {                  
-						//setPlayingTimeBeforeRunning( getPlayingTime() );
 						adapter.processStarted( getProcessId() );
 						Shell.waitProcess( getProcessId() );
 					}
 					
 												
 					checkLength();
-					//checkPlayingTime();
 					adapter.processFinished( getProcessId() , exitCode );
 					setProcessId( -1L );     
 					if ( getCoverImage() == null ) {
@@ -105,8 +101,8 @@ public class Game {
 	}
 	
 	public void handlePlayingTimeOnFocus( OnProcessListener listener ) {
+		System.out.println("handlePlayingTimeOnFocus " + getProcessId() );
 		Thread th = new Thread(()-> {
-			System.out.println("handlePlayingTimeOnFocus");
 			String[] script = new String[]{
 				"add-type @\\\"",
 				"using System;",
@@ -121,10 +117,13 @@ public class Game {
 				"	public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId );",
 				"}",
 				"\\\"@",
-				"$process = get-process -id " + getProcessId(),  
+				"$process = get-process -id " + getProcessId() + " -ErrorAction SilentlyContinue",
+				"if(!$process) {",
+				"	exit 1",
+				"}",
 				"$startTime = (get-date).ticks - " + getPlayingTime() * 10000,
 				"$timeFocused = 0",
-				"while ( $process.hasExited -eq $false ) {",
+				"while ( !$process.hasExited ) {",
 				"	start-sleep -milliseconds 1000;",
 				"	$foregroundWindow = [WindowFocus]::GetForegroundWindow()",
 				"	[System.UInt32]$foregroundPID = $null;",
@@ -185,22 +184,6 @@ public class Game {
 		}
 	}
 	
-	
-	//playing time
-	public long getPlayingTimeBeforeRunning() {
-		return playingTimeBeforeRunning;
-	}
-	
-	public void setPlayingTimeBeforeRunning( long l ) {
-		playingTimeBeforeRunning = l;
-	}
-	/*
-	public void checkPlayingTime() {
-		if ( isRunning() ) {
-			setPlayingTime( getPlayingTimeBeforeRunning() + System.currentTimeMillis() - getLastTimePlayed() ); 		
-		} 
-	}
-	*/
 	
 	private void setPlayingTime( long l ) {
 		info.set( Info.PLAYING_TIME, String.valueOf(l) );
