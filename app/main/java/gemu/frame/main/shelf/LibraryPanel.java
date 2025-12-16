@@ -42,7 +42,12 @@ public class LibraryPanel extends GemuSplitPane {
 				}
 			}
 		};
-		
+		banner.addMouseListener( new MouseAdapter() {
+			@Override
+			public void mouseClicked( MouseEvent event ) {
+				shelf.scrollTo( getFocusedBookCover() );
+			}
+		});
 		shelf.addOnBookCoverMouseAdapter( new Shelf.OnBookCoverMouseAdapter() {
 			@Override
 			public void mouseClicked( MouseEvent event, BookCover cover ) {

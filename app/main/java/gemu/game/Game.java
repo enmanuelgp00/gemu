@@ -38,6 +38,11 @@ public class Game {
 		if ( game.getCoverImage() == null ) {
 			game.findCoverImage();		
 		}
+		if ( game.isInZip()) {
+			if ( game.getZipLength() == null ) {
+				game.checkLength();
+			}
+		}
 		return game;
 	}
 	
@@ -80,13 +85,12 @@ public class Game {
 				} 
 				@Override
 				public void processFinished( long processId, int exitCode ) {
-					
 					if ( needsAdmin() ) {                  
 						adapter.processStarted( getProcessId() );
-						Shell.waitProcess( getProcessId() );
-					}
+					}                    
+					handleChildWithMainWindow();
+					Shell.waitProcess( getProcessId() );
 					
-												
 					checkLength();
 					adapter.processFinished( getProcessId() , exitCode );
 					setProcessId( -1L );     
@@ -99,9 +103,57 @@ public class Game {
 		
 		th.start();
 	}
-	
+	public void handleChildWithMainWindow() {
+		String[] script = new String[]{
+			"function FindProcessMainWindow {",
+			"	param(",
+			"		$ParentProcessId",
+			"	)",
+			"	$processList = (Get-WMIObject -Class Win32_Process | where {$_.ParentProcessId -like $ParentProcessId })",
+			"	foreach ( $process in $processList) {",
+			"		$p = get-process -id $process.ProcessId",
+			"		if ( $p.MainWindowHandle -ne 0 ) {    ",
+			"			",
+			"			$a = FindProcessMainWindow -ParentProcessId $p.id;",
+			"			if ( $a -ne $null ) {",
+			"				return $a",
+			"			} else {",
+			"				return $p.id",
+			"			}",
+			"		} else {",
+			"			FindProcessMainWindow -ParentProcessId $p.id",
+			"		}",
+			"	}",
+			"	return $null",
+			"}",
+			"write-host checking",
+			"FindProcessMainWindow -ParentProcessId " + getProcessId()
+		};
+		StringBuilder sb = new StringBuilder();
+			for ( String s : script ) {
+				sb.append( s + "\n" );
+			} 
+		Shell.run( new OnProcessListener() {
+				@Override
+				public void processStarted( long processId ) {
+				
+				}                            
+				@Override
+				public void streamLineRead( long processId, String line ) {
+					try {
+						long id = Long.parseLong( line );
+						setProcessId( id );
+						System.out.println( line );
+					} catch( Exception e ) {}  
+					
+				}
+				@Override
+				public void processFinished( long processId, int exitCode ) {
+					
+				}
+			}, null, "powershell", sb.toString() );
+	}
 	public void handlePlayingTimeOnFocus( OnProcessListener listener ) {
-		System.out.println("handlePlayingTimeOnFocus " + getProcessId() );
 		Thread th = new Thread(()-> {
 			String[] script = new String[]{
 				"add-type @\\\"",
@@ -117,10 +169,45 @@ public class Game {
 				"	public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId );",
 				"}",
 				"\\\"@",
-				"$process = get-process -id " + getProcessId() + " -ErrorAction SilentlyContinue",
-				"if(!$process) {",
+				"function GetMainWindow {",
+				"	param($ProcessId)",
+				"	$process = Get-Process -id $ProcessId -ErrorAction SilentlyContinue",
+				"	if ( !$process ) {",
+				"		return $null",
+				"	}",
+				"	if ( $process.MainWindowHandle -ne 0 ) {",
+				"		return $process.id",
+				"	}",
+				"	",
+				"	$children = ( Get-WMIObject -Class Win32_Process | Where { $_.ParentProcessId -like $process.id } | Sort-Object StartTime )",
+				"	",
+				"	if ( $children -eq $null ) {",
+				"		return $null;",
+				"	}",
+				"	if ( $children.count -eq $null ) {",
+				"		$p = GetMainWindow -ProcessId $children.ProcessId",
+				"		if ($p -ne $null) {",
+				"			return $p",
+				"		}",
+				"		",
+				"	} else {",
+				"		for ( $i = $children.count; $i -gt 0; --$i ) {",
+				"			$p = GetMainWindow -ProcessId $children[$i].ProcessId",
+				"			if ($p -ne $null) {",
+				"				return $p",
+				"			}",
+				"		}",
+				"	}",
+				"	return $null",
+				"}",
+				
+				"$id = GetMainWindow -ProcessId " + getProcessId(),
+				"if(!$id) {",
 				"	exit 1",
 				"}",
+				"write-host d$id",
+				"$process = get-process -id $id -ErrorAction SilentlyContinue",
+				
 				"$startTime = (get-date).ticks - " + getPlayingTime() * 10000,
 				"$timeFocused = 0",
 				"while ( !$process.hasExited ) {",
@@ -154,6 +241,13 @@ public class Game {
 				}                            
 				@Override
 				public void streamLineRead( long processId, String line ) {
+					if (line.charAt(0) == 'd') {
+						try {
+							long id = Long.parseLong( line.substring(1) );
+							setProcessId( id );
+						} catch( Exception e ) {}
+						return;
+					}
 					try {
 						long playingTime = Long.parseLong( line );
 						setPlayingTime( playingTime );
