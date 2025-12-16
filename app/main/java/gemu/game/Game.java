@@ -89,7 +89,7 @@ public class Game {
 						adapter.processStarted( getProcessId() );
 					}                    
 					handleChildWithMainWindow();
-					Shell.waitProcess( getProcessId() );
+					//Shell.waitProcess( getProcessId() );
 					
 					checkLength();
 					adapter.processFinished( getProcessId() , exitCode );
@@ -105,29 +105,59 @@ public class Game {
 	}
 	public void handleChildWithMainWindow() {
 		String[] script = new String[]{
-			"function FindProcessMainWindow {",
-			"	param(",
-			"		$ParentProcessId",
-			"	)",
-			"	$processList = (Get-WMIObject -Class Win32_Process | where {$_.ParentProcessId -like $ParentProcessId })",
-			"	foreach ( $process in $processList) {",
-			"		$p = get-process -id $process.ProcessId",
-			"		if ( $p.MainWindowHandle -ne 0 ) {    ",
-			"			",
-			"			$a = FindProcessMainWindow -ParentProcessId $p.id;",
-			"			if ( $a -ne $null ) {",
-			"				return $a",
-			"			} else {",
-			"				return $p.id",
-			"			}",
-			"		} else {",
-			"			FindProcessMainWindow -ParentProcessId $p.id",
+			"function GetChildren {",
+			"	param($ProcessId) 	",
+			"	return ( Get-WMIObject -Class Win32_Process | Where { $_.ParentProcessId -like $ProcessId } | Sort-Object StartTime ) 	",
+			"} 	",
+			
+			"function GetMainWindow { 	",
+			"	param($ProcessId) 	",
+			"	$children = ( Get-WMIObject -Class Win32_Process | Where { $_.ParentProcessId -like $ProcessId } | Sort-Object StartTime ) 	",
+			
+			"	",
+			"	if ( !$children ) { 	",
+			"		$process = Get-Process -id $ProcessId -ErrorAction SilentlyContinue ",
+			"		if ( !$process ) { 	",
+			"			return $null",
+			"		} 	",
+			"		",
+			"		if ( $process.MainWindowHandle -ne 0 ) {",
+			"			return $process.id",
+			"		} 	",
+			"		",
+			"		return $null",
+			"	} 	",
+			"	if ( $children.count -eq $null ) {            ",
+			"		$p = GetMainWindow -ProcessId $children.ProcessId",
+			"		if ($p) {",
+			"			return $p		",
 			"		}",
+			"		",
+			"	} else { 	",
+			"		for ( $i = $children.count - 1; $i -gt -1; $i-- ) {",
+			"			",
+			"			$p = GetMainWindow -ProcessId $children[$i].ProcessId",
+			"			if ($p) { 	",
+			"				return $p",
+			"			} 	",
+			"		} 	",
 			"	}",
+			"	",
+			"	$process = Get-Process -id $ProcessId -ErrorAction SilentlyContinue ",
+			"	if ( !$process ) { 	",
+			"		return $null",
+			"	} 	",
+			"	",
+			"	if ( $process.MainWindowHandle -ne 0 ) { ",
+			"		return $process.id",
+			"	} 	",
+			"	",
 			"	return $null",
-			"}",
-			"write-host checking",
-			"FindProcessMainWindow -ParentProcessId " + getProcessId()
+			"} 	",
+			"while( (GetChildren -ProcessId " + getProcessId() + " ) ) {",
+			"	GetMainWindow -ProcessId " + getProcessId(),
+			"	start-sleep -milliseconds 1000",
+			"}"
 		};
 		StringBuilder sb = new StringBuilder();
 			for ( String s : script ) {
@@ -139,12 +169,11 @@ public class Game {
 				
 				}                            
 				@Override
-				public void streamLineRead( long processId, String line ) {
+				public void streamLineRead( long processId, String line ) { 
 					try {
 						long id = Long.parseLong( line );
 						setProcessId( id );
-						System.out.println( line );
-					} catch( Exception e ) {}  
+					} catch( Exception e ) {}   
 					
 				}
 				@Override
@@ -181,19 +210,19 @@ public class Game {
 				"	",
 				"	$children = ( Get-WMIObject -Class Win32_Process | Where { $_.ParentProcessId -like $process.id } | Sort-Object StartTime )",
 				"	",
-				"	if ( $children -eq $null ) {",
+				"	if ( !$children ) {",
 				"		return $null;",
 				"	}",
 				"	if ( $children.count -eq $null ) {",
 				"		$p = GetMainWindow -ProcessId $children.ProcessId",
-				"		if ($p -ne $null) {",
+				"		if ( $p ) {",
 				"			return $p",
 				"		}",
 				"		",
 				"	} else {",
 				"		for ( $i = $children.count; $i -gt 0; --$i ) {",
 				"			$p = GetMainWindow -ProcessId $children[$i].ProcessId",
-				"			if ($p -ne $null) {",
+				"			if ( $p ) {",
 				"				return $p",
 				"			}",
 				"		}",
@@ -209,7 +238,7 @@ public class Game {
 				"$process = get-process -id $id -ErrorAction SilentlyContinue",
 				
 				"$startTime = (get-date).ticks - " + getPlayingTime() * 10000,
-				"$timeFocused = 0",
+				"$timeFocused = " + getPlayingTime() * 10000,
 				"while ( !$process.hasExited ) {",
 				"	$foregroundWindow = [WindowFocus]::GetForegroundWindow()",
 				"	[System.UInt32]$foregroundPID = $null;",
