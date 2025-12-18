@@ -1,6 +1,7 @@
 package gemu.frame.main.shelf;
 
-import gemu.common.*;
+import gemu.common.*; 
+import java.lang.ref.WeakReference;
 import java.io.*;
 import javax.swing.*;
 import javax.imageio.ImageIO;
@@ -16,6 +17,7 @@ public class Banner extends JPanel {
 	JTextField titleLabel;
 	Banner() {
 		super();  
+		WeakReference<BufferedImage> weakReference = new WeakReference<>(bufferedImage);
 		setFocusable( true );
 		setBackground( Style.COLOR_SECONDARY );
 		setLayout( new OverlayLayout( this ));
@@ -94,6 +96,11 @@ public class Banner extends JPanel {
 	}
 	
 	public void updateBufferedImage() {
+		if ( bufferedImage != null ) {
+			bufferedImage.flush();
+			bufferedImage = null;
+			System.gc();
+		}
 		try {
 			File cover = game.getCoverImage();
 			if ( cover != null ) {
@@ -103,7 +110,7 @@ public class Banner extends JPanel {
 			}
 		} catch( Exception e ) {
 			e.printStackTrace();
-		}
+		}  
 	}
 	
 	public void setGame( Game game ) {
@@ -117,6 +124,8 @@ public class Banner extends JPanel {
 	
 	@Override
 	public void paintComponent( Graphics g ) {
+		
+		super.paintComponent(g);
 		if ( bufferedImage != null ) {       
 			Graphics2D g2d = ( Graphics2D)g.create();
 			
@@ -130,10 +139,7 @@ public class Banner extends JPanel {
 			g2d.drawImage( bufferedImage, 0, 0, (int)with, (int)imageScaledHeight, this );	
 			g2d.dispose();
 		
-		} else {
-			super.paintComponent(g);
-			
-		}
+		}  
 		
 	}
 	

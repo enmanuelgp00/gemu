@@ -1,5 +1,6 @@
 package gemu.frame.main.shelf;
 
+import java.lang.ref.WeakReference;
 import java.awt.*;   
 import java.awt.image.*;
 import java.io.*;
@@ -22,9 +23,11 @@ public class BookCover extends JPanel {
 	Tag lengthTag;
 	Tag zipLengthTag;
 	boolean pointed = false;
+	boolean loadingBufferedImage = false;
 	public BookCover( Game game ) {
 		super();
 		this.game = game;
+		WeakReference<BufferedImage> weakReference = new WeakReference<>(bufferedImage);
 		updateBufferedImage();
 		coverXViewport = game.getCoverXViewport();
 		setLayout( new OverlayLayout( this ) );
@@ -165,17 +168,44 @@ public class BookCover extends JPanel {
 			g2.dispose();
 		}
 	}
+	public void flushBufferedImage() {
+		if ( bufferedImage != null ) {
+			bufferedImage.flush();
+			bufferedImage = null;
+		}
+	}
+	public BufferedImage getBufferedImage() {
+		return bufferedImage;
+	}
+	private void setBufferedImage( BufferedImage buffer ) {
+		bufferedImage = buffer;
+	}
+	
+	public boolean isLoadingBufferedImage() {
+		return loadingBufferedImage;
+	}
+	
+	private void setLoadingBufferedImage( boolean bool ) {
+		loadingBufferedImage = bool;
+	}
 	
 	public void updateBufferedImage() { 
-		try {
-			File f = game.getCoverImage();
-			if ( f != null ) {
-				bufferedImage = ImageIO.read( f );
-			}
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
-	
+		//Thread loadBufferImage = new Thread(()->{
+			setLoadingBufferedImage( true );
+			flushBufferedImage();
+			try {
+				File f = game.getCoverImage();
+				if ( f != null ) {
+					setBufferedImage(ImageIO.read( f ));
+				}
+			} catch( Exception e ) {
+				e.printStackTrace();
+			}               
+			setLoadingBufferedImage( false );
+		//});
+		//if ( !isLoadingBufferedImage()){
+		//	loadBufferImage.start();
+		//}                    
 	}
 	
 	public Game getGame() {
@@ -198,7 +228,7 @@ public class BookCover extends JPanel {
 			if ( event.getButton() == MouseEvent.BUTTON2 ) {                                           
 				initialMouseX = event.getX() + coverXViewport;	
 			}
-			//setBounds( initialX + 1, initialY + 1, standardSize.width -2, standardSize.height - 2  );
+			
 			
 		}
 		@Override
@@ -206,26 +236,9 @@ public class BookCover extends JPanel {
 			if ( event.getButton() == MouseEvent.BUTTON2){ 
 				getGame().setCoverXViewport(coverXViewport);
 			}
-			/*
-			if ( isMouseInside ) {
-				setBounds( initialX - 2, initialY - 2, standardSize.width + 4, standardSize.height + 4 );			
-			}
-			*/
 		}
 		@Override
 		public void mouseMoved( MouseEvent event ) {
-			/*
-			if ( initialX == -1 ) {
-				initialX = getX();
-			}                       
-			if ( initialY == -1 ) {
-				initialY = getY();
-			}
-			if ( contains(event.getPoint())) {
-				setBounds( initialX - 2, initialY - 2, standardSize.width + 4, standardSize.height + 4 );
-			}
-			*/
-			//setIsMouseInside( true );
 		}
 		@Override
 		public void mouseEntered( MouseEvent event ) {
@@ -236,17 +249,6 @@ public class BookCover extends JPanel {
 		@Override
 		public void mouseExited( MouseEvent event ) {
 			setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ));
-			/*
-			if ( !contains(event.getPoint())) {
-				setPreferredSize( standardSize );
-				revalidate();
-				repaint();   
-				//setIsMouseInside( false );
-				initialX = -1;
-				initialY = -1;
-				
-			}
-			*/
 			
 		}
 		@Override
@@ -261,8 +263,10 @@ public class BookCover extends JPanel {
 	};
 	
 	@Override
-	public void paintComponent( Graphics g ) {        
-		Graphics2D g2 = (Graphics2D)g.create();   
+	public void paintComponent( Graphics g ) {
+		
+		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D)g.create();
 		g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 		if ( bufferedImage != null ) {  
 			double scale = (double)bufferedImage.getWidth( null ) / (double)bufferedImage.getHeight( null ); 
@@ -291,44 +295,41 @@ public class BookCover extends JPanel {
 				}
 				
 			}
-		} else {
-			super.paintComponent(g2);			
-		} 	
+		}	
 		
 		if ( game.isInZip() ) {
 			Color background = Style.COLOR_BACKGROUND;
-			/*
-			if ( bufferedImage != null ) {
-				int count = 0;
-				int width = bufferedImage.getWidth() / 2;
-				int height = bufferedImage.getHeight();
-				
-				int[] buffer = bufferedImage.getRGB( 0, 0, width, height, null, 0, width );
-				int average = 0;
-				int b ;
-				int gr;
-				int r ;
-				int a ;
-				int pixel;
-				for ( int x = 0; x < width; x++ ) {
-					for ( int y = 0; y < height; y++ ) {
-						pixel = buffer[ y * width + x ];
-						a = ( pixel >> 24 ) & 0xff;          
-						r = ( pixel >> 12 ) & 0xff;
-						gr = ( pixel >> 6 ) & 0xff;            
-						b = pixel & 0xff;
-						average += ( r + gr + b ) / 3;
-						count++;
-					
-					}
-				}
-				
-				average /= count;
-				if ( average < 60 ) {
-					background = Color.WHITE;
-				} 
-			}
-			*/
+		
+			//if ( bufferedImage != null ) {
+			//	int count = 0;
+			//	int width = bufferedImage.getWidth() / 2;
+			//	int height = bufferedImage.getHeight();
+			//	
+			//	int[] buffer = bufferedImage.getRGB( 0, 0, width, height, null, 0, width );
+			//	int average = 0;
+			//	int b ;
+			//	int gr;
+			//	int r ;
+			//	int a ;
+			//	int pixel;
+			//	for ( int x = 0; x < width; x++ ) {
+			//		for ( int y = 0; y < height; y++ ) {
+			//			pixel = buffer[ y * width + x ];
+			//			a = ( pixel >> 24 ) & 0xff;          
+			//			r = ( pixel >> 12 ) & 0xff;
+			//			gr = ( pixel >> 6 ) & 0xff;            
+			//			b = pixel & 0xff;
+			//			average += ( r + gr + b ) / 3;
+			//			count++;
+			//		
+			//		}
+			//	}
+			//	
+			//	average /= count;
+			//	if ( average < 60 ) {
+			//		background = Color.WHITE;
+			//	} 
+			//}
 			
 			
 			g2.setColor( new Color( background.getRed(), background.getGreen(), background.getBlue(), 150 ));
@@ -358,6 +359,7 @@ public class BookCover extends JPanel {
 			g2.setColor( Color.GREEN );
 			g2.draw( frame );
 		}
-		g2.dispose();	
+		g2.dispose();
+		 
 	}
 }

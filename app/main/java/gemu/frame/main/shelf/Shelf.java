@@ -11,7 +11,8 @@ import gemu.game.*;
 public class Shelf extends GemuScrollPane {
 	BookCover[] bookCovers;
 	ArrayList<OnBookCoverMouseAdapter> onBookCoverMouseListeners = new ArrayList<>(); 
-	
+	LinkedList<BookCover> bookCoversToUpdateBuffer = new LinkedList<>();
+	boolean bufferUpdaterRunning = false;
 	Shelf( Game[] games ) {
 		super();
 		setFocusable( true );
@@ -34,7 +35,59 @@ public class Shelf extends GemuScrollPane {
 			}
 		});
 		th.start();
-		
+		getVerticalScrollBar().addAdjustmentListener( ( event ) -> {
+			JViewport viewport = getViewport();
+			int top = viewport.getViewPosition().y;
+			int bottom = top + getHeight();
+			Rectangle bounds;
+			int bookTop;
+			int bookBottom;
+			
+			for ( BookCover bookCover : bookCovers ) {
+				if ( bookCover == null ) {
+					continue;
+				}
+				bounds = bookCover.getBounds();
+				bookTop = bounds.y;
+				bookBottom = bookTop + bounds.height;
+				if ( top - bounds.height * 2 > bookBottom || bookTop > bottom + bounds.height * 2 ) {
+					bookCoversToUpdateBuffer.remove(bookCover);
+					bookCover.flushBufferedImage();
+					
+				} else if ( bookCover.getBufferedImage() == null && !bookCover.isLoadingBufferedImage() ) {
+					
+					if ( !bookCoversToUpdateBuffer.contains(bookCover) ) {
+						bookCoversToUpdateBuffer.add( bookCover );					
+					}
+					Thread updateBufferedImageTh = new Thread(()->{
+						BookCover bc;
+						while( bookCoversToUpdateBuffer.size() > 0 ) {
+								bc = bookCoversToUpdateBuffer.get(0);  
+							if ( bc.getBufferedImage() == null ) {
+								bc.updateBufferedImage();
+								bc.repaint(); 
+							}							
+							bookCoversToUpdateBuffer.remove(bc);
+							try {
+								Thread.sleep( 100 );
+							} catch( Exception e ) {}
+							
+						}
+						
+						setBufferUpdaterRunning( false );
+					});
+					if ( !isBufferUpdaterRunning() && bookCoversToUpdateBuffer.size() > 0 ) {
+						updateBufferedImageTh.start(); 
+						setBufferUpdaterRunning( true );
+						
+					} 
+					
+					
+				}
+				
+			}
+			System.gc();
+		});
 		addMouseListener( new MouseAdapter(){
 			@Override
 			public void mousePressed( MouseEvent e ) {
@@ -42,8 +95,14 @@ public class Shelf extends GemuScrollPane {
 			}
 		});
 	}
-	
+	public boolean isBufferUpdaterRunning() {
+		return bufferUpdaterRunning;
+	}
+	private void setBufferUpdaterRunning( boolean bool ) {
+		bufferUpdaterRunning = bool;
+	}
 	public void scrollTo( BookCover bookCover ) {
+		
 		Rectangle  bookBounds = bookCover.getBounds();
 		JViewport viewport = getViewport();
 		

@@ -73,7 +73,11 @@ public class MainFrame extends JFrame {
 		});
 		
 	}
-	
+	@Override
+	public void paint(Graphics g) {
+		System.gc();
+		super.paint(g);
+	}
 	long getTotalPlayingTime() {
 		long totalTime = 0;
 		for ( Game g : games ) {

@@ -62,6 +62,8 @@ public class ZipFile extends File {
 	}
 	
 	private void unzip( OnZipProcessListener listener, File dir, Iterator<String> passwordIterator )  {
+		String password = passwordIterator.next();
+		System.out.println("Testing password : " + password);
 		Shell.run( new OnProcessListener() {
 			@Override
 			public void processStarted( long processId ) {
@@ -92,7 +94,7 @@ public class ZipFile extends File {
 				unzip( listener, dir, passwordIterator );
 				
 			}
-		}, null, "7z",  "-o" + dir.getAbsolutePath() ,"-bsp1", "-y", "-p" + passwordIterator.next() , "x", getRootZipFile().getAbsolutePath() );
+		}, null, "7z",  "-o" + dir.getAbsolutePath() ,"-bsp1", "-y", "-p" + password , "x", getRootZipFile().getAbsolutePath() );
 	}
 	
 	@Override
@@ -105,7 +107,9 @@ public class ZipFile extends File {
 		return list.toArray( new ZipFile[ list.size() ] );
 	}
 	
-	private void putListedFilesInList( ArrayList<ZipFile> list, Iterator<String> passwordIterator ) {
+	private void putListedFilesInList( ArrayList<ZipFile> list, Iterator<String> passwordIterator ) { 
+		String password = passwordIterator.next();
+		System.out.println("Testing password : " + password);
 		Shell.run( new OnProcessListener() {
 			String path;
 			@Override
@@ -140,6 +144,6 @@ public class ZipFile extends File {
 				}
 			}
 			
-		}, null , "7z","-processId" + passwordIterator.next(), "l", "-slt", "-ba", getAbsolutePath() );
+		}, null , "7z","-p" + password, "l", "-slt", "-ba", getAbsolutePath() );
 	}
 }

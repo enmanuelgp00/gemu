@@ -56,8 +56,8 @@ public class Game {
 			String[] cmd;
 			
 			if ( needsAdmin() ) {
-				cmd = new String[] {"powershell", "$process = start-process -PassThru -verb runas -filePath '" + getLauncher().getAbsolutePath() + "';",
-				"write-host $process.id;" };
+				cmd = new String[] {"powershell", "try { $process = start-process -PassThru -verb runas -filePath '" + getLauncher().getAbsolutePath() + "' -ErrorAction SilentlyContinue ;",
+				"write-host $process.id; } catch {  }" };
 			} else {
 				cmd = new String[] { getLauncher().getAbsolutePath() };
 			}
