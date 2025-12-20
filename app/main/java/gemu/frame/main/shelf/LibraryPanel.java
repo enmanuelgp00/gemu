@@ -507,6 +507,8 @@ public class LibraryPanel extends GemuSplitPane {
 					String[] scriptCode = new String[] {
 						"add-type -assemblyname system.windows.forms",
 						"add-type -assemblyname system.drawing",
+						"add-type -assemblyName UIAutomationClient",
+						"add-type -assemblyName UIAutomationTypes",
 						
 						"add-type @\\\"",
 						"	using System;",
@@ -520,6 +522,7 @@ public class LibraryPanel extends GemuSplitPane {
 						"		public static extern bool SetForegroundWindow(IntPtr hWind);",
 						
 						"		[DllImport(\\\"user32.dll\\\")]",
+						"		[return: MarshalAs(UnmanagedType.Bool)]",
 						"		public static extern bool GetClientRect(IntPtr hWind, out RECT rect);",
 						"		",
 						"		[DllImport(\\\"user32.dll\\\")]",
@@ -536,7 +539,6 @@ public class LibraryPanel extends GemuSplitPane {
 						
 						"		[DllImport(\\\"user32.dll\\\")]",
 						"		public static extern bool IsIconic(IntPtr hWind);",
-						"		",
 						
 						"	}",
 						
@@ -563,23 +565,31 @@ public class LibraryPanel extends GemuSplitPane {
 						"	[void][Win32]::ShowWindow($hWind, $SW_RESTORE);",
 						"}",
 						
-						"[void][Win32]::SetForegroundWindow($process.MainWindowHandle)",
-						
+						"[void][Win32]::SetForegroundWindow($hWind)",
 						"Start-Sleep -Milliseconds 500",
-						
-						
+						"$root = [System.Windows.Automation.AutomationElement]::RootElement",
+						"$condition = [System.Windows.Automation.PropertyCondition]::new(",
+						"	[System.Windows.Automation.AutomationElement]::ProcessIdProperty, $process.id",
+						")",
+						"$window = $root.FindFirst([System.Windows.Automation.TreeScope]::Children, $condition )",
+						//"$bounds = $window.Current.BoundingRectangle",
+
+						"$nativeHandle = $window.Current.NativeWindowHandle",
 						"$clientRect = New-Object RECT",
-						"[void][Win32]::GetClientRect($process.MainWindowHandle, [ref]$clientRect )",
-						
+						"[void][Win32]::GetClientRect($nativeHandle, [ref]$clientRect )",
+		
 						"$clientPoint = New-Object POINT",
 						"$clientPoint.X = 0",
 						"$clientPoint.Y = 0",
 						
-						"[void][Win32]::ClientToScreen( $hWind, [ref]$clientPoint )",
-						
+						"[void][Win32]::ClientToScreen( $nativeHandle, [ref]$clientPoint )",
+						"$clientPoint",
 						"$width = $clientRect.Right - $clientRect.Left",
 						"$height = $clientRect.Bottom - $clientRect.Top",
-						
+						/*
+						"$width = [int]::parse($bounds.width)",
+						"$height = [int]::parse($bounds.height)",
+						*/
 						"$bitmap = New-Object System.Drawing.Bitmap $width, $height",
 						"$graphics = [System.Drawing.Graphics]::fromImage($bitmap)",
 						"$graphics.CopyFromScreen($clientPoint.X, $clientPoint.Y, 0, 0, $bitmap.size )",
@@ -596,10 +606,16 @@ public class LibraryPanel extends GemuSplitPane {
 					
 					Shell.run( new OnProcessListener() {
 						@Override
+						public void streamLineRead( long processId, String line ) {
+							System.out.println( line );
+						}
+						@Override
 						public void processFinished( long processId, int exitCode ) {
 							if ( exitCode == 0 ) { 
 								game.findScreenshots();
-								game.setCoverImage( new File( game.likeAbsolutePath( screenshotFileName ) ) );
+								if ( game.getCoverImage() == null ) {
+									game.setCoverImage( new File( game.likeAbsolutePath( screenshotFileName ) ) );
+								}
 								banner.updateBufferedImage();
 								banner.repaint();
 								

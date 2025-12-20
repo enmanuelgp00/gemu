@@ -54,8 +54,12 @@ public class Game {
 	public void play( OnProcessListener adapter ) {
 		Thread th = new Thread(() -> {
 			String[] cmd;
+			final Shell.PowerCfgScheme initialScheme;
 			if ( usesLowClockCPU() ) {
+				initialScheme = Shell.getCurrentPowerCfgScheme();
 				Shell.setLowClockPerformance();
+			} else {
+				initialScheme = null;
 			}
 			if ( needsAdmin() ) {
 				cmd = new String[] {"powershell", "try { $process = start-process -PassThru -verb runas -filePath '" + getLauncher().getAbsolutePath() + "' -ErrorAction SilentlyContinue ;",
@@ -93,7 +97,7 @@ public class Game {
 					handleChildWithMainWindow();
 					//Shell.waitProcess( getProcessId() );
 					if ( usesLowClockCPU() ) {
-						Shell.setActiveInitialPowerCfgScheme();
+						Shell.setActivePowerCfgScheme( initialScheme );
 					}
 					if ( getLength() == null ) {
 						checkLength();
@@ -734,12 +738,14 @@ public class Game {
 	}
 	
 	public File getCoverImage() {
+		/*
 		File cover = getKeyAsFile( Info.COVER_IMAGE);
 		File[] screenshots = getScreenshots();
 		if ( cover == null && screenshots.length > 0 )  {
 			setCoverImage( screenshots[0] );
 			return screenshots[0];
 		}
+		*/
 		return getKeyAsFile( Info.COVER_IMAGE);
 	}                              
 	

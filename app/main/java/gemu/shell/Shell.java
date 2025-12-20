@@ -5,8 +5,9 @@ import java.util.*;
 import java.io.*;
 
 public final class Shell {
-	private static class PowerCfgScheme {
-	
+
+	public static class PowerCfgScheme {
+		PowerCfgScheme() {}
 		String scheme_guid = "";
 		String subgroup_guid = "";
 		Setting	minimum_setting = new Setting();      
@@ -18,8 +19,6 @@ public final class Shell {
 			int dc = -1;
 		}
 	}
-	
-	private static PowerCfgScheme initialPowerCfgScheme = getCurrentPowerCfgScheme();
 	
 	public static void setLowClockPerformance() {
 	
@@ -40,9 +39,7 @@ public final class Shell {
 			*/
 		}
 	};
-	public static void setActiveInitialPowerCfgScheme() {
-		setActivePowerCfgScheme( initialPowerCfgScheme );
-	}
+	
 	public static void setActivePowerCfgScheme( PowerCfgScheme scheme ) {
 		System.out.println( "Setting power scheme : " + scheme.scheme_guid );
 		run( new OnProcessListener(){}, null, "powercfg", "/setActive", scheme.scheme_guid );
