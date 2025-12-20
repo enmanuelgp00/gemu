@@ -11,7 +11,7 @@ import gemu.util.*;
 
 
 public class Game {
-	Info info;
+	Info info;  
 	long processId = -1;
 	long zippingProcessId = -1;
 	private Game() {
@@ -20,6 +20,7 @@ public class Game {
 	
 	public Game( Executable... executables) throws Exception {
 		info = Info.createInfo( executables );
+		findScreenshots();
 		checkLength();
 	}
 													  
@@ -35,14 +36,13 @@ public class Game {
 	public static Game from( Info info ) {
 		Game game = new Game();
 		game.info = info;
-		if ( game.getCoverImage() == null ) {
-			game.findCoverImage();		
-		}
+		
 		if ( game.isInZip()) {
 			if ( game.getZipLength() == null ) {
 				game.checkLength();
 			}
 		}
+		game.findScreenshots();
 		return game;
 	}
 	
@@ -54,7 +54,9 @@ public class Game {
 	public void play( OnProcessListener adapter ) {
 		Thread th = new Thread(() -> {
 			String[] cmd;
-			
+			if ( usesLowClockCPU() ) {
+				Shell.setLowClockPerformance();
+			}
 			if ( needsAdmin() ) {
 				cmd = new String[] {"powershell", "try { $process = start-process -PassThru -verb runas -filePath '" + getLauncher().getAbsolutePath() + "' -ErrorAction SilentlyContinue ;",
 				"write-host $process.id; } catch {  }" };
@@ -90,13 +92,15 @@ public class Game {
 					}                    
 					handleChildWithMainWindow();
 					//Shell.waitProcess( getProcessId() );
-					
-					checkLength();
-					adapter.processFinished( getProcessId() , exitCode );
-					setProcessId( -1L );     
-					if ( getCoverImage() == null ) {
-						findCoverImage();		
+					if ( usesLowClockCPU() ) {
+						Shell.setActiveInitialPowerCfgScheme();
 					}
+					if ( getLength() == null ) {
+						checkLength();
+					}
+					adapter.processFinished( getProcessId() , exitCode );
+					setProcessId( -1L ); 
+					findScreenshots();
 				}
 			}, getDirectory(), cmd );		
 		});
@@ -397,6 +401,21 @@ public class Game {
 		info.commit();
 	}
 	
+	public boolean usesLowClockCPU() {
+		try {
+			return Boolean.parseBoolean(info.get( Info.USES_LOW_CLOCK_CPU ));
+		} catch( Exception e ) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	public void setUsesLowClockCPU( boolean bool ) {
+		info.set( Info.USES_LOW_CLOCK_CPU, String.valueOf(bool) );
+		info.commit();
+	
+	}
+	
 	private void setProcessId( Long processId ) {
 		this.processId = processId;		
 	}
@@ -620,9 +639,7 @@ public class Game {
 							
 							info.commit();
 							
-							if ( getCoverImage() == null ) {
-								findCoverImage();		
-							}
+							findScreenshots();
 							
 							if ( !rootZipFile.delete() ) {
 								throw new RuntimeException() {
@@ -710,23 +727,41 @@ public class Game {
 	}
 	
 	public void setCoverImage( File cover ) {
-		info.set( Info.COVER_IMAGE, cover.getName() ); 
-		info.commit();
+		if ( new HashSet<File>( Arrays.<File>asList(getScreenshots())).contains(cover) ) {
+			info.set( Info.COVER_IMAGE, cover.getName() ); 
+			info.commit();
+		}
 	}
 	
 	public File getCoverImage() {
+		File cover = getKeyAsFile( Info.COVER_IMAGE);
+		File[] screenshots = getScreenshots();
+		if ( cover == null && screenshots.length > 0 )  {
+			setCoverImage( screenshots[0] );
+			return screenshots[0];
+		}
 		return getKeyAsFile( Info.COVER_IMAGE);
+	}                              
+	
+	public File[] getScreenshots() {
+		Set<File> screenshots = new HashSet<>();
+		for ( String names : info.list( Info.SCREENSHOTS ) ) {
+			screenshots.add( new File( likeAbsolutePath(names) ) );
+		}
+		return screenshots.toArray( new File[screenshots.size()] );
 	}
 	
-	public void findCoverImage() {
+	public void findScreenshots() {
+		HashSet<String> screenshotsNames = new HashSet<>();
 		for ( File f : getDirectory().listFiles() ) {
 			if ( !f.isDirectory() ) {
-				if ( FileNames.getBaseName(f).equals(Games.COVER_NAME)) {
-					setCoverImage( f );
-					break;
+				if ( FileNames.hasImageExtension(f)) {
+					screenshotsNames.add( f.getName() );
 				}
 			}
 		}
+		info.setList( Info.SCREENSHOTS, screenshotsNames.toArray( new String[screenshotsNames.size()] ) );
+		info.commit();
 	} 
 	//extra
 	private File getKeyAsFile( Info.Key key ) {
@@ -738,7 +773,7 @@ public class Game {
 			}
 		}
 		return null;
-		
+	
 	}
 	
 	public String likeAbsolutePath( String r ) {

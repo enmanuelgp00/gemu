@@ -20,7 +20,7 @@ public class MainFrame extends JFrame {
 		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 		getContentPane().setBackground( Style.COLOR_BACKGROUND );
 		((JPanel)getContentPane()).setBorder( BorderFactory.createEmptyBorder(4, 4, 4, 4));
-		setMinimumSize( new Dimension(1000, 600 )); 
+		setMinimumSize( new Dimension(800, 600 )); 
 		add( new TitleBar( this, "Gemu" ), BorderLayout.NORTH );
 		
 		Box logBar = new Box( BoxLayout.X_AXIS );
@@ -64,6 +64,7 @@ public class MainFrame extends JFrame {
 		
 		addMouseListener( resizeAdapter );
 		addMouseMotionListener( resizeAdapter );
+		setLocationRelativeTo( null );
 		setVisible(true);
 		addWindowListener( new WindowAdapter(){
 			@Override

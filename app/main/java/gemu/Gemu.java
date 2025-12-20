@@ -108,9 +108,6 @@ public class Gemu {
 	
 	public void handleMultipleExecutables( Game game ) {
 		if ( game.getLauncher() != null || game.isDeleted() ) {
-			if ( game.getCoverImage() == null ) {
-				game.findCoverImage();
-			}               
 			games.add( game );			
 			return;
 		}

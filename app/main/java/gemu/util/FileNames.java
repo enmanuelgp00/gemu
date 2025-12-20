@@ -3,11 +3,19 @@ package gemu.util;
 import java.io.*;
 
 public final class FileNames {
+	public static final String[] IMAGE_EXTENSIONS = new String[] { ".jpg",".jpeg",".png",".webp"};
 
 	public static boolean hasExtension( File f, String extension ) {
 		return getExtension(f).equals(extension);
 	}
-
+	public static boolean hasImageExtension( File f ) {
+		for ( String extension : IMAGE_EXTENSIONS ) {
+			if (  hasExtension( f, extension ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 	public static String getExtension( File f ) {
 		if ( f.isDirectory() ) {
 			return "";

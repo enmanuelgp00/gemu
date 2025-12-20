@@ -18,7 +18,9 @@ public class Info {
 	final static Key LAST_TIME_PLAYED = new Key("last_time_played");
 	final static Key PLAYING_TIME = new Key("playing_time");              
 	final static Key NEEDS_ADMIN = new Key("needs_admin");                  
-	final static Key PINNED = new Key("pinned");
+	final static Key PINNED = new Key("pinned");                             
+	final static Key SCREENSHOTS = new Key("screenshots");                    
+	final static Key USES_LOW_CLOCK_CPU = new Key("uses_low_clock_cpu");
 	
 	public final static HashSet<Key> KEYS = new HashSet<>( Arrays.<Key>asList(
 		COVER_IMAGE,
@@ -31,7 +33,9 @@ public class Info {
 		LAST_TIME_PLAYED,
 		PLAYING_TIME,
 		NEEDS_ADMIN,
-		PINNED
+		PINNED,
+		SCREENSHOTS,
+		USES_LOW_CLOCK_CPU
 	));
 	
 	File file;
@@ -222,7 +226,13 @@ public class Info {
 	public String[] list( Key key ) {
 		return hashMap.get( key ).toArray( new String[0] );
 	}
-	
+	public void setList( Key key, String[] arr ) {
+		Set<String> set = hashMap.get(key);
+		set.clear();
+		for ( String s : arr ) {
+			set.add( s );
+		}
+	}
 	public void set( Key key, String value) {
 		Set<String> set = hashMap.get(key);
 		set.clear();

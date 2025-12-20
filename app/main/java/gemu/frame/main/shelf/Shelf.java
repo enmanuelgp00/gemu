@@ -50,7 +50,8 @@ public class Shelf extends GemuScrollPane {
 				bounds = bookCover.getBounds();
 				bookTop = bounds.y;
 				bookBottom = bookTop + bounds.height;
-				if ( top - bounds.height * 2 > bookBottom || bookTop > bottom + bounds.height * 2 ) {
+				int hgap = ((FlowLayout)content.getLayout()).getHgap();
+				if ( top - ( bounds.height + hgap ) * 2 > bookBottom || bookTop > bottom + ( bounds.height + hgap ) * 2 ) {
 					bookCoversToUpdateBuffer.remove(bookCover);
 					bookCover.flushBufferedImage();
 					
@@ -214,18 +215,29 @@ public class Shelf extends GemuScrollPane {
 		}
 		@Override
 		public Dimension getPreferredSize() {
-			LayoutManager layout = getLayout();
+			Component[] components = getComponents();
+			Rectangle bounds = components[0].getBounds();
+			int containerWidth = getWidth();
+			int minimumGap = 5;
+			int spaceOcupated = 0;
+			int count = 1;
+			while ( spaceOcupated + minimumGap + bounds.width < containerWidth ) {
+				count++;
+				spaceOcupated += minimumGap + bounds.width;
+			}
+			int hMargin = ( containerWidth - spaceOcupated) / count + minimumGap;
+			FlowLayout layout = (FlowLayout)getLayout();
+			layout.setHgap( hMargin );
 			if ( layout != null ) {
 				layout.layoutContainer( this );
 			}
 			int width = 0;
 			int height = 0;
-			Rectangle last;
-			Component[] components = getComponents(); 
+			
 			if ( components.length > 0 ) {
-				last = components[ components.length - 1 ].getBounds();
-				width = last.x + last.width;
-				height = last.y + last.height;
+				bounds = components[ components.length - 1 ].getBounds();
+				width = bounds.width;
+				height = bounds.y + bounds.height;
 			}
 			Insets insets = getInsets();
 			int gap = ((FlowLayout)getLayout()).getVgap();

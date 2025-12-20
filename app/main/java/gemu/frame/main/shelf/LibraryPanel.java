@@ -120,7 +120,7 @@ public class LibraryPanel extends GemuSplitPane {
 			}
 		};
 		
-		GemuButton buttonScreenshot = new GemuButton("Screenshot");    
+		GemuButton buttonScreenshot = new GemuButton("['o-]");    
 		GemuButton buttonZip = new GemuButton("7zip", 5, 5 );
 		GemuButton buttonFiles = new GemuButton("Files");
 		GemuButton buttonPreferences = new GemuButton("Settings") {
@@ -192,6 +192,10 @@ public class LibraryPanel extends GemuSplitPane {
 				@Override
 				public Dimension getMaximumSize() {
 					return new Dimension( getPreferredSize() );
+				}
+				@Override
+				public Dimension getMinimumSize() {
+					return new Dimension( 0, 0 );
 				}
 			});
 			add( Box.createHorizontalGlue());
@@ -485,7 +489,8 @@ public class LibraryPanel extends GemuSplitPane {
 		};
 			
 		
-		protected ActionListener screenshotAction = new ActionListener() {
+		protected ActionListener screenshotAction = new ActionListener() { 
+			String screenshotFileName;
 			@Override
 			public void actionPerformed( ActionEvent event ) {
 				Game game = getGame();
@@ -493,7 +498,10 @@ public class LibraryPanel extends GemuSplitPane {
 					return;
 				}                        
 				try {
-					String screenshotFileName = Games.COVER_NAME + ".jpg";
+					int count = 0;
+					while ( new File ( game.likeAbsolutePath( 
+						( screenshotFileName = String.format("screenshot_%02d.jpg", count++ ) )
+					)).exists() ) {	}
 										 
 					long id = game.getProcessId();
 					String[] scriptCode = new String[] {
@@ -585,28 +593,12 @@ public class LibraryPanel extends GemuSplitPane {
 					for ( String s : scriptCode ) {
 						cmd.append(s + '\n');
 					}
-					/*
-					File scriptFile = new File( new File( LibraryPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath() ).getParentFile() + "\\screenshot_script.txt" ); 
-					BufferedReader reader = new BufferedReader( new InputStreamReader ( new FileInputStream( scriptFile ) ));
-					char ch;
-					int code;
-					String screenshotFileName = Games.COVER_NAME + ".jpg";
-					StringBuilder script = new StringBuilder();
-					script.append("$id = " + id + "\n" );            
-					script.append("$screenshotFileName = \\\"" + screenshotFileName + "\\\"\n" );
-					while( ( code = reader.read() ) != -1 ) {
-						ch = (char)code;
-						if ( ch == '"' ) {  
-							script.append( "\\" );							
-						}
-						script.append( ch );
-					}
-					reader.close();
-					*/
+					
 					Shell.run( new OnProcessListener() {
 						@Override
 						public void processFinished( long processId, int exitCode ) {
-							if ( exitCode == 0 ) {                             
+							if ( exitCode == 0 ) { 
+								game.findScreenshots();
 								game.setCoverImage( new File( game.likeAbsolutePath( screenshotFileName ) ) );
 								banner.updateBufferedImage();
 								banner.repaint();

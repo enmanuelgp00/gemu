@@ -4,7 +4,6 @@ import gemu.util.*;
 
 public final class Games {
 	
-	public static String COVER_NAME = "main_screenshot";
 	public static boolean isLauncher( File f) {
 		if (f.isDirectory()) {
 			return false;

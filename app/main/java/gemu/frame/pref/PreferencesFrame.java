@@ -27,6 +27,16 @@ public class PreferencesFrame extends JFrame {
 			game.setNeedsAdmin( !game.needsAdmin() );
 		}
 	);  
+	SimpleOption lowClockOption = new SimpleOption("Low Clock CPU", new GemuSwitch() {
+			@Override
+			public boolean isTurnOn() {
+				return getBookCover().getGame().usesLowClockCPU();
+			}
+		}, ( bookCover ) -> { 
+			Game game = bookCover.getGame();
+			game.setUsesLowClockCPU( !game.usesLowClockCPU() );
+		}
+	);  
 	
 	SimpleOption FavoriteOption = new SimpleOption("Favorite", new GemuSwitch() {
 			@Override
@@ -56,9 +66,10 @@ public class PreferencesFrame extends JFrame {
 		});  
 	BookCover bookCover;
 	
-	ArrayList<Box> options = new ArrayList<>( Arrays.<Box>asList(
-		adminOption,     
+	ArrayList<Box> options = new ArrayList<>( Arrays.<Box>asList( 
 		FavoriteOption,
+		adminOption,
+		lowClockOption,
 		DeleteOption
 	) );
 	
