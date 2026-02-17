@@ -1,1 +1,3 @@
 Simple "game" manager to use locally, like a launcher platform
+It can compress the folder container to save space, track your playing time and other staff like performance,
+but most of that implementations only works on windows ...
